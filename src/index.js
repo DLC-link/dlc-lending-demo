@@ -16,12 +16,10 @@ const getLibrary = (provider) => {
 
 const rootElement = document.getElementById("root");
 ReactDOM.render(
-  <StrictMode>
     <ChakraProvider resetCSS theme={theme}>
       <Web3ReactProvider getLibrary={getLibrary}>
         <App />
       </Web3ReactProvider>
-    </ChakraProvider>
-  </StrictMode>,
+    </ChakraProvider>,
   rootElement
 );
