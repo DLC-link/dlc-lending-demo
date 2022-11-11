@@ -63,8 +63,8 @@ export default class DLCTable extends React.Component {
                         bgGradient="linear(to-r, background1, background2)">
                         <VStack>
                             <Text
-                                fontSize="4xl" f
-                                ontWeight="extrabold"
+                                fontSize="4xl" 
+                                fontWeight="extrabold"
                                 bgGradient="linear(to-r, primary1, primary2)"
                                 bgClip='text'>DLCs
                             </Text>
@@ -80,7 +80,8 @@ export default class DLCTable extends React.Component {
                                 <HStack>
                                     <VStack>
                                         <TableContainer>
-                                            <Table variant='simple'>
+                                            <Table 
+                                            variant='simple'>
                                                 <TableCaption>DLC List</TableCaption>
                                                 <Thead>
                                                     <Tr>
@@ -93,7 +94,7 @@ export default class DLCTable extends React.Component {
                                                 </Thead>
                                                 <Tbody>
                                                     {data.map((data) => (
-                                                        <Tr>
+                                                        <Tr key={data.uuid}>
                                                             <Td>
                                                                 {data.status === "unfunded" && (
                                                                     <InfoIcon color="orange" />

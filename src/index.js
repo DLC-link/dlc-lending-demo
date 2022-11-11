@@ -1,25 +1,14 @@
-import { StrictMode } from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 import { ChakraProvider } from "@chakra-ui/react";
-import { Web3ReactProvider } from "@web3-react/core";
-import { ethers } from "ethers";
 import { theme } from "./styles/theme";
 import "@fontsource/poppins";
 
 import App from "./App";
 
-const getLibrary = (provider) => {
-  const library = new ethers.providers.Web3Provider(provider);
-  library.pollingInterval = 8000; // frequency provider is polling
-  return library;
-};
-
-const rootElement = document.getElementById("root");
-ReactDOM.render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+root.render(
     <ChakraProvider resetCSS theme={theme}>
-      <Web3ReactProvider getLibrary={getLibrary}>
         <App />
-      </Web3ReactProvider>
-    </ChakraProvider>,
-  rootElement
+    </ChakraProvider>
 );
