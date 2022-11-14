@@ -15,3 +15,11 @@ export const truncateAddress = (address) => {
     const val = Number(num);
     return "0x" + val.toString(16);
   };
+
+  export function customShiftValue(value, shift, unshift) {
+    return unshift ? value / (10 ** shift) : value * (10 ** shift);
+  }
+
+  export function fixedTwoDecimalShift(value) {
+    return customShiftValue(value, 2, true).toFixed(2);
+  }

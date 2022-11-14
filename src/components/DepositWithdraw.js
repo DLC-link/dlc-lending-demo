@@ -127,6 +127,7 @@ export default class DepositWithdraw extends React.Component {
                                                 variant="outline"
                                                 fontSize="sm"
                                                 fontWeight="bold"
+                                                isDisabled
                                             >WITHDRAW</Button>
                                         </HStack>
                                     </VStack>

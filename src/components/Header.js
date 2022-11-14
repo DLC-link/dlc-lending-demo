@@ -48,21 +48,21 @@ export default class Header extends React.Component {
     render() {
         return (
             <>
-                <Flex px="143px" py="15px" width="full" bgGradient="linear(to-r, background1, background2)" alignItems="flex-end" justifyContent="space-between">
+                <Flex px="91px" py="15px" width="full" bgGradient="linear(to-r, background1, background2)" alignItems="flex-end" justifyContent="space-between">
                     <Flex>
                         <HStack spacing="15px">
                             <Heading margin="8px">
                                 <Button as="a" href="https://www.dlc.link/"
                                     _hover={{
-                                        background: "accent"
+                                        background: "none"
                                     }}
                                     variant="ghost"
-                                    height="50px"
+                                    height="100px"
                                 >
                                     <Image
                                         src="/dlc.link_logo.png"
                                         alt="DLC.Link Logo"
-                                        height="50px"
+                                        height="100px"
                                     /></Button>
                             </Heading>
                             {!this.state.isConnected ? (
@@ -88,7 +88,14 @@ export default class Header extends React.Component {
                                     width="200px"
                                 >Disconnect</Button>
                             )}
-                            <Flex margin="15px" justifyContent="center" w="300px" h="50px" padding="10px 10px" borderRadius='md' bgGradient="linear(to-r, primary1, primary2)">
+                            <Flex 
+                            margin="15px" 
+                            justifyContent="center" 
+                            w="300px" 
+                            h="50px" 
+                            padding="10px 10px" 
+                            borderRadius='md' 
+                            background="secondary1">
                                 {this.state.isConnected ? (
                                     <HStack margin="15px">
                                         {this.state.walletType === "metamask" ? (
