@@ -17,10 +17,10 @@ import {
     TableContainer,
     Collapse,
     AspectRatio,
+    Tooltip,
 } from "@chakra-ui/react";
 import data from "../DLCData"
-import { customShiftValue, fixedTwoDecimalShift } from "../utils";
-import { FetchError } from "node-fetch/src";
+import { customShiftValue, fixedTwoDecimalShift, hex2ascii } from "../utils";
 
 export default class DLCTable extends React.Component {
 
@@ -40,8 +40,9 @@ export default class DLCTable extends React.Component {
         eventBus.on("change-deposit", (data) =>
             this.setState({ bitCoin: Number(this.state.bitCoin) + Number(data.deposit) })
         );
-        await this.setFormattedDLCArray();
-        console.log(this.state.formattedDLCArray)
+        await this.setFormattedDLCArray()
+            .then((formattedDLCArray) =>
+                this.setState({ formattedDLCArray: formattedDLCArray }));
     }
 
     openDepositModal() {
@@ -49,7 +50,7 @@ export default class DLCTable extends React.Component {
     }
 
     async setFormattedDLCArray() {
-        this.setState({ formattedDLCArray: this.formatAllDLC(await this.fetchAllDLC()) })
+        return this.formatAllDLC(await this.fetchAllDLC());
     }
 
     async fetchAllUUID() {
@@ -80,6 +81,7 @@ export default class DLCTable extends React.Component {
                     dlcArray.push(msg)
                 });
         }
+        console.log(dlcArray)
         return dlcArray;
     }
 
@@ -89,18 +91,19 @@ export default class DLCTable extends React.Component {
             const formattedDLC = this.formatDLC(dlc);
             formattedDLCArray.push(formattedDLC)
         }
-        this.state.formattedDLCArray = formattedDLCArray;
+        return formattedDLCArray;
     }
 
     formatDLC(dlc) {
         let formattedDLC = {
-            dlcUUID: dlc.dlc_uuid.value.value,
+            dlcUUID: hex2ascii(dlc.dlc_uuid.value.value),
             status: dlc.status.value,
             userID: dlc["user-id"].value,
             liquidationFee: fixedTwoDecimalShift(dlc["liquidation-fee"].value) + " %",
             liquidationRatio: fixedTwoDecimalShift(dlc["liquidation-ratio"].value) + " %",
             vaultCollateral: customShiftValue(dlc["vault-collateral"].value, 8, true) + " BTC",
-            vaultLoan: fixedTwoDecimalShift(dlc["vault-loan"].value) + " $"
+            vaultLoan: fixedTwoDecimalShift(dlc["vault-loan"].value) + " $",
+            closingPrice: fixedTwoDecimalShift(dlc["closing-price"].value) + " $"
         }
         return formattedDLC;
     }
@@ -133,7 +136,7 @@ export default class DLCTable extends React.Component {
                             </Text>
                             <Flex
                                 height="auto"
-                                width="1000px"
+                                width="full"
                                 alignContent="center"
                                 justifyContent="center"
                                 padding="10px 10px"
@@ -142,7 +145,6 @@ export default class DLCTable extends React.Component {
                                 bg="white">
                                 <HStack>
                                     <VStack>
-                                    <h1>{this.state.formattedDLCArray}</h1>
                                         <TableContainer>
                                             <Table
                                                 variant='simple'>
@@ -157,26 +159,52 @@ export default class DLCTable extends React.Component {
                                                         <Th>Liquidation Fee</Th>
                                                         <Th>Liquidation Ratio</Th>
                                                         <Th>Closing Price</Th>
+                                                        <Th>Action</Th>
                                                     </Tr>
                                                 </Thead>
-                                                {/* <Tbody>
-                                                    {this.state.formattedDLCArray.map((dlc) => (
+                                                <Tbody>
+                                                    {this.state.formattedDLCArray?.map((dlc) => (
                                                         <Tr key={dlc.dlcUUID}>
                                                             <Td>
-                                                                {dlc.status === ("not-ready" || "pre-repaid" || "pre-liquidated") && (
+                                                                {dlc.status === "not-ready" && (
+                                                                    <Tooltip label="DLC is not ready yet">
                                                                     <TimeIcon color="orange" />
+                                                                    </Tooltip>
+                                                                )}
+                                                                {dlc.status === "unfunded" && (
+                                                                    <Tooltip label="DLC is not yet funded">
+                                                                    <TimeIcon color="orange" />
+                                                                    </Tooltip>
+                                                                )}
+                                                                {dlc.status === "pre-repaid" && (
+                                                                    <Tooltip label="Waiting to be repaid">
+                                                                    <TimeIcon color="orange" />
+                                                                    </Tooltip>
+                                                                )}
+                                                                {dlc.status === "pre-liquidated" && (
+                                                                    <Tooltip label="Waiting to be liquidated">
+                                                                    <TimeIcon color="orange" />
+                                                                    </Tooltip>
                                                                 )}
                                                                 {dlc.status === "ready" && (
+                                                                    <Tooltip label="DLC is ready">
                                                                     <InfoIcon color="orange" />
+                                                                    </Tooltip>
                                                                 )}
                                                                 {dlc.status === "funded" && (
+                                                                    <Tooltip label="DLC is funded">
                                                                     <ArrowRightIcon color="orange" />
+                                                                    </Tooltip>
                                                                 )}
                                                                 {dlc.status === "liquidated" && (
+                                                                    <Tooltip label="DLC is liquidated">
                                                                     <UnlockIcon color="green" />
+                                                                    </Tooltip>
                                                                 )}
                                                                 {dlc.status === "repaid" && (
+                                                                    <Tooltip label="DLC is repaid">
                                                                     <CheckCircleIcon color="green" />
+                                                                    </Tooltip>
                                                                 )}
                                                             </Td>
                                                             <Td>{dlc.dlcUUID}</Td>
@@ -185,9 +213,9 @@ export default class DLCTable extends React.Component {
                                                             <Td>{dlc.vaultLoan}</Td>
                                                             <Td>{dlc.liquidationFee}</Td>
                                                             <Td>{dlc.liquidationRatio}</Td>
-                                                            <Td>Closing Price</Td>
+                                                            <Td>{dlc.closingPrice}</Td>
                                                             <Td>
-                                                                {dlc.status === "unfunded" && (
+                                                                {dlc.status === "ready" && (
                                                                     <Button
                                                                         _hover={{
                                                                             color: "white",
@@ -203,7 +231,7 @@ export default class DLCTable extends React.Component {
                                                                         fontWeight="bold"
                                                                     >SEND BTC</Button>
                                                                 )}
-                                                                {dlc.status === "pending" && (
+                                                                {dlc.status === ("not-ready" || "pre-liquidated" || "pre-paid") && (
                                                                     <Button
                                                                         _hover={{
                                                                             shadow: "none"
@@ -219,7 +247,7 @@ export default class DLCTable extends React.Component {
                                                                         fontWeight="bold"
                                                                     ></Button>
                                                                 )}
-                                                                {dlc.status === "funded" && (
+                                                                {dlc.status ===  "funded" && (
                                                                     <VStack>
                                                                         <Button
                                                                             _hover={{
@@ -256,7 +284,7 @@ export default class DLCTable extends React.Component {
                                                             </Td>
                                                         </Tr>
                                                     ))}
-                                                </Tbody> */}
+                                                </Tbody>
                                             </Table>
                                         </TableContainer>
                                     </VStack>

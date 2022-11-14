@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { StacksMainnet, StacksMocknet, StacksTestnet } from "@stacks/network";
 import { bufferCVFromString, callReadOnlyFunction,cvToValue } from "@stacks/transactions";
 

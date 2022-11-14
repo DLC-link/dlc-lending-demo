@@ -7,6 +7,7 @@ import React from "react";
 import DepositModal from "./modals/DepositModal";
 import Footer from "./components/Footer"
 import DLCTable from "./components/DLCTable";
+import DLCTable2 from "./unused_components/DLCTable_function";
 
 export default class App extends React.Component {
   constructor() {
@@ -14,7 +15,8 @@ export default class App extends React.Component {
     this.state = {
       isSelectWalletOpen: false,
       isDepositOpen: false,
-      isConnected: false
+      isConnected: false,
+      isLoading: true
     };
   }
 
@@ -27,6 +29,9 @@ export default class App extends React.Component {
     );
     eventBus.on("is-deposit-modal-open", (data) =>
       this.setState({ isDepositOpen: data.isDepositOpen })
+    );
+    eventBus.on("is-loading", (data) =>
+      this.setState({ isLoading: data.isLoading })
     );
   }
 

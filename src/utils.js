@@ -16,6 +16,15 @@ export const truncateAddress = (address) => {
     return "0x" + val.toString(16);
   };
 
+  export function hex2ascii(hexx) {
+    if (!hexx) return "";
+    var hex = hexx.toString();
+    var str = '';
+    for (var i = 2; i < hex.length; i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
+  }
+
   export function customShiftValue(value, shift, unshift) {
     return unshift ? value / (10 ** shift) : value * (10 ** shift);
   }
