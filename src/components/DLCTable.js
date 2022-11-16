@@ -27,6 +27,7 @@ export default class DLCTable extends React.Component {
     constructor() {
         super();
         this.state = {
+            address: "",
             isConnected: false,
             bitCoin: 0,
             formattedDLCArray: []
@@ -43,6 +44,14 @@ export default class DLCTable extends React.Component {
         await this.setFormattedDLCArray()
             .then((formattedDLCArray) =>
                 this.setState({ formattedDLCArray: formattedDLCArray }));
+    }
+
+    async componentDidUpdate() {
+        eventBus.on("change-address", (data) =>
+            this.setState({
+                address: data.address
+            }));
+            console.log(this.state.address)
     }
 
     openDepositModal() {
@@ -78,7 +87,10 @@ export default class DLCTable extends React.Component {
                 })
                 .then((x) => x.json())
                 .then(({ msg }) => {
-                    dlcArray.push(msg)
+                    console.log(this.state.address)
+                    if (msg.owner.value == this.state.address) {
+                        dlcArray.push(msg)
+                    }
                 });
         }
         console.log(dlcArray)
@@ -168,42 +180,42 @@ export default class DLCTable extends React.Component {
                                                             <Td>
                                                                 {dlc.status === "not-ready" && (
                                                                     <Tooltip label="DLC is not ready yet">
-                                                                    <TimeIcon color="orange" />
+                                                                        <TimeIcon color="orange" />
                                                                     </Tooltip>
                                                                 )}
                                                                 {dlc.status === "unfunded" && (
                                                                     <Tooltip label="DLC is not yet funded">
-                                                                    <TimeIcon color="orange" />
+                                                                        <TimeIcon color="orange" />
                                                                     </Tooltip>
                                                                 )}
                                                                 {dlc.status === "pre-repaid" && (
                                                                     <Tooltip label="Waiting to be repaid">
-                                                                    <TimeIcon color="orange" />
+                                                                        <TimeIcon color="orange" />
                                                                     </Tooltip>
                                                                 )}
                                                                 {dlc.status === "pre-liquidated" && (
                                                                     <Tooltip label="Waiting to be liquidated">
-                                                                    <TimeIcon color="orange" />
+                                                                        <TimeIcon color="orange" />
                                                                     </Tooltip>
                                                                 )}
                                                                 {dlc.status === "ready" && (
                                                                     <Tooltip label="DLC is ready">
-                                                                    <InfoIcon color="orange" />
+                                                                        <InfoIcon color="orange" />
                                                                     </Tooltip>
                                                                 )}
                                                                 {dlc.status === "funded" && (
                                                                     <Tooltip label="DLC is funded">
-                                                                    <ArrowRightIcon color="orange" />
+                                                                        <ArrowRightIcon color="orange" />
                                                                     </Tooltip>
                                                                 )}
                                                                 {dlc.status === "liquidated" && (
                                                                     <Tooltip label="DLC is liquidated">
-                                                                    <UnlockIcon color="green" />
+                                                                        <UnlockIcon color="green" />
                                                                     </Tooltip>
                                                                 )}
                                                                 {dlc.status === "repaid" && (
                                                                     <Tooltip label="DLC is repaid">
-                                                                    <CheckCircleIcon color="green" />
+                                                                        <CheckCircleIcon color="green" />
                                                                     </Tooltip>
                                                                 )}
                                                             </Td>
@@ -247,7 +259,7 @@ export default class DLCTable extends React.Component {
                                                                         fontWeight="bold"
                                                                     ></Button>
                                                                 )}
-                                                                {dlc.status ===  "funded" && (
+                                                                {dlc.status === "funded" && (
                                                                     <VStack>
                                                                         <Button
                                                                             _hover={{

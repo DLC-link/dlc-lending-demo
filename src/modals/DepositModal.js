@@ -68,12 +68,11 @@ export default function DepositModal({ isOpen, closeModal }) {
       liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
       emergencyRefundTime: 5
     }
-    console.log("Contract:" + loanContract)
     return loanContract;
   };
 
   const sendLoanContract = async (loanContract, network) => {
-    // console.log(network)
+    console.log(network)
     openContractCall({
       network: network,
       anchorMode: 1,
