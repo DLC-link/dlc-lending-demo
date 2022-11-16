@@ -17,18 +17,16 @@ import {
   Flex,
   Text,
   Image,
-  Box,
   Table,
   Tr,
   Td,
-  Center,
   Tbody,
   TableContainer
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift } from "../utils";
-import { StacksMainnet, StacksMocknet, StacksTestnet } from "@stacks/network";
-import { bufferCVFromString, callReadOnlyFunction,cvToValue, uintCV } from "@stacks/transactions";
+import { customShiftValue, fixedTwoDecimalUnshift } from "../utils";
+import { StacksMocknet } from "@stacks/network";
+import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 
 export default function DepositModal({ isOpen, closeModal }) {
@@ -41,7 +39,7 @@ export default function DepositModal({ isOpen, closeModal }) {
   const [bitcoinInUSDAsNumber, setBitcoinInUSDAsNumber] = useState();
   const [USD, setUSD] = useState(0);
 
-  const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link" });
+  
 
   useEffect(() => {
     async function fetchData() {
@@ -72,10 +70,12 @@ export default function DepositModal({ isOpen, closeModal }) {
     return loanContract;
   };
 
-  const sendLoanContract = async (loanContract, network) => {
+  const sendLoanContract = (loanContract) => {
     // console.log(network)
+    const neetwork = new StacksMocknet({ url: "http://localhost:3999" });
+    console.log(neetwork)
     openContractCall({
-      network: network,
+      network: neetwork,
       anchorMode: 1,
       contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
       contractName: "sample-contract-loan-v0",
@@ -102,8 +102,8 @@ export default function DepositModal({ isOpen, closeModal }) {
     })
   }
 
-  const createAndSendLoanContract = async () => {
-    sendLoanContract(createLoanContract(), network);
+  const createAndSendLoanContract = () => {
+    sendLoanContract(createLoanContract());
   }
 
   const countCollateralToDebtRatio = () => {
