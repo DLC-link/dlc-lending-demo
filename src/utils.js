@@ -32,3 +32,7 @@ export const truncateAddress = (address) => {
   export function fixedTwoDecimalShift(value) {
     return customShiftValue(value, 2, true).toFixed(2);
   }
+
+  export function fixedTwoDecimalUnshift(value) {
+    return customShiftValue(value, 2, false);
+  }

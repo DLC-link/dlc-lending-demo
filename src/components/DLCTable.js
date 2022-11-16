@@ -98,12 +98,12 @@ export default class DLCTable extends React.Component {
         let formattedDLC = {
             dlcUUID: hex2ascii(dlc.dlc_uuid.value.value),
             status: dlc.status.value,
-            userID: dlc["user-id"].value,
+            owner: dlc.owner.value,
             liquidationFee: fixedTwoDecimalShift(dlc["liquidation-fee"].value) + " %",
             liquidationRatio: fixedTwoDecimalShift(dlc["liquidation-ratio"].value) + " %",
             vaultCollateral: customShiftValue(dlc["vault-collateral"].value, 8, true) + " BTC",
-            vaultLoan: fixedTwoDecimalShift(dlc["vault-loan"].value) + " $",
-            closingPrice: fixedTwoDecimalShift(dlc["closing-price"].value) + " $"
+            vaultLoan: "$ " + fixedTwoDecimalShift(dlc["vault-loan"].value),
+            closingPrice: "$ " + fixedTwoDecimalShift(dlc["closing-price"].value)
         }
         return formattedDLC;
     }
@@ -208,7 +208,7 @@ export default class DLCTable extends React.Component {
                                                                 )}
                                                             </Td>
                                                             <Td>{dlc.dlcUUID}</Td>
-                                                            <Td>{dlc.userID}</Td>
+                                                            <Td fontSize="2xs">{dlc.owner}</Td>
                                                             <Td>{dlc.vaultCollateral}</Td>
                                                             <Td>{dlc.vaultLoan}</Td>
                                                             <Td>{dlc.liquidationFee}</Td>

@@ -1,3 +1,4 @@
+import fetch from "node-fetch"
 import { StacksMainnet, StacksMocknet, StacksTestnet } from "@stacks/network";
 import { bufferCVFromString, callReadOnlyFunction,cvToValue } from "@stacks/transactions";
 
@@ -13,7 +14,7 @@ function txOptions(UUID) {
   return {
     contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
     contractName: "sample-contract-loan-v0",
-    functionName: "get-useraccount-by-uuid",
+    functionName: "get-loan-by-uuid",
     functionArgs: [
       bufferCVFromString(UUID),
     ],

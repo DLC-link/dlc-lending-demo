@@ -1,3 +1,4 @@
+import fetch from "node-fetch"
 
 const handler = async function () {
   const URLAPI = "http://stx-btc1.dlc.link:3999/extended/v1/tokens/nft/holdings?asset_identifiers=ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.dlc-manager-loan-v0::open-dlc&principal=ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.dlc-manager-loan-v0";

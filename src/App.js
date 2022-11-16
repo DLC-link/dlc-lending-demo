@@ -33,6 +33,7 @@ export default class App extends React.Component {
     eventBus.on("is-loading", (data) =>
       this.setState({ isLoading: data.isLoading })
     );
+    console.log(this.state)
   }
 
   onSelectWalletClose = () => {
