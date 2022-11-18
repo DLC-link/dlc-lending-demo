@@ -48,85 +48,117 @@ export default class Header extends React.Component {
     render() {
         return (
             <>
-                <Flex px="91px" py="15px" width="full" bgGradient="linear(to-r, background1, background2)" alignItems="flex-end" justifyContent="space-between">
-                    <Flex>
-                        <HStack spacing="15px">
-                            <Heading margin="8px">
-                                <Button as="a" href="https://www.dlc.link/"
-                                    _hover={{
-                                        background: "none"
-                                    }}
-                                    variant="ghost"
-                                    height="100px"
-                                >
-                                    <Image
-                                        src="/dlc.link_logo.png"
-                                        alt="DLC.Link Logo"
-                                        height="100px"
-                                    /></Button>
-                            </Heading>
-                            {!this.state.isConnected ? (
+                <Flex
+                    height="auto"
+                    marginTop={[5, 25]}
+                    marginBottom={[5, 25]}
+                    marginLeft={[1, 25]}
+                    marginRight={[1, 25]}
+                >
+                    <HStack
+                        spacing={[5, 55]}
+                        margin={5}
+                    >
+                        <Button as="a" href="https://www.dlc.link/"
+                            _hover={{
+                                background: "none"
+                            }}
+                            variant="ghost"
+                            height={[25, 65]}
+                        >
+                            <Image
+                                src="/dlc.link_logo.png"
+                                alt="DLC.Link Logo"
+                                height={[25, 65]}
+                                width={[25, 65]}
+                            />
+                        </Button>
+                        {!this.state.isConnected ? (
+                            <HStack>
                                 <Button
                                     _hover={{
-                                        background: "accent"
+                                        background: "secondary1"
                                     }}
+                                    shadow="dark-lg"
+                                    height={[25, 50]}
+                                    width={[125, 250]}
                                     bgGradient="linear(to-r, primary1, primary2)"
                                     onClick={this.openSelectWalletModal}
+                                >
+                                    <Text
+                                        color="white"
+                                        fontSize={[10, 15]}
+                                    >Connect Wallet
+                                    </Text>
+                                </Button>
+                            </HStack>
+                        ) : (
+                            <Button
+                                _hover={{
+                                    background: "accent",
+                                }}
+                                shadow="dark-lg"
+                                height={[25, 50]}
+                                width={[125, 250]}
+                                bgGradient="linear(to-r, primary1, primary2)"
+                                onClick={this.disconnect}
+                            >
+                                <Text
                                     color="white"
-                                    height="50px"
-                                    width="200px"
-                                >Connect Wallet</Button>
+                                    fontSize={[10, 15]}
+                                >Disconnect
+                                </Text>
+                            </Button>
+                        )}
+                        <Flex
+                            bgGradient="linear(to-d, secondary1, secondary2)"
+                            borderRadius="lg"
+                            justifyContent="center"
+                            height={[25, 50]}
+                            width={[100, 200]}
+                            padding="10px 10px"
+                        shadow="dark-lg">
+                            {this.state.isConnected ? (
+                                <HStack>
+                                    {this.state.walletType === "metamask" ? (
+                                        <Image
+                                            src="/mm_logo.png"
+                                            alt="Metamask Logo"
+                                            boxSize={[2, 6]}
+                                        />
+                                    ) : (
+                                        <Image
+                                            src="/h_logo.png"
+                                            alt="Hiro Wallet Logo"
+                                            boxSize={[2, 6]}
+                                        />
+                                    )}
+                                    <CheckCircleIcon
+                                        boxSize={[1, 3]}
+                                        color="secondary1"
+                                    />
+                                    <Text
+                                        color="white"
+                                        fontSize={[5, 10]}
+                                    >Account:{easyTruncateAddress(this.state.address)}
+                                    </Text>
+                                </HStack>
                             ) : (
-                                <Button
-                                    _hover={{
-                                        background: "accent"
-                                    }}
-                                    bgGradient="linear(to-r, primary1, primary2)"
-                                    onClick={this.disconnect}
-                                    color="white"
-                                    height="50px"
-                                    width="200px"
-                                >Disconnect</Button>
+                                <HStack>
+                                    <WarningIcon
+                                        boxSize={[1, 3]}
+                                        color="primary2" />
+                                    <Text
+                                        padding={3}
+                                        color="white"
+                                        fontSize={[5, 10]}
+                                    >Account: Not connected
+                                    </Text>
+                                </HStack>
                             )}
-                            <Flex 
-                            margin="15px" 
-                            justifyContent="center" 
-                            w="300px" 
-                            h="50px" 
-                            padding="10px 10px" 
-                            borderRadius='md' 
-                            background="secondary1">
-                                {this.state.isConnected ? (
-                                    <HStack margin="15px">
-                                        {this.state.walletType === "metamask" ? (
-                                            <Image
-                                                src="/mm_logo.png"
-                                                alt="Metamask Logo"
-                                                boxSize="15px"
-                                                borderRadius="3px"
-                                            />
-                                        ) : (
-                                            <Image
-                                                src="/h_logo.png"
-                                                alt="Hiro Wallet Logo"
-                                                boxSize="15px"
-                                                borderRadius="3px"
-                                            />
-                                        )}
-                                        <CheckCircleIcon color="green" />
-                                        <Text fontSize="sm" color="white">{`Account: ${easyTruncateAddress(this.state.address)}`}</Text>
-                                    </HStack>
-                                ) : (
-                                    <HStack margin="15px">
-                                        <WarningIcon color="#cd5700" />
-                                        <Text fontSize="sm" color="white">{`Account: Not connected`}</Text>
-                                    </HStack>
-                                )}
-                            </Flex>
-                        </HStack>
-                    </Flex>
+                        </Flex>
+                    </HStack>
                 </Flex>
-
             </>
         );
     }

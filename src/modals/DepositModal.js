@@ -17,18 +17,16 @@ import {
   Flex,
   Text,
   Image,
-  Box,
   Table,
   Tr,
   Td,
-  Center,
   Tbody,
   TableContainer
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift } from "../utils";
-import { StacksMainnet, StacksMocknet, StacksTestnet } from "@stacks/network";
-import { bufferCVFromString, callReadOnlyFunction,cvToValue, uintCV } from "@stacks/transactions";
+import { customShiftValue, fixedTwoDecimalUnshift } from "../utils";
+import { StacksMocknet } from "@stacks/network";
+import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 
 export default function DepositModal({ isOpen, closeModal }) {
@@ -41,7 +39,7 @@ export default function DepositModal({ isOpen, closeModal }) {
   const [bitcoinInUSDAsNumber, setBitcoinInUSDAsNumber] = useState();
   const [USD, setUSD] = useState(0);
 
-  const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link" });
+
 
   useEffect(() => {
     async function fetchData() {
@@ -71,7 +69,8 @@ export default function DepositModal({ isOpen, closeModal }) {
     return loanContract;
   };
 
-  const sendLoanContract = async (loanContract, network) => {
+  const sendLoanContract = (loanContract) => {
+    const network = new StacksMocknet({ url: "http://localhost:3999" });
     console.log(network)
     openContractCall({
       network: network,
@@ -81,12 +80,13 @@ export default function DepositModal({ isOpen, closeModal }) {
       functionName: "setup-loan",
       functionArgs: [
         uintCV(loanContract.vaultLoanAmount),
-        uintCV(loanContract.BTCDeposit) ,
+        uintCV(loanContract.BTCDeposit),
         uintCV(loanContract.liquidationRatio),
         uintCV(loanContract.liquidationFee),
         uintCV(loanContract.emergencyRefundTime)
       ],
       onFinish: (data) => {
+        closeModal();
         console.log("onFinish:", data);
         window
           .open(
@@ -101,12 +101,12 @@ export default function DepositModal({ isOpen, closeModal }) {
     })
   }
 
-  const createAndSendLoanContract = async () => {
-    sendLoanContract(createLoanContract(), network);
+  const createAndSendLoanContract = () => {
+    sendLoanContract(createLoanContract());
   }
 
   const countCollateralToDebtRatio = () => {
-    const collateralToDebtRatio = ((bitcoinInUSDAsNumber* collateral) / loan) * 100;
+    const collateralToDebtRatio = ((bitcoinInUSDAsNumber * collateral) / loan) * 100;
     setCollateralToDebtRatio(Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100)
   }
 
@@ -129,35 +129,70 @@ export default function DepositModal({ isOpen, closeModal }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={closeModal} isCentered>
+    <Modal
+      isOpen={isOpen}
+      onClose={closeModal}
+      isCentered>
       <ModalOverlay />
-      <ModalContent borderColor="black" color="white" width="500px">
+      <ModalContent
+        borderColor="black"
+        color="white"
+        width={350}>
         <VStack>
           <ModalHeader
             bgGradient="linear(to-r, primary1, primary2)"
-            bgClip="text">
-            Request Loan
+            bgClip="text"
+          >Request Loan
           </ModalHeader>
           <ModalCloseButton
             _focus={{
               boxShadow: "none"
             }}
           />
-          <ModalBody paddingBottom="1.5rem">
-            <FormControl isInvalid={isCollateralError} margin="15px" >
+          <ModalBody
+          >
+            <FormControl
+              isInvalid={isCollateralError}
+            >
               <FormLabel
-                margin="15px"
+                marginTop={25}
+                marginLeft={50}
+                marginRight={50}
                 bgGradient="linear(to-r, primary1, primary2)"
-                bgClip="text">
-                Collateral Amount
+                bgClip="text"
+              >Collateral Amount
               </FormLabel>
-              <HStack marginLeft="15px" spacing="15px" w="100%" >
+              {!isCollateralError ? (
+                <FormHelperText
+                  fontSize="x-small"
+                  marginTop={15}
+                  marginBottom={15}
+                  marginLeft={50}
+                >
+                  Enter the amount of Bitcoin you would like to deposit.
+                </FormHelperText>
+              ) : (
+                <FormErrorMessage
+                  fontSize="x-small"
+                  marginTop={15}
+                  marginBottom={15}
+                  marginLeft={50}
+                >
+                  Enter a valid amount of BTC
+                </FormErrorMessage>
+              )}
+              <HStack
+                marginLeft={50}
+                marginRight={50}
+                spacing={35}
+              >
                 <NumberInput>
                   <NumberInputField
+                    padding={15}
                     bgGradient="linear(to-r, primary1, primary2)"
                     bgClip="text"
                     value={collateral}
-                    width="300px"
+                    width={200}
                     onChange={handleCollateralChange} />
                 </NumberInput>
                 <Image
@@ -170,36 +205,53 @@ export default function DepositModal({ isOpen, closeModal }) {
               <Text
                 fontSize="x-small"
                 color="gray"
-                marginLeft="15px">
+                marginLeft={50}
+              >
                 ${USD} at 1 BTC = ${bitcoinInUSDAsString}
               </Text>
-              {!isCollateralError ? (
+            </FormControl>
+            <FormControl
+              isInvalid={isLoanError}
+            >
+              <FormLabel
+                marginTop={25}
+                marginLeft={50}
+                marginRight={50}
+                bgGradient="linear(to-r, primary1, primary2)"
+                bgClip="text"
+              >Loan Amount
+              </FormLabel>
+              {!isLoanError ? (
                 <FormHelperText
                   fontSize="x-small"
-                  marginLeft="15px">
-                  Enter the amount of Bitcoin you would like to deposit.
+                  marginTop={15}
+                  marginBottom={15}
+                  marginLeft={50}
+                >
+                  Enter the amount of USDC you would like to loan.
                 </FormHelperText>
               ) : (
                 <FormErrorMessage
                   fontSize="x-small"
-                  marginLeft="15px">
-                  Enter a valid amount of BTC
+                  marginTop={15}
+                  marginBottom={15}
+                  marginLeft={50}
+                >
+                  Enter a valid amount of USDC
                 </FormErrorMessage>
               )}
-            </FormControl>
-            <FormControl isInvalid={isLoanError} margin="15px">
-              <FormLabel
-                margin="15px"
-                bgGradient="linear(to-r, primary1, primary2)"
-                bgClip="text">Loan Amount
-              </FormLabel>
-              <HStack marginLeft="15px" spacing="15px" w="100%" >
+              <HStack
+                marginLeft={50}
+                marginRight={50}
+                spacing={35}
+              >
                 <NumberInput>
                   <NumberInputField
+                    padding={15}
                     bgGradient="linear(to-r, primary1, primary2)"
                     bgClip="text"
                     value={loan}
-                    width="300px"
+                    width={200}
                     onChange={handleLoanChange} />
                 </NumberInput>
                 <Image
@@ -209,19 +261,6 @@ export default function DepositModal({ isOpen, closeModal }) {
                   height={25}>
                 </Image>
               </HStack>
-              {!isLoanError ? (
-                <FormHelperText
-                  fontSize="x-small"
-                  marginLeft="15px">
-                  Enter the amount of USDC you would like to loan.
-                </FormHelperText>
-              ) : (
-                <FormErrorMessage
-                  fontSize="x-small"
-                  marginLeft="15px">
-                  Enter a valid amount of USDC
-                </FormErrorMessage>
-              )}
             </FormControl>
             <TableContainer margin="15px" width="350px">
               <Table >

@@ -1,6 +1,6 @@
 import React from "react";
 import eventBus from "../EventBus";
-import { CheckCircleIcon, InfoIcon, UnlockIcon, TimeIcon, ArrowRightIcon } from "@chakra-ui/icons";
+import { CheckCircleIcon, InfoIcon, UnlockIcon, TimeIcon, ArrowRightIcon, SpinnerIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import {
     VStack,
     Button,
@@ -16,46 +16,67 @@ import {
     TableCaption,
     TableContainer,
     Collapse,
-    AspectRatio,
     Tooltip,
+    IconButton,
+    SlideFade,
+    Container,
+    Box,
+    Grid,
+    SimpleGrid,
+    ScaleFade
 } from "@chakra-ui/react";
-import data from "../DLCData"
-import { customShiftValue, fixedTwoDecimalShift, hex2ascii } from "../utils";
+import { customShiftValue, fixedTwoDecimalShift, hex2ascii, easyTruncateAddress } from "../utils";
+import Card from "./Card";
+
 
 export default class DLCTable extends React.Component {
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
             address: "",
-            isConnected: false,
+            isConnected: this.props.isConnected,
             bitCoin: 0,
-            formattedDLCArray: []
+            formattedDLCArray: [],
+            isLoading: true,
+            logo_col_order: 2,
+            cart_col_order: 1
         };
     }
 
-    async componentDidMount() {
-        eventBus.on("account-connected", (data) =>
-            this.setState({ isConnected: data.isConnected })
-        );
-        eventBus.on("change-deposit", (data) =>
-            this.setState({ bitCoin: Number(this.state.bitCoin) + Number(data.deposit) })
-        );
-        await this.setFormattedDLCArray()
+
+    componentDidMount() {
+        this.setState({ address: this.props.address })
+        this.setFormattedDLCArray()
             .then((formattedDLCArray) =>
-                this.setState({ formattedDLCArray: formattedDLCArray }));
+                this.setState({ formattedDLCArray: formattedDLCArray }))
+            .then(() => this.setState({ isLoading: false }));
+        console.log(this.state)
+        if (window.innerWidth <= 760) {
+            this.setState({
+                logo_col_order: 1,
+                cart_col_order: 2,
+            })
+        }
     }
 
-    async componentDidUpdate() {
-        eventBus.on("change-address", (data) =>
-            this.setState({
-                address: data.address
-            }));
-            console.log(this.state.address)
+    componentDidUpdate(previousProps) {
+        if (previousProps.isConnected !== this.props.isConnected) {
+            this.setState({ isConnected: this.props.isConnected })
+        }
+        console.log(this.state)
     }
 
     openDepositModal() {
         eventBus.dispatch("is-deposit-modal-open", { isDepositOpen: true });
+    }
+
+    refreshDLCTable() {
+        this.setState({ isLoading: true })
+        this.setFormattedDLCArray()
+            .then((formattedDLCArray) =>
+                this.setState({ formattedDLCArray: formattedDLCArray }))
+            .then(() => this.setState({ isLoading: false }));
     }
 
     async setFormattedDLCArray() {
@@ -87,13 +108,11 @@ export default class DLCTable extends React.Component {
                 })
                 .then((x) => x.json())
                 .then(({ msg }) => {
-                    console.log(this.state.address)
                     if (msg.owner.value == this.state.address) {
                         dlcArray.push(msg)
                     }
                 });
         }
-        console.log(dlcArray)
         return dlcArray;
     }
 
@@ -132,178 +151,57 @@ export default class DLCTable extends React.Component {
         return (
             <>
                 <Collapse in={this.state.isConnected}>
-                    <Flex
-                        height="auto"
-                        width="full"
-                        py="50px"
+                    <VStack
+                        margin={25}
                         alignContent="center"
                         justifyContent="center"
-                        bgGradient="linear(to-r, background1, background2)">
-                        <VStack>
+                    >
+                        <HStack
+                            spacing={15}
+                        >
                             <Text
-                                fontSize="4xl"
+                                fontSize={[25, 50]}
                                 fontWeight="extrabold"
-                                bgGradient="linear(to-r, primary1, primary2)"
-                                bgClip='text'>DLCs
+                                color="white"
+                            >DLCs
                             </Text>
-                            <Flex
-                                height="auto"
-                                width="full"
-                                alignContent="center"
-                                justifyContent="center"
-                                padding="10px 10px"
-                                borderRadius="md"
-                                boxShadow="dark-lg"
-                                bg="white">
-                                <HStack>
-                                    <VStack>
-                                        <TableContainer>
-                                            <Table
-                                                variant='simple'>
-                                                <TableCaption>DLC List</TableCaption>
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>Status</Th>
-                                                        <Th>UUID</Th>
-                                                        <Th>User ID</Th>
-                                                        <Th>Vault Collateral</Th>
-                                                        <Th>Vault Loan</Th>
-                                                        <Th>Liquidation Fee</Th>
-                                                        <Th>Liquidation Ratio</Th>
-                                                        <Th>Closing Price</Th>
-                                                        <Th>Action</Th>
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                    {this.state.formattedDLCArray?.map((dlc) => (
-                                                        <Tr key={dlc.dlcUUID}>
-                                                            <Td>
-                                                                {dlc.status === "not-ready" && (
-                                                                    <Tooltip label="DLC is not ready yet">
-                                                                        <TimeIcon color="orange" />
-                                                                    </Tooltip>
-                                                                )}
-                                                                {dlc.status === "unfunded" && (
-                                                                    <Tooltip label="DLC is not yet funded">
-                                                                        <TimeIcon color="orange" />
-                                                                    </Tooltip>
-                                                                )}
-                                                                {dlc.status === "pre-repaid" && (
-                                                                    <Tooltip label="Waiting to be repaid">
-                                                                        <TimeIcon color="orange" />
-                                                                    </Tooltip>
-                                                                )}
-                                                                {dlc.status === "pre-liquidated" && (
-                                                                    <Tooltip label="Waiting to be liquidated">
-                                                                        <TimeIcon color="orange" />
-                                                                    </Tooltip>
-                                                                )}
-                                                                {dlc.status === "ready" && (
-                                                                    <Tooltip label="DLC is ready">
-                                                                        <InfoIcon color="orange" />
-                                                                    </Tooltip>
-                                                                )}
-                                                                {dlc.status === "funded" && (
-                                                                    <Tooltip label="DLC is funded">
-                                                                        <ArrowRightIcon color="orange" />
-                                                                    </Tooltip>
-                                                                )}
-                                                                {dlc.status === "liquidated" && (
-                                                                    <Tooltip label="DLC is liquidated">
-                                                                        <UnlockIcon color="green" />
-                                                                    </Tooltip>
-                                                                )}
-                                                                {dlc.status === "repaid" && (
-                                                                    <Tooltip label="DLC is repaid">
-                                                                        <CheckCircleIcon color="green" />
-                                                                    </Tooltip>
-                                                                )}
-                                                            </Td>
-                                                            <Td>{dlc.dlcUUID}</Td>
-                                                            <Td fontSize="2xs">{dlc.owner}</Td>
-                                                            <Td>{dlc.vaultCollateral}</Td>
-                                                            <Td>{dlc.vaultLoan}</Td>
-                                                            <Td>{dlc.liquidationFee}</Td>
-                                                            <Td>{dlc.liquidationRatio}</Td>
-                                                            <Td>{dlc.closingPrice}</Td>
-                                                            <Td>
-                                                                {dlc.status === "ready" && (
-                                                                    <Button
-                                                                        _hover={{
-                                                                            color: "white",
-                                                                            bg: "accent"
-                                                                        }}
-                                                                        background="white"
-                                                                        bgGradient="linear(to-r, primary1, primary2)"
-                                                                        bgClip="text"
-                                                                        width="100px"
-                                                                        shadow="2xl"
-                                                                        variant="outline"
-                                                                        fontSize="sm"
-                                                                        fontWeight="bold"
-                                                                    >SEND BTC</Button>
-                                                                )}
-                                                                {dlc.status === ("not-ready" || "pre-liquidated" || "pre-paid") && (
-                                                                    <Button
-                                                                        _hover={{
-                                                                            shadow: "none"
-                                                                        }}
-                                                                        isLoading
-                                                                        loadingText="PENDING"
-                                                                        background="white"
-                                                                        color="gray"
-                                                                        width="100px"
-                                                                        shadow="2xl"
-                                                                        variant="outline"
-                                                                        fontSize="sm"
-                                                                        fontWeight="bold"
-                                                                    ></Button>
-                                                                )}
-                                                                {dlc.status === "funded" && (
-                                                                    <VStack>
-                                                                        <Button
-                                                                            _hover={{
-                                                                                color: "white",
-                                                                                bg: "accent"
-                                                                            }}
-                                                                            background="white"
-                                                                            bgGradient="linear(to-r, primary1, primary2)"
-                                                                            bgClip="text"
-                                                                            width="100px"
-                                                                            shadow="2xl"
-                                                                            variant="outline"
-                                                                            fontSize="sm"
-                                                                            fontWeight="bold"
-                                                                            onClick={this.withdraw}
-                                                                        >WITHDRAW</Button>
-                                                                        <Button
-                                                                            _hover={{
-                                                                                color: "white",
-                                                                                bg: "accent"
-                                                                            }}
-                                                                            background="white"
-                                                                            bgGradient="linear(to-r, primary1, primary2)"
-                                                                            bgClip="text"
-                                                                            width="100px"
-                                                                            shadow="2xl"
-                                                                            variant="outline"
-                                                                            fontSize="sm"
-                                                                            fontWeight="bold"
-                                                                            onClick={this.liquidate}
-                                                                        >LIQUIDATE</Button>
-                                                                    </VStack>
-                                                                )}
-                                                            </Td>
-                                                        </Tr>
-                                                    ))}
-                                                </Tbody>
-                                            </Table>
-                                        </TableContainer>
-                                    </VStack>
-                                </HStack>
-                            </Flex>
-                        </VStack>
-                    </Flex>
+                            <IconButton
+                                _hover={{
+                                    background: "secondary1"
+                                }}
+                                isLoading={this.state.isLoading}
+                                variant="outline"
+                                onClick={() => this.refreshDLCTable()}
+                                color="white"
+                                borderRadius="full"
+                                width={[25, 35]}
+                                height={[25, 35]}
+                            >
+                                <RepeatClockIcon
+                                color="accent">
+                                </RepeatClockIcon>
+                            </IconButton>
+                        </HStack>
+                        <SimpleGrid
+                            columns={[1, 4]}
+                            spacing={[0, 15]}
+                        >
+                            {this.state.formattedDLCArray?.map((dlc) => (
+                                <ScaleFade in={!this.state.isLoading}>
+                                    <Card 
+                                        status={dlc.status}
+                                        dlcUUID={dlc.dlcUUID}
+                                        owner={dlc.owner}
+                                        vaultCollateral={dlc.vaultCollateral}
+                                        vaultLoan={dlc.vaultLoan}
+                                        liquidationFee={dlc.liquidationFee}
+                                        liquidationRatio={dlc.liquidationRatio}
+                                        closingPrice={dlc.closingPrice}
+                                    >
+                                    </Card>
+                                </ScaleFade>))}
+                        </SimpleGrid>
+                    </VStack>
                 </Collapse>
             </>
         );

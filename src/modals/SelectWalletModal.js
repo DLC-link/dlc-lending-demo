@@ -44,8 +44,11 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       },
       onFinish: () => {
         eventBus.dispatch("change-address", { address: userSession.loadUserData().profile.stxAddress.testnet })
+        console.log("am i here?")
         eventBus.dispatch("account-connected", { isConnected: true })
         eventBus.dispatch("wallet-type", { walletType: "hiro" })
+        eventBus.remove("change-address");
+        eventBus.remove("account-connected");
       },
       userSession,
     });
