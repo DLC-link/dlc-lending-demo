@@ -1,8 +1,48 @@
+/*global chrome*/
+
 import { Box, Flex, Text, Tooltip, VStack, Button, TableContainer, Tbody, Table, Tr, Td } from "@chakra-ui/react";
 import { CheckCircleIcon, InfoIcon, UnlockIcon, TimeIcon, ArrowRightIcon, SpinnerIcon, RepeatClockIcon } from "@chakra-ui/icons";
-import { easyTruncateAddress } from "../utils";
+import { easyTruncateAddress, customShiftValue } from "../utils";
+
 
 export default function Card(props) {
+
+    const sendOfferForSigning = (msg) => {
+        console.log(msg)
+        const extensionID = "niinmdkjgghdkkmlilpngkccihjmefin";
+        chrome.runtime.sendMessage(extensionID, { action: 'get-offer', data: msg }, {},
+            function (response) {
+                console.log(response)
+                if (!response.success) {
+                    console.log('error');
+                }
+                else {
+                    console.log('success')
+                }
+            });
+    }
+
+    const convertBTCToSatoshi = (collateralInBTC) => {
+        const collateralInSatoshi = customShiftValue(Number(collateralInBTC.substring(0, collateralInBTC.length -3)), 8, false);
+        return collateralInSatoshi;
+    }
+
+    const sendBTC = () => {
+        const collateralInSatoshi = convertBTCToSatoshi(props.vaultCollateral);
+        try {
+            fetch("/.netlify/functions/get-offer/?uuid=" + props.dlcUUID + "&collateral=" + collateralInSatoshi,
+                {
+                    headers: { accept: "Accept: application/json" },
+                })
+                .then((x) => x.json())
+                .then(({ msg }) => {
+                    sendOfferForSigning(msg);
+                })
+        } catch (error) {
+            console.log("ezitt?" + error)
+        }
+    }
+
     return (
         <Flex
             bgGradient="linear(to-d, secondary1, secondary2)"
@@ -191,6 +231,7 @@ export default function Card(props) {
                             variant="outline"
                             fontSize="sm"
                             fontWeight="bold"
+                            onClick={sendBTC}
                         >SEND BTC</Button>
                     )}
                     {props.status === ("not-ready" || "pre-liquidated" || "pre-paid") && (
