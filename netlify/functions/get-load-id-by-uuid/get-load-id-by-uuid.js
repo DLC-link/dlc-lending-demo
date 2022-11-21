@@ -1,8 +1,15 @@
 import fetch from "node-fetch"
 import { StacksMainnet, StacksMocknet, StacksTestnet } from "@stacks/network";
-import { bufferCVFromString, callReadOnlyFunction,cvToValue } from "@stacks/transactions";
+import { bufferCVFromString, callReadOnlyFunction,cvToValue, cvTo } from "@stacks/transactions";
 
 const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
+
+function toJson(data) {
+  if (data !== undefined) {
+      return JSON.stringify(data, (_, v) => typeof v === 'bigint' ? `${v}#bigint` : v)
+          .replace(/"(-?\d+)#bigint"/g, (_, a) => a);
+  }
+}
 
 function txOptions(UUID) {
   return {
@@ -21,10 +28,10 @@ const handler = async function (event, context) {
   const UUID = event.queryStringParameters.uuid;
   try {
     const response = await callReadOnlyFunction(txOptions(UUID))
-
+ console.log(response)
     return {
       statusCode: 200,
-      body: JSON.stringify({ msg: cvToValue(response.value) }),
+      body: JSON.stringify({ msg: toJson(cvToValue(response.value)) }),
     }
   } catch (error) {
     // output to netlify function log

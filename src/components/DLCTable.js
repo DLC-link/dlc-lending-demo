@@ -118,7 +118,7 @@ export default class DLCTable extends React.Component {
           <VStack margin={25} alignContent="center" justifyContent="center">
             <HStack spacing={15}>
               <Text fontSize={[25, 50]} fontWeight="extrabold" color="white">
-                DLCs
+                Loans
               </Text>
               <IconButton
                 _hover={{

@@ -45,17 +45,19 @@ export default function Card(props) {
   };
 
   const getLoanIDByUUID = async (UUID) => {
-    await fetch("/.netlify/functions/get-loan-id-by-uuid?uuid=" + UUID, {
+    let loanContractID = undefined;
+    await fetch("/.netlify/functions/get-load-id-by-uuid?uuid=" + UUID, {
       headers: { accept: "Accept: application/json" },
     })
       .then((x) => x.json())
       .then(({ msg }) => {
-        return msg;
+        loanContractID = msg;
       });
+      return loanContractID;
   };
 
   const repayLoanContract = async (UUID) => {
-    const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
+    const network = new StacksMocknet({ url: "http://localhost:3999" });
     const loanContractID = await getLoanIDByUUID(UUID);
     console.log(loanContractID);
     openContractCall({
@@ -80,16 +82,16 @@ export default function Card(props) {
     });
   };
 
-  const liquidateLoanContract = (UUID) => {
-    const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
-    const loanContractID = getLoanIDByUUID(UUID);
+  const liquidateLoanContract = async (UUID) => {
+    const network = new StacksMocknet({ url: "http://localhost:3999" });
+    const loanContractID = await getLoanIDByUUID(UUID);
     openContractCall({
       network: network,
       anchorMode: 1,
       contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
       contractName: "sample-contract-loan-v0",
       functionName: "liquidate-loan",
-      functionArgs: [uintCV(parseInt(loanContractID)), uintCV(2400000000000)],
+      functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
       onFinish: (data) => {
         console.log("onFinish:", data);
         window
