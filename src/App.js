@@ -2,12 +2,11 @@ import SelectWalletModal from "./modals/SelectWalletModal";
 import eventBus from "./EventBus";
 import DepositWithdraw from "./components/DepositWithdraw";
 import Header from "./components/Header";
-import Intro from "./components/Intro"
+import Intro from "./components/Intro";
 import React from "react";
 import DepositModal from "./modals/DepositModal";
-import Footer from "./components/Footer"
 import DLCTable from "./components/DLCTable";
-import { Flex, VStack, Box } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 
 export default class App extends React.Component {
   constructor() {
@@ -28,42 +27,54 @@ export default class App extends React.Component {
     eventBus.on("is-deposit-modal-open", (data) =>
       this.setState({ isDepositOpen: data.isDepositOpen })
     );
-  }
+  };
 
   componentDidUpdate = () => {
-    eventBus.on("account-connected", (data) =>
-      this.state.isConnected !== data.isConnected &&
-      this.setState({ isConnected: data.isConnected }),
+    eventBus.on(
+      "account-connected",
+      (data) =>
+        this.state.isConnected !== data.isConnected &&
+        this.setState({ isConnected: data.isConnected })
     );
-    eventBus.on("change-address", (data) =>
-      this.state.address !== data.address &&
-      this.setState({ address: data.address })
+    eventBus.on(
+      "change-address",
+      (data) =>
+        this.state.address !== data.address &&
+        this.setState({ address: data.address })
     );
-  }
-
+  };
 
   onSelectWalletClose = () => {
-    this.setState({ isSelectWalletOpen: false })
-  }
+    this.setState({ isSelectWalletOpen: false });
+  };
 
   onDepositClose = () => {
-    this.setState({ isDepositOpen: false })
-  }
+    this.setState({ isDepositOpen: false });
+  };
 
   render() {
     return (
       <>
-        <Box
-          height="auto"
-        >
+        <Box height="auto">
           <Header></Header>
-          <DepositModal isOpen={this.state.isDepositOpen} closeModal={this.onDepositClose} />
-          <SelectWalletModal isOpen={this.state.isSelectWalletOpen} closeModal={this.onSelectWalletClose} />
+          <DepositModal
+            isOpen={this.state.isDepositOpen}
+            closeModal={this.onDepositClose}
+          />
+          <SelectWalletModal
+            isOpen={this.state.isSelectWalletOpen}
+            closeModal={this.onSelectWalletClose}
+          />
           <Intro isConnected={this.state.isConnected}></Intro>
           {this.state.isConnected && (
             <>
-              <DepositWithdraw isConnected={this.state.isConnected}></DepositWithdraw>
-              <DLCTable isConnected={this.state.isConnected} address={this.state.address}></DLCTable>
+              <DepositWithdraw
+                isConnected={this.state.isConnected}
+              ></DepositWithdraw>
+              <DLCTable
+                isConnected={this.state.isConnected}
+                address={this.state.address}
+              ></DLCTable>
             </>
           )}
         </Box>

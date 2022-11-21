@@ -21,7 +21,7 @@ import {
   Tr,
   Td,
   Tbody,
-  TableContainer
+  TableContainer,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { customShiftValue, fixedTwoDecimalUnshift } from "../utils";
@@ -39,8 +39,6 @@ export default function DepositModal({ isOpen, closeModal }) {
   const [bitcoinInUSDAsNumber, setBitcoinInUSDAsNumber] = useState();
   const [USD, setUSD] = useState(0);
 
-
-
   useEffect(() => {
     async function fetchData() {
       await fetchBitcoinPrice();
@@ -48,15 +46,17 @@ export default function DepositModal({ isOpen, closeModal }) {
     fetchData();
     countUSD();
     countCollateralToDebtRatio();
-  }, [collateral, loan])
+  }, [collateral, loan]);
 
-  const handleCollateralChange = (collateral) => setCollateral(collateral.target.value);
+  const handleCollateralChange = (collateral) =>
+    setCollateral(collateral.target.value);
   const handleLoanChange = (loan) => setLoan(loan.target.value);
 
   const isCollateralError = collateral < 0 || collateral == undefined;
   const isLoanError = loan < 1 || loan == undefined;
   const isCollateralToDebtRatioError = collateralToDebtRatio < 140;
-  const isError = isLoanError || isCollateralError || isCollateralToDebtRatioError;
+  const isError =
+    isLoanError || isCollateralError || isCollateralToDebtRatioError;
 
   const createLoanContract = () => {
     let loanContract = {
@@ -64,14 +64,14 @@ export default function DepositModal({ isOpen, closeModal }) {
       BTCDeposit: customShiftValue(collateral, 8, false),
       liquidationRatio: fixedTwoDecimalUnshift(liquidationRatio),
       liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
-      emergencyRefundTime: 5
-    }
+      emergencyRefundTime: 5,
+    };
     return loanContract;
   };
 
   const sendLoanContract = (loanContract) => {
     const network = new StacksMocknet({ url: "http://localhost:3999" });
-    console.log(network)
+    console.log(network);
     openContractCall({
       network: network,
       anchorMode: 1,
@@ -83,7 +83,7 @@ export default function DepositModal({ isOpen, closeModal }) {
         uintCV(loanContract.BTCDeposit),
         uintCV(loanContract.liquidationRatio),
         uintCV(loanContract.liquidationFee),
-        uintCV(loanContract.emergencyRefundTime)
+        uintCV(loanContract.emergencyRefundTime),
       ],
       onFinish: (data) => {
         closeModal();
@@ -98,69 +98,63 @@ export default function DepositModal({ isOpen, closeModal }) {
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
       },
-    })
-  }
+    });
+  };
 
   const createAndSendLoanContract = () => {
     sendLoanContract(createLoanContract());
-  }
+  };
 
   const countCollateralToDebtRatio = () => {
-    const collateralToDebtRatio = ((bitcoinInUSDAsNumber * collateral) / loan) * 100;
-    setCollateralToDebtRatio(Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100)
-  }
+    const collateralToDebtRatio =
+      ((bitcoinInUSDAsNumber * collateral) / loan) * 100;
+    setCollateralToDebtRatio(
+      Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100
+    );
+  };
 
   const countUSD = () => {
     setUSD(new Intl.NumberFormat().format(bitcoinInUSDAsNumber * collateral));
-  }
+  };
 
   const fetchBitcoinPrice = async () => {
-    await fetch(
-      "/.netlify/functions/get-bitcoin-price",
-      {
-        headers: { accept: "Accept: application/json" },
-      })
+    await fetch("/.netlify/functions/get-bitcoin-price", {
+      headers: { accept: "Accept: application/json" },
+    })
       .then((x) => x.json())
       .then(({ msg }) => {
         const bitcoinValue = Number(msg.bpi.USD.rate.replace(/[^0-9.-]+/g, ""));
         setBitcoinInUSDAsNumber(bitcoinValue);
         setBitcoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
       });
-  }
+  };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={closeModal}
-      isCentered>
+    <Modal isOpen={isOpen} onClose={closeModal} isCentered>
       <ModalOverlay />
-      <ModalContent
-        borderColor="black"
-        color="white"
-        width={350}>
+      <ModalContent borderColor="black" color="white" width={350}>
         <VStack>
           <ModalHeader
             bgGradient="linear(to-r, primary1, primary2)"
             bgClip="text"
-          >Request Loan
+          >
+            Request Loan
           </ModalHeader>
           <ModalCloseButton
             _focus={{
-              boxShadow: "none"
+              boxShadow: "none",
             }}
           />
-          <ModalBody
-          >
-            <FormControl
-              isInvalid={isCollateralError}
-            >
+          <ModalBody>
+            <FormControl isInvalid={isCollateralError}>
               <FormLabel
                 marginTop={25}
                 marginLeft={50}
                 marginRight={50}
                 bgGradient="linear(to-r, primary1, primary2)"
                 bgClip="text"
-              >Collateral Amount
+              >
+                Collateral Amount
               </FormLabel>
               {!isCollateralError ? (
                 <FormHelperText
@@ -181,11 +175,7 @@ export default function DepositModal({ isOpen, closeModal }) {
                   Enter a valid amount of BTC
                 </FormErrorMessage>
               )}
-              <HStack
-                marginLeft={50}
-                marginRight={50}
-                spacing={35}
-              >
+              <HStack marginLeft={50} marginRight={50} spacing={35}>
                 <NumberInput>
                   <NumberInputField
                     padding={15}
@@ -193,33 +183,29 @@ export default function DepositModal({ isOpen, closeModal }) {
                     bgClip="text"
                     value={collateral}
                     width={200}
-                    onChange={handleCollateralChange} />
+                    onChange={handleCollateralChange}
+                  />
                 </NumberInput>
                 <Image
                   src="/btc_logo.png"
                   alt="Bitcoin Logo"
                   width={25}
-                  height={25}>
-                </Image>
+                  height={25}
+                ></Image>
               </HStack>
-              <Text
-                fontSize="x-small"
-                color="gray"
-                marginLeft={50}
-              >
+              <Text fontSize="x-small" color="gray" marginLeft={50}>
                 ${USD} at 1 BTC = ${bitcoinInUSDAsString}
               </Text>
             </FormControl>
-            <FormControl
-              isInvalid={isLoanError}
-            >
+            <FormControl isInvalid={isLoanError}>
               <FormLabel
                 marginTop={25}
                 marginLeft={50}
                 marginRight={50}
                 bgGradient="linear(to-r, primary1, primary2)"
                 bgClip="text"
-              >Loan Amount
+              >
+                Loan Amount
               </FormLabel>
               {!isLoanError ? (
                 <FormHelperText
@@ -240,11 +226,7 @@ export default function DepositModal({ isOpen, closeModal }) {
                   Enter a valid amount of USDC
                 </FormErrorMessage>
               )}
-              <HStack
-                marginLeft={50}
-                marginRight={50}
-                spacing={35}
-              >
+              <HStack marginLeft={50} marginRight={50} spacing={35}>
                 <NumberInput>
                   <NumberInputField
                     padding={15}
@@ -252,59 +234,47 @@ export default function DepositModal({ isOpen, closeModal }) {
                     bgClip="text"
                     value={loan}
                     width={200}
-                    onChange={handleLoanChange} />
+                    onChange={handleLoanChange}
+                  />
                 </NumberInput>
                 <Image
                   src="/usdc_logo.png"
                   alt="USD Coin Logo"
                   width={25}
-                  height={25}>
-                </Image>
+                  height={25}
+                ></Image>
               </HStack>
             </FormControl>
             <TableContainer margin="15px" width="350px">
-              <Table >
+              <Table>
                 <Tbody>
                   <Tr>
-                    <Td
-                      fontSize="sm"
-                      color="gray">
+                    <Td fontSize="sm" color="gray">
                       Collateral to debt ratio:
                     </Td>
                     {!isCollateralToDebtRatioError ? (
-                      <Td
-                        fontSize="sm"
-                        color="green">
+                      <Td fontSize="sm" color="green">
                         {collateralToDebtRatio}%
                       </Td>
                     ) : (
-                      <Td
-                        fontSize="sm"
-                        color="red">
+                      <Td fontSize="sm" color="red">
                         {collateralToDebtRatio}%
-                      </Td>)}
+                      </Td>
+                    )}
                   </Tr>
                   <Tr>
-                    <Td
-                      fontSize="sm"
-                      color="gray">
+                    <Td fontSize="sm" color="gray">
                       Liquidation ratio:
                     </Td>
-                    <Td
-                      fontSize="sm"
-                      color="gray">
+                    <Td fontSize="sm" color="gray">
                       {liquidationRatio}%
                     </Td>
                   </Tr>
                   <Tr>
-                    <Td
-                      fontSize="sm"
-                      color="gray">
+                    <Td fontSize="sm" color="gray">
                       Liquidation fee:
                     </Td>
-                    <Td
-                      fontSize="sm"
-                      color="gray">
+                    <Td fontSize="sm" color="gray">
                       {liquidationFee}%
                     </Td>
                   </Tr>
@@ -315,7 +285,7 @@ export default function DepositModal({ isOpen, closeModal }) {
               <Button
                 _hover={{
                   color: "white",
-                  bg: "accent"
+                  bg: "accent",
                 }}
                 isDisabled={isError}
                 background="white"
@@ -326,13 +296,15 @@ export default function DepositModal({ isOpen, closeModal }) {
                 variant="outline"
                 fontSize="sm"
                 fontWeight="bold"
-                type="submit" onClick={createAndSendLoanContract}>
+                type="submit"
+                onClick={createAndSendLoanContract}
+              >
                 Request Loan
               </Button>
             </Flex>
           </ModalBody>
         </VStack>
       </ModalContent>
-    </Modal >
+    </Modal>
   );
 }

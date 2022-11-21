@@ -11,12 +11,11 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { Image } from "@chakra-ui/react";
-import eventBus from "../EventBus"
+import eventBus from "../EventBus";
 import { userSession } from "../hiroWalletUserSession";
 import { showConnect } from "@stacks/connect";
 
 export default function SelectWalletModal({ isOpen, closeModal }) {
-
   async function requestMetaMaskAccount() {
     try {
       const { ethereum } = window;
@@ -26,11 +25,11 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       }
       const accounts = await ethereum.request({
         method: "eth_requestAccounts",
-      })
+      });
       console.log("Connected", accounts[0]);
-      eventBus.dispatch("change-address", { address: accounts[0] })
-      eventBus.dispatch("account-connected", { isConnected: true })
-      eventBus.dispatch("wallet-type", { walletType: "metamask" })
+      eventBus.dispatch("change-address", { address: accounts[0] });
+      eventBus.dispatch("account-connected", { isConnected: true });
+      eventBus.dispatch("wallet-type", { walletType: "metamask" });
     } catch (error) {
       console.log(error);
     }
@@ -43,10 +42,11 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
         icon: window.location.origin + "/dlc.link_logo.png",
       },
       onFinish: () => {
-        eventBus.dispatch("change-address", { address: userSession.loadUserData().profile.stxAddress.testnet })
-        console.log("am i here?")
-        eventBus.dispatch("account-connected", { isConnected: true })
-        eventBus.dispatch("wallet-type", { walletType: "hiro" })
+        eventBus.dispatch("change-address", {
+          address: userSession.loadUserData().profile.stxAddress.testnet,
+        });
+        eventBus.dispatch("account-connected", { isConnected: true });
+        eventBus.dispatch("wallet-type", { walletType: "hiro" });
         eventBus.remove("change-address");
         eventBus.remove("account-connected");
       },
@@ -60,20 +60,23 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       <ModalContent borderColor="black" color="white" w="300px">
         <ModalHeader
           bgGradient="linear(to-r, primary1, primary2)"
-          bgClip="text">Select Wallet</ModalHeader>
+          bgClip="text"
+        >
+          Select Wallet
+        </ModalHeader>
         <ModalCloseButton
           _focus={{
-            boxShadow: "none"
+            boxShadow: "none",
           }}
           bgGradient="linear(to-r, primary1, primary2)"
           borderRadius="md"
         />
         <ModalBody paddingBottom="1.5rem">
-          <VStack >
+          <VStack>
             <Button
               _hover={{
                 color: "white",
-                bg: "accent"
+                bg: "accent",
               }}
               background="white"
               bgGradient="linear(to-r, primary1, primary2)"
@@ -102,7 +105,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
             <Button
               _hover={{
                 color: "white",
-                bg: "accent"
+                bg: "accent",
               }}
               background="white"
               bgGradient="linear(to-r, primary1, primary2)"
@@ -131,6 +134,6 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
           </VStack>
         </ModalBody>
       </ModalContent>
-    </Modal >
+    </Modal>
   );
 }

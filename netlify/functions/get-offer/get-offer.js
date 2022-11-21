@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 
-const WALLET_DOMAIN = "https://dev-oracle.dlc.link/wallet";
+const WALLET_DOMAIN = "http://oracle.dlc.link:8085";
 
 const handler = async function (event, context) {
   if (!context.clientContext && !context.clientContext.identity) {
@@ -23,6 +23,7 @@ const handler = async function (event, context) {
       body: JSON.stringify({
         "uuid": uuid,
         "acceptCollateral": parseInt(collateral),
+        "offerCollateral": parseInt(collateral),
         "totalOutcomes": 1
       })
     })
