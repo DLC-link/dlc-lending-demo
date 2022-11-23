@@ -26,22 +26,31 @@ import { openContractCall } from "@stacks/connect";
 import { type } from "@testing-library/user-event/dist/type";
 
 export default function Card(props) {
-  const sendOfferForSigning = (msg) => {
+  const sendOfferForSigning = async (msg) => {
     console.log(msg);
-    const extensionID = "niinmdkjgghdkkmlilpngkccihjmefin";
-    chrome.runtime.sendMessage(
-      extensionID,
-      { action: "get-offer", data: msg },
-      {},
-      function (response) {
-        console.log(response);
-        if (!response.success) {
-          console.log("error");
-        } else {
-          console.log("success");
+    let success = false;
+
+    const extensionIDs = [
+      "gjjgfnpmfpealbpggmhfafcddjiopbpa",
+      "kmidoigmjbbecngmenanflcogbjojlhf",
+      "niinmdkjgghdkkmlilpngkccihjmefin",
+    ];
+
+    for (let i = 0; success !== true; i++) {
+      chrome.runtime.sendMessage(
+        extensionIDs[i],
+        { action: "get-offer", data: msg },
+        {},
+        function (response) {
+          if (response.success == true) {
+            success = true;
+            console.log(response);
+          } else {
+            console.log(response);
+          }
         }
-      }
-    );
+      );
+    }
   };
 
   const getLoanIDByUUID = async (UUID) => {
@@ -53,7 +62,7 @@ export default function Card(props) {
       .then(({ msg }) => {
         loanContractID = msg;
       });
-      return loanContractID;
+    return loanContractID;
   };
 
   const repayLoanContract = async (UUID) => {
