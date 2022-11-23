@@ -27,8 +27,6 @@ import { type } from "@testing-library/user-event/dist/type";
 
 export default function Card(props) {
   const sendOfferForSigning = async (msg) => {
-    console.log(msg);
-    let success = false;
 
     const extensionIDs = [
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
@@ -36,17 +34,16 @@ export default function Card(props) {
       "niinmdkjgghdkkmlilpngkccihjmefin",
     ];
 
-    for (let i = 0; success !== true; i++) {
+    for (let i = 0; i < extensionIDs.length; i++) {
       chrome.runtime.sendMessage(
         extensionIDs[i],
         { action: "get-offer", data: msg },
         {},
         function (response) {
-          if (response.success == true) {
-            success = true;
-            console.log(response);
+          if (chrome.runtime.lastError) {
+            console.log("Failure: " + chrome.runtime.lastError.message);
           } else {
-            console.log(response);
+            console.log("Success: Found receiving end.");
           }
         }
       );
@@ -142,7 +139,7 @@ export default function Card(props) {
           sendOfferForSigning(msg);
         });
     } catch (error) {
-      console.log("ezitt?" + error);
+      console.log(error);
     }
   };
 
