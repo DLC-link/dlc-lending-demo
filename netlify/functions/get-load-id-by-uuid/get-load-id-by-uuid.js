@@ -11,23 +11,24 @@ function toJson(data) {
   }
 }
 
-function txOptions(UUID) {
+function txOptions(UUID, creator) {
   return {
-    contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+    contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
     contractName: "sample-contract-loan-v0",
     functionName: "get-loan-id-by-uuid",
     functionArgs: [
       bufferCVFromString(UUID),
     ],
-    senderAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+    senderAddress: creator,
     network,
   };
 }
 
 const handler = async function (event, context) {
   const UUID = event.queryStringParameters.uuid;
+  const creator = event.queryStringParameters.creator;
   try {
-    const response = await callReadOnlyFunction(txOptions(UUID))
+    const response = await callReadOnlyFunction(txOptions(UUID, creator))
  console.log(response)
     return {
       statusCode: 200,

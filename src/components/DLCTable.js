@@ -12,15 +12,16 @@ import {
 } from "@chakra-ui/react";
 import { customShiftValue, fixedTwoDecimalShift, hex2ascii } from "../utils";
 import Card from "./Card";
+import { cvToHex, addressToString, bufferCV } from "@stacks/transactions";
+import { bytesToUtf8 } from "micro-stacks/common";
 
 export default class DLCTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      address: "",
       isConnected: this.props.isConnected,
       bitCoinValue: 0,
-      formattedDLCArray: [],
+      loans: [],
       isLoading: true,
     };
   }
@@ -28,10 +29,8 @@ export default class DLCTable extends React.Component {
   async componentDidMount() {
     this.fetchBitcoinValue();
     this.setState({ address: this.props.address });
-    this.setFormattedDLCArray()
-      .then((formattedDLCArray) =>
-        this.setState({ formattedDLCArray: formattedDLCArray })
-      )
+    this.setLoans()
+      .then((dlcs) => this.setState({ loans: dlcs }))
       .then(() => this.setState({ isLoading: false }))
       .then(() => eventBus.dispatch("setLoadingState", false));
   }
@@ -40,6 +39,7 @@ export default class DLCTable extends React.Component {
     if (previousProps.isConnected !== this.props.isConnected) {
       this.setState({ isConnected: this.props.isConnected });
     }
+    console.log(this.state);
   }
 
   openDepositModal() {
@@ -49,7 +49,7 @@ export default class DLCTable extends React.Component {
   refreshDLCTable() {
     this.setState({ isLoading: true });
     eventBus.dispatch("setLoadingState", false);
-    this.setFormattedDLCArray()
+    this.setLoans()
       .then((formattedDLCArray) =>
         this.setState({ formattedDLCArray: formattedDLCArray })
       )
@@ -57,38 +57,22 @@ export default class DLCTable extends React.Component {
       .then(() => eventBus.dispatch("setLoadingState", false));
   }
 
-  async setFormattedDLCArray() {
-    return this.formatAllDLC(await this.fetchAllDLC());
-  }
+  setLoans = async () => {
+    const dlcs = await this.fetchAllDLC();
+    return dlcs;
+  };
 
-  async fetchAllUUID() {
-    let uuidArray = [];
-    await fetch("/.netlify/functions/get-all-open-dlc", {
+  fetchAllDLC = async () => {
+    let dlcArray = undefined;
+    await fetch("/.netlify/functions/get-dlc?creator=" + this.props.address, {
       headers: { accept: "Accept: application/json" },
     })
       .then((x) => x.json())
       .then(({ msg }) => {
-        uuidArray = msg;
+        dlcArray = msg;
       });
-    return uuidArray;
-  }
-
-  async fetchAllDLC() {
-    const dlcArray = [];
-    const uuidArray = await this.fetchAllUUID();
-    for (const uuid of uuidArray) {
-      await fetch("/.netlify/functions/get-dlc?uuid=" + uuid, {
-        headers: { accept: "Accept: application/json" },
-      })
-        .then((x) => x.json())
-        .then(({ msg }) => {
-          if (msg.owner.value == this.state.address) {
-            dlcArray.push(msg);
-          }
-        });
-    }
     return dlcArray;
-  }
+  };
 
   fetchBitcoinValue = async () => {
     await fetch("/.netlify/functions/get-bitcoin-price", {
@@ -101,31 +85,6 @@ export default class DLCTable extends React.Component {
         });
       });
   };
-
-  formatAllDLC(dlcArray) {
-    const formattedDLCArray = [];
-    for (const dlc of dlcArray) {
-      const formattedDLC = this.formatDLC(dlc);
-      formattedDLCArray.push(formattedDLC);
-    }
-    return formattedDLCArray;
-  }
-
-  formatDLC(dlc) {
-    let formattedDLC = {
-      dlcUUID: hex2ascii(dlc.dlc_uuid.value.value),
-      status: dlc.status.value,
-      owner: dlc.owner.value,
-      liquidationFee: fixedTwoDecimalShift(dlc["liquidation-fee"].value) + " %",
-      liquidationRatio:
-        fixedTwoDecimalShift(dlc["liquidation-ratio"].value) + " %",
-      vaultCollateral:
-        customShiftValue(dlc["vault-collateral"].value, 8, true) + " BTC",
-      vaultLoan: "$ " + fixedTwoDecimalShift(dlc["vault-loan"].value),
-      closingPrice: "$ " + fixedTwoDecimalShift(dlc["closing-price"].value),
-    };
-    return formattedDLC;
-  }
 
   render() {
     return (
@@ -155,6 +114,7 @@ export default class DLCTable extends React.Component {
               {this.state.formattedDLCArray?.map((dlc) => (
                 <ScaleFade in={!this.state.isLoading} key={dlc.dlcUUID}>
                   <Card
+                    creator={this.props.address}
                     bitCoinValue={this.state.bitCoinValue}
                     status={dlc.status}
                     dlcUUID={dlc.dlcUUID}

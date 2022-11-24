@@ -22,13 +22,14 @@ import {
 import { easyTruncateAddress, customShiftValue, asciiToHex } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV, bufferCVFromString } from "@stacks/transactions";
+import { cvToHex, addressToString, bufferCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { useEffect } from "react";
 import eventBus from "../EventBus";
 
 export default function Card(props) {
-
   useEffect(() => {
+    console.log(props)
     if (props.status === "funded") {
       eventBus.dispatch("changeDepositAmount", props.vaultCollateral);
     }
@@ -66,9 +67,15 @@ export default function Card(props) {
 
   const getLoanIDByUUID = async (UUID) => {
     let loanContractID = undefined;
-    await fetch("/.netlify/functions/get-load-id-by-uuid?uuid=" + UUID, {
-      headers: { accept: "Accept: application/json" },
-    })
+    await fetch(
+      "/.netlify/functions/get-load-id-by-uuid?uuid=" +
+        UUID +
+        "&creator=" +
+        this.props.creator,
+      {
+        headers: { accept: "Accept: application/json" },
+      }
+    )
       .then((x) => x.json())
       .then(({ msg }) => {
         loanContractID = msg;
@@ -83,7 +90,7 @@ export default function Card(props) {
     openContractCall({
       network: network,
       anchorMode: 1,
-      contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+      contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
       contractName: "sample-contract-loan-v0",
       functionName: "repay-loan",
       functionArgs: [uintCV(parseInt(loanContractID))],
@@ -108,7 +115,7 @@ export default function Card(props) {
     openContractCall({
       network: network,
       anchorMode: 1,
-      contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+      contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
       contractName: "sample-contract-loan-v0",
       functionName: "liquidate-loan",
       functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
