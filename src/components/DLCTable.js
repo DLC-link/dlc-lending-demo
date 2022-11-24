@@ -19,19 +19,21 @@ export default class DLCTable extends React.Component {
     this.state = {
       address: "",
       isConnected: this.props.isConnected,
-      bitCoin: 0,
+      bitCoinValue: 0,
       formattedDLCArray: [],
       isLoading: true,
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    this.fetchBitcoinValue();
     this.setState({ address: this.props.address });
     this.setFormattedDLCArray()
       .then((formattedDLCArray) =>
         this.setState({ formattedDLCArray: formattedDLCArray })
       )
-      .then(() => this.setState({ isLoading: false }));
+      .then(() => this.setState({ isLoading: false }))
+      .then(() => eventBus.dispatch("setLoadingState", false));
   }
 
   componentDidUpdate(previousProps) {
@@ -46,11 +48,13 @@ export default class DLCTable extends React.Component {
 
   refreshDLCTable() {
     this.setState({ isLoading: true });
+    eventBus.dispatch("setLoadingState", false);
     this.setFormattedDLCArray()
       .then((formattedDLCArray) =>
         this.setState({ formattedDLCArray: formattedDLCArray })
       )
-      .then(() => this.setState({ isLoading: false }));
+      .then(() => this.setState({ isLoading: false }))
+      .then(() => eventBus.dispatch("setLoadingState", false));
   }
 
   async setFormattedDLCArray() {
@@ -85,6 +89,18 @@ export default class DLCTable extends React.Component {
     }
     return dlcArray;
   }
+
+  fetchBitcoinValue = async () => {
+    await fetch("/.netlify/functions/get-bitcoin-price", {
+      headers: { accept: "Accept: application/json" },
+    })
+      .then((x) => x.json())
+      .then(({ msg }) => {
+        this.setState({
+          bitCoinValue: Number(msg.bpi.USD.rate.replace(/[^0-9.-]+/g, "")),
+        });
+      });
+  };
 
   formatAllDLC(dlcArray) {
     const formattedDLCArray = [];
@@ -139,6 +155,7 @@ export default class DLCTable extends React.Component {
               {this.state.formattedDLCArray?.map((dlc) => (
                 <ScaleFade in={!this.state.isLoading} key={dlc.dlcUUID}>
                   <Card
+                    bitCoinValue={this.state.bitCoinValue}
                     status={dlc.status}
                     dlcUUID={dlc.dlcUUID}
                     owner={dlc.owner}

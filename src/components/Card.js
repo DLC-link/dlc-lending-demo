@@ -23,11 +23,18 @@ import { easyTruncateAddress, customShiftValue, asciiToHex } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV, bufferCVFromString } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
-import { type } from "@testing-library/user-event/dist/type";
+import { useEffect } from "react";
+import eventBus from "../EventBus";
 
 export default function Card(props) {
-  const sendOfferForSigning = async (msg) => {
 
+  useEffect(() => {
+    if (props.status === "funded") {
+      eventBus.dispatch("changeDepositAmount", props.vaultCollateral);
+    }
+  }, []);
+
+  const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
       "kmidoigmjbbecngmenanflcogbjojlhf",
@@ -48,6 +55,13 @@ export default function Card(props) {
         }
       );
     }
+  };
+
+  const countCollateralToDebtRatio = (bitCoinValue, collateral, loan) => {
+    const collateralToDebtRatio = ((bitCoinValue * collateral) / loan) * 100;
+    const roundedCollateralToDebtRatio =
+      Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100;
+    return roundedCollateralToDebtRatio;
   };
 
   const getLoanIDByUUID = async (UUID) => {
@@ -323,22 +337,28 @@ export default function Card(props) {
               >
                 WITHDRAW
               </Button>
-              <Button
-                _hover={{
-                  color: "white",
-                  bg: "secondary1",
-                }}
-                margin={15}
-                color="accent"
-                width={100}
-                shadow="2xl"
-                variant="outline"
-                fontSize="sm"
-                fontWeight="bold"
-                onClick={() => liquidateLoanContract(props.dlcUUID)}
-              >
-                LIQUIDATE
-              </Button>
+              {countCollateralToDebtRatio(
+                props.bitCoinValue,
+                props.vaultCollateral,
+                props.vaultLoan
+              ) < 140 && (
+                <Button
+                  _hover={{
+                    color: "white",
+                    bg: "secondary1",
+                  }}
+                  margin={15}
+                  color="accent"
+                  width={100}
+                  shadow="2xl"
+                  variant="outline"
+                  fontSize="sm"
+                  fontWeight="bold"
+                  onClick={() => liquidateLoanContract(props.dlcUUID)}
+                >
+                  LIQUIDATE
+                </Button>
+              )}
             </VStack>
           )}
           {props.status === ("not-ready" || "pre-liquidated" || "pre-paid") && (
