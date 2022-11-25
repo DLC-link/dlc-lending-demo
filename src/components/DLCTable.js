@@ -116,15 +116,18 @@ export default class DLCTable extends React.Component {
               </IconButton>
             </HStack>
             <ScaleFade in={!this.state.isLoading}>
-              {this.state.loans?.map((loan) => (
-                <SimpleGrid columns={[1, 4]} spacing={[0, 15]} key={loan.raw.dlcUUID}>
+              <SimpleGrid
+                columns={[1, 4]}
+                spacing={[0, 15]}
+              >
+                {this.state.loans?.map((loan) => (
                   <Card
                     dlc={loan}
                     creator={this.props.address}
                     bitCoinValue={this.state.bitCoinValue}
                   ></Card>
-                </SimpleGrid>
-              ))}
+                ))}
+              </SimpleGrid>
             </ScaleFade>
           </VStack>
         </Collapse>

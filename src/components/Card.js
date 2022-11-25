@@ -23,6 +23,7 @@ import { easyTruncateAddress } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
+import { customShiftValue, fixedTwoDecimalShift } from "../utils";
 
 export default function Card(props) {
 
@@ -50,9 +51,10 @@ export default function Card(props) {
   };
 
   const countCollateralToDebtRatio = (bitCoinValue, collateral, loan) => {
-    const collateralToDebtRatio = ((bitCoinValue * collateral) / loan) * 100;
+    const collateralToDebtRatio = ((bitCoinValue * customShiftValue(collateral, 8, true)) / loan) * 100;
     const roundedCollateralToDebtRatio =
       Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100;
+      console.log(roundedCollateralToDebtRatio)
     return roundedCollateralToDebtRatio;
   };
 
@@ -284,7 +286,7 @@ export default function Card(props) {
                     </Text>
                   </Td>
                   <Td>
-                    <Text fontSize={12} color="white">
+                    <Text fontSize={8} color="white">
                       {props.dlc.formatted.formattedClosingPrice}
                     </Text>
                   </Td>

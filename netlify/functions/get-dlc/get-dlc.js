@@ -34,11 +34,15 @@ function formatDLC(dlc) {
     liquidationRatio: toJson(dlcData["liquidation-ratio"].value),
     vaultCollateral: toJson(dlcData["vault-collateral"].value),
     vaultLoan: toJson(dlcData["vault-loan"].value),
-    closingPrice: dlcData["closing-price"].value,
+    ...(dlcData["closing-price"].hasOwnProperty("value") && {
+      closingPrice: Number(dlcData["closing-price"].value.value),
+    }),
     ...(dlcData.dlc_uuid.hasOwnProperty("value") && {
       dlcUUID: bytesToUtf8(dlcData.dlc_uuid.value.buffer),
     }),
   };
+
+  console.log(rawData.closingPrice);
 
   const loan = {
     raw: rawData,
@@ -50,8 +54,11 @@ function formatDLC(dlc) {
       formattedVaultCollateral:
         customShiftValue(rawData.vaultCollateral, 8, true) + " BTC",
       formattedVaultLoan: "$ " + fixedTwoDecimalShift(rawData.vaultLoan),
-      ...(rawData.closingPrice !== undefined && { formattedClosingPrice: "$ " + fixedTwoDecimalShift(rawData.closingPrice) })
-    }
+      ...(rawData.hasOwnProperty("closingPrice") && {
+        formattedClosingPrice:
+          "$ " + fixedTwoDecimalShift(rawData.closingPrice),
+      }),
+    },
   };
   return loan;
 }
@@ -75,6 +82,7 @@ const handler = async function (event, context) {
     if (!response.list.length) {
       loans = [];
     } else {
+      console.log(response.list);
       loans = formatAllDLC(response.list);
     }
     return {
