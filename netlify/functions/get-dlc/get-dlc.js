@@ -56,7 +56,7 @@ function formatDLC(dlc) {
       formattedVaultLoan: "$ " + fixedTwoDecimalShift(rawData.vaultLoan),
       ...(rawData.hasOwnProperty("closingPrice") && {
         formattedClosingPrice:
-          "$ " + fixedTwoDecimalShift(rawData.closingPrice),
+          "$ " + customShiftValue(rawData.closingPrice, 8, true),
       }),
     },
   };
