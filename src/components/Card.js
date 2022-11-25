@@ -19,19 +19,17 @@ import {
   TimeIcon,
   ArrowRightIcon,
 } from "@chakra-ui/icons";
-import { easyTruncateAddress, customShiftValue, asciiToHex } from "../utils";
+import { easyTruncateAddress } from "../utils";
 import { StacksMocknet } from "@stacks/network";
-import { uintCV, bufferCVFromString } from "@stacks/transactions";
-import { cvToHex, addressToString, bufferCV } from "@stacks/transactions";
+import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { useEffect } from "react";
 import eventBus from "../EventBus";
 
 export default function Card(props) {
   useEffect(() => {
-    console.log(props)
-    if (props.status === "funded") {
-      eventBus.dispatch("changeDepositAmount", props.vaultCollateral);
+    if (props.dlc.raw.status === "funded") {
+      eventBus.dispatch("changeDepositAmount", { depositAmount: props.dlc.raw.vaultCollateral });
     }
   }, []);
 
@@ -65,11 +63,11 @@ export default function Card(props) {
     return roundedCollateralToDebtRatio;
   };
 
-  const getLoanIDByUUID = async (UUID) => {
+  const getLoanIDByUUID = async () => {
     let loanContractID = undefined;
     await fetch(
       "/.netlify/functions/get-load-id-by-uuid?uuid=" +
-        UUID +
+        props.dlc.raw.dlcUUID +
         "&creator=" +
         this.props.creator,
       {
@@ -83,9 +81,9 @@ export default function Card(props) {
     return loanContractID;
   };
 
-  const repayLoanContract = async (UUID) => {
+  const repayLoanContract = async () => {
     const network = new StacksMocknet({ url: "http://localhost:3999" });
-    const loanContractID = await getLoanIDByUUID(UUID);
+    const loanContractID = await getLoanIDByUUID(props.dlc.raw.dlcUUID);
     console.log(loanContractID);
     openContractCall({
       network: network,
@@ -109,9 +107,9 @@ export default function Card(props) {
     });
   };
 
-  const liquidateLoanContract = async (UUID) => {
+  const liquidateLoanContract = async () => {
     const network = new StacksMocknet({ url: "http://localhost:3999" });
-    const loanContractID = await getLoanIDByUUID(UUID);
+    const loanContractID = await getLoanIDByUUID(props.dlc.raw.dlcUUID);
     openContractCall({
       network: network,
       anchorMode: 1,
@@ -134,29 +132,20 @@ export default function Card(props) {
     });
   };
 
-  const convertBTCToSatoshi = (collateralInBTC) => {
-    const collateralInSatoshi = customShiftValue(
-      Number(collateralInBTC.substring(0, collateralInBTC.length - 3)),
-      8,
-      false
-    );
-    return collateralInSatoshi;
-  };
-
   const sendBTC = () => {
-    const collateralInSatoshi = convertBTCToSatoshi(props.vaultCollateral);
     try {
       fetch(
         "/.netlify/functions/get-offer/?uuid=" +
-          props.dlcUUID +
+          props.dlc.raw.dlcUUID +
           "&collateral=" +
-          collateralInSatoshi,
+          props.dlc.raw.vaultCollateral,
         {
           headers: { accept: "Accept: application/json" },
         }
       )
         .then((x) => x.json())
         .then(({ msg }) => {
+          console.log(msg);
           sendOfferForSigning(msg);
         });
     } catch (error) {
@@ -178,42 +167,42 @@ export default function Card(props) {
     >
       <VStack margin={15}>
         <Flex>
-          {props.status === "not-ready" && (
+          {props.dlc.raw.status === "not-ready" && (
             <Tooltip label="DLC is not ready yet">
               <TimeIcon color="orange" />
             </Tooltip>
           )}
-          {props.status === "unfunded" && (
+          {props.dlc.raw.status === "unfunded" && (
             <Tooltip label="DLC is not yet funded">
               <TimeIcon color="orange" />
             </Tooltip>
           )}
-          {props.status === "pre-repaid" && (
+          {props.dlc.raw.status === "pre-repaid" && (
             <Tooltip label="Waiting to be repaid">
               <TimeIcon color="orange" />
             </Tooltip>
           )}
-          {props.status === "pre-liquidated" && (
+          {props.dlc.raw.status === "pre-liquidated" && (
             <Tooltip label="Waiting to be liquidated">
               <TimeIcon color="orange" />
             </Tooltip>
           )}
-          {props.status === "ready" && (
+          {props.dlc.raw.status === "ready" && (
             <Tooltip label="DLC is ready">
               <InfoIcon color="orange" />
             </Tooltip>
           )}
-          {props.status === "funded" && (
+          {props.dlc.raw.status === "funded" && (
             <Tooltip label="DLC is funded">
               <ArrowRightIcon color="orange" />
             </Tooltip>
           )}
-          {props.status === "liquidated" && (
+          {props.dlc.raw.status === "liquidated" && (
             <Tooltip label="DLC is liquidated">
               <UnlockIcon color="green" />
             </Tooltip>
           )}
-          {props.status === "repaid" && (
+          {props.dlc.raw.status === "repaid" && (
             <Tooltip label="DLC is repaid">
               <CheckCircleIcon color="green" />
             </Tooltip>
@@ -230,7 +219,7 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {props.dlcUUID}
+                    {props.dlc.raw.dlcUUID}
                   </Text>
                 </Td>
               </Tr>
@@ -242,7 +231,7 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {easyTruncateAddress(props.owner)}
+                    {easyTruncateAddress(props.dlc.raw.owner)}
                   </Text>
                 </Td>
               </Tr>
@@ -254,7 +243,7 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {props.vaultCollateral}
+                    {props.dlc.formatted.formattedVaultCollateral}
                   </Text>
                 </Td>
               </Tr>
@@ -266,7 +255,7 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {props.vaultLoan}
+                    {props.dlc.formatted.formattedVaultLoan}
                   </Text>
                 </Td>
               </Tr>
@@ -278,7 +267,7 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {props.liquidationFee}
+                    {props.dlc.formatted.formattedLiquidationFee}
                   </Text>
                 </Td>
               </Tr>
@@ -290,27 +279,29 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {props.liquidationRatio}
+                    {props.dlc.formatted.formattedLiquidationRatio}
                   </Text>
                 </Td>
               </Tr>
-              <Tr>
-                <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
-                    Closing Price
-                  </Text>
-                </Td>
-                <Td>
-                  <Text fontSize={12} color="white">
-                    {props.closingPrice}
-                  </Text>
-                </Td>
-              </Tr>
+              {props.dlc.formatted.formattedClosingPrice && (
+                <Tr>
+                  <Td>
+                    <Text fontSize={12} fontWeight="extrabold" color="white">
+                      Closing Price
+                    </Text>
+                  </Td>
+                  <Td>
+                    <Text fontSize={12} color="white">
+                      {props.dlc.formatted.formattedClosingPrice}
+                    </Text>
+                  </Td>
+                </Tr>
+              )}
             </Tbody>
           </Table>
         </TableContainer>
         <Flex>
-          {props.status === "ready" && (
+          {props.dlc.raw.status === "ready" && (
             <VStack>
               <Button
                 _hover={{
@@ -328,47 +319,10 @@ export default function Card(props) {
               >
                 SEND BTC
               </Button>
-              <Button
-                _hover={{
-                  color: "white",
-                  bg: "secondary1",
-                }}
-                margin={15}
-                color="accent"
-                width={100}
-                shadow="2xl"
-                variant="outline"
-                fontSize="sm"
-                fontWeight="bold"
-                onClick={() => repayLoanContract(props.dlcUUID)}
-              >
-                WITHDRAW
-              </Button>
-              {countCollateralToDebtRatio(
-                props.bitCoinValue,
-                props.vaultCollateral,
-                props.vaultLoan
-              ) < 140 && (
-                <Button
-                  _hover={{
-                    color: "white",
-                    bg: "secondary1",
-                  }}
-                  margin={15}
-                  color="accent"
-                  width={100}
-                  shadow="2xl"
-                  variant="outline"
-                  fontSize="sm"
-                  fontWeight="bold"
-                  onClick={() => liquidateLoanContract(props.dlcUUID)}
-                >
-                  LIQUIDATE
-                </Button>
-              )}
             </VStack>
           )}
-          {props.status === ("not-ready" || "pre-liquidated" || "pre-paid") && (
+          {props.dlc.raw.status ===
+            ("not-ready" || "pre-liquidated" || "pre-paid") && (
             <Button
               _hover={{
                 shadow: "none",
@@ -384,7 +338,7 @@ export default function Card(props) {
               fontWeight="bold"
             ></Button>
           )}
-          {props.status === "funded" && (
+          {props.dlc.raw.status === "funded" && (
             <VStack>
               <Button
                 _hover={{
@@ -398,26 +352,32 @@ export default function Card(props) {
                 variant="outline"
                 fontSize="sm"
                 fontWeight="bold"
-                onClick={() => repayLoanContract(props.dlcUUID)}
+                onClick={() => repayLoanContract()}
               >
                 WITHDRAW
               </Button>
-              <Button
-                _hover={{
-                  color: "white",
-                  bg: "secondary1",
-                }}
-                margin={15}
-                color="accent"
-                width={100}
-                shadow="2xl"
-                variant="outline"
-                fontSize="sm"
-                fontWeight="bold"
-                onClick={() => liquidateLoanContract(props.dlcUUID)}
-              >
-                LIQUIDATE
-              </Button>
+              {countCollateralToDebtRatio(
+                props.bitCoinValue,
+                props.dlc.raw.vaultCollateral,
+                props.dlc.raw.vaultLoan
+              ) < 140 && (
+                <Button
+                  _hover={{
+                    color: "white",
+                    bg: "secondary1",
+                  }}
+                  margin={15}
+                  color="accent"
+                  width={100}
+                  shadow="2xl"
+                  variant="outline"
+                  fontSize="sm"
+                  fontWeight="bold"
+                  onClick={() => liquidateLoanContract()}
+                >
+                  LIQUIDATE
+                </Button>
+              )}
             </VStack>
           )}
         </Flex>

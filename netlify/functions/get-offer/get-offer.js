@@ -27,12 +27,15 @@ const handler = async function (event, context) {
         "totalOutcomes": 1
       })
     })
-     
+
     if (!response.ok) {
       // NOT res.status >= 200 && res.status < 300
       return { statusCode: response.status, body: response.statusText }
     }
+
+    console.log(response);
     const data = await response.json();
+
     return {
       statusCode: 200,
       body: JSON.stringify({ identity, user, msg: data }),

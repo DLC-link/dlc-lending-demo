@@ -19,20 +19,21 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { RepeatClockIcon } from "@chakra-ui/icons";
+import { customShiftValue, fixedTwoDecimalShift } from "../utils"
 
 export default function DepositWithdraw(props) {
   const [isConnected, setConnected] = useState(false);
   const [isLoading, setLoading] = useState(true);
-  const [depositAmount, setDepositAmount] = useState(0);
+  const [depositAmount, setDepositAmount] = useState("0 BTC");
 
   useEffect(() => {
     setConnected(props.isConnected);
   }, [props]);
 
   useEffect(() => {
-    eventBus.on("setLoadingState", (data) => setLoading(data));
+    eventBus.on("setLoadingState", (data) => setLoading(data.isLoading));
     eventBus.on("changeDepositAmount", (data) =>
-      setDepositAmount(depositAmount + data)
+      setDepositAmount(Number(depositAmount.substring(0, depositAmount.length - 3)) + customShiftValue(data.depositAmount, 8, true) + " BTC")
     );
   });
 

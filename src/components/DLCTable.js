@@ -9,11 +9,13 @@ import {
   IconButton,
   SimpleGrid,
   ScaleFade,
+  omitThemingProps,
 } from "@chakra-ui/react";
 import { customShiftValue, fixedTwoDecimalShift, hex2ascii } from "../utils";
 import Card from "./Card";
 import { cvToHex, addressToString, bufferCV } from "@stacks/transactions";
 import { bytesToUtf8 } from "micro-stacks/common";
+import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 
 export default class DLCTable extends React.Component {
   constructor(props) {
@@ -32,7 +34,7 @@ export default class DLCTable extends React.Component {
     this.setLoans()
       .then((dlcs) => this.setState({ loans: dlcs }))
       .then(() => this.setState({ isLoading: false }))
-      .then(() => eventBus.dispatch("setLoadingState", false));
+      .then(() => eventBus.dispatch("setLoadingState", { isLoading: false }));
   }
 
   componentDidUpdate(previousProps) {
@@ -48,13 +50,13 @@ export default class DLCTable extends React.Component {
 
   refreshDLCTable() {
     this.setState({ isLoading: true });
-    eventBus.dispatch("setLoadingState", false);
+    eventBus.dispatch("setLoadingState", { isLoading: true });
     this.setLoans()
       .then((formattedDLCArray) =>
         this.setState({ formattedDLCArray: formattedDLCArray })
       )
       .then(() => this.setState({ isLoading: false }))
-      .then(() => eventBus.dispatch("setLoadingState", false));
+      .then(() => eventBus.dispatch("setLoadingState", { isLoading: false }));
   }
 
   setLoans = async () => {
@@ -111,19 +113,12 @@ export default class DLCTable extends React.Component {
               </IconButton>
             </HStack>
             <SimpleGrid columns={[1, 4]} spacing={[0, 15]}>
-              {this.state.formattedDLCArray?.map((dlc) => (
+              {this.state.loans?.map((dlc) => (
                 <ScaleFade in={!this.state.isLoading} key={dlc.dlcUUID}>
                   <Card
+                    dlc={dlc}
                     creator={this.props.address}
                     bitCoinValue={this.state.bitCoinValue}
-                    status={dlc.status}
-                    dlcUUID={dlc.dlcUUID}
-                    owner={dlc.owner}
-                    vaultCollateral={dlc.vaultCollateral}
-                    vaultLoan={dlc.vaultLoan}
-                    liquidationFee={dlc.liquidationFee}
-                    liquidationRatio={dlc.liquidationRatio}
-                    closingPrice={dlc.closingPrice}
                   ></Card>
                 </ScaleFade>
               ))}
