@@ -4,7 +4,6 @@ import {
   VStack,
   Button,
   Text,
-  HStack,
   Flex,
   Image,
   Table,
@@ -18,22 +17,25 @@ import {
   Collapse,
   IconButton,
 } from "@chakra-ui/react";
-import { RepeatClockIcon } from "@chakra-ui/icons";
-import { customShiftValue, fixedTwoDecimalShift } from "../utils"
+import { customShiftValue, fixedTwoDecimalShift } from "../utils";
 
 export default function DepositWithdraw(props) {
   const [isConnected, setConnected] = useState(false);
-  const [isLoading, setLoading] = useState(true);
-  const [depositAmount, setDepositAmount] = useState("0 BTC");
+  const [isLoading, setLoading] = useState(undefined);
+  const [depositAmount, setDepositAmount] = useState(0);
+  const [loanAmount, setLoanAmount] = useState(0);
 
   useEffect(() => {
     setConnected(props.isConnected);
   }, [props]);
 
   useEffect(() => {
-    eventBus.on("setLoadingState", (data) => setLoading(data.isLoading));
-    eventBus.on("changeDepositAmount", (data) =>
-      setDepositAmount(Number(depositAmount.substring(0, depositAmount.length - 3)) + customShiftValue(data.depositAmount, 8, true) + " BTC")
+    eventBus.on("set-loading-state", (data) => setLoading(data.isLoading));
+    eventBus.on("change-deposit-amount", (data) =>
+      setDepositAmount(customShiftValue(data.depositAmount, 8, true))
+    );
+    eventBus.on("change-loan-amount", (data) =>
+      setLoanAmount(fixedTwoDecimalShift(data.loanAmount))
     );
   });
 
@@ -66,11 +68,15 @@ export default function DepositWithdraw(props) {
               <VStack>
                 <TableContainer>
                   <Table variant="simple" color="white">
-                    <TableCaption>Deposit or withdraw Bitcoin</TableCaption>
+                    <TableCaption fontSize={12}>Deposit Bitcoin</TableCaption>
                     <Thead>
                       <Tr>
-                        <Th color="white">Asset</Th>
-                        <Th color="white">Balance</Th>
+                        <Th fontSize={8} color="white">
+                          Asset
+                        </Th>
+                        <Th fontSize={8} color="white">
+                          Deposit Balance
+                        </Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -96,12 +102,50 @@ export default function DepositWithdraw(props) {
                               borderRadius="full"
                               width={[25, 35]}
                               height={[25, 35]}
-                            >
-                              <RepeatClockIcon color="accent"></RepeatClockIcon>
-                            </IconButton>
+                            ></IconButton>
                           </Td>
                         ) : (
                           <Td>{depositAmount}</Td>
+                        )}
+                      </Tr>
+                    </Tbody>
+                    <Thead>
+                      <Tr>
+                        <Th fontSize={8} color="white">
+                          Asset
+                        </Th>
+                        <Th fontSize={8} color="white">
+                          Loan Balance
+                        </Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      <Tr>
+                        <Td>
+                          <Image
+                            src="/usdc_logo.png"
+                            alt="USDC Logo"
+                            width={25}
+                            height={25}
+                            borderRadius="3px"
+                          ></Image>
+                        </Td>
+                        {isLoading ? (
+                          <Td>
+                            <IconButton
+                              _hover={{
+                                background: "secondary1",
+                              }}
+                              isLoading
+                              variant="outline"
+                              color="white"
+                              borderRadius="full"
+                              width={[25, 35]}
+                              height={[25, 35]}
+                            ></IconButton>
+                          </Td>
+                        ) : (
+                          <Td>{loanAmount}</Td>
                         )}
                       </Tr>
                     </Tbody>

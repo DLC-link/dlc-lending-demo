@@ -40,7 +40,6 @@ function formatDLC(dlc) {
     }),
   };
 
-  console.log(rawData)
   const loan = {
     raw: rawData,
     formatted: {

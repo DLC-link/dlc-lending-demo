@@ -42,7 +42,6 @@ export default class App extends React.Component {
         this.state.address !== data.address &&
         this.setState({ address: data.address })
     );
-    console.log(this.state)
   };
 
   onSelectWalletClose = () => {

@@ -23,15 +23,8 @@ import { easyTruncateAddress } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
-import { useEffect } from "react";
-import eventBus from "../EventBus";
 
 export default function Card(props) {
-  useEffect(() => {
-    if (props.dlc.raw.status === "funded") {
-      eventBus.dispatch("changeDepositAmount", { depositAmount: props.dlc.raw.vaultCollateral });
-    }
-  }, []);
 
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
@@ -69,7 +62,7 @@ export default function Card(props) {
       "/.netlify/functions/get-load-id-by-uuid?uuid=" +
         props.dlc.raw.dlcUUID +
         "&creator=" +
-        this.props.creator,
+        props.creator,
       {
         headers: { accept: "Accept: application/json" },
       }

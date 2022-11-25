@@ -9,13 +9,8 @@ import {
   IconButton,
   SimpleGrid,
   ScaleFade,
-  omitThemingProps,
 } from "@chakra-ui/react";
-import { customShiftValue, fixedTwoDecimalShift, hex2ascii } from "../utils";
 import Card from "./Card";
-import { cvToHex, addressToString, bufferCV } from "@stacks/transactions";
-import { bytesToUtf8 } from "micro-stacks/common";
-import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 
 export default class DLCTable extends React.Component {
   constructor(props) {
@@ -24,44 +19,52 @@ export default class DLCTable extends React.Component {
       isConnected: this.props.isConnected,
       bitCoinValue: 0,
       loans: [],
-      isLoading: true,
+      isLoading: undefined,
     };
   }
 
   async componentDidMount() {
     this.fetchBitcoinValue();
     this.setState({ address: this.props.address });
-    this.setLoans()
-      .then((dlcs) => this.setState({ loans: dlcs }))
-      .then(() => this.setState({ isLoading: false }))
-      .then(() => eventBus.dispatch("setLoadingState", { isLoading: false }));
+    this.refreshLoansTable();
   }
 
   componentDidUpdate(previousProps) {
     if (previousProps.isConnected !== this.props.isConnected) {
       this.setState({ isConnected: this.props.isConnected });
     }
-    console.log(this.state);
   }
 
   openDepositModal() {
     eventBus.dispatch("is-deposit-modal-open", { isDepositOpen: true });
   }
 
-  refreshDLCTable() {
+  refreshLoansTable() {
     this.setState({ isLoading: true });
-    eventBus.dispatch("setLoadingState", { isLoading: true });
-    this.setLoans()
-      .then((formattedDLCArray) =>
-        this.setState({ formattedDLCArray: formattedDLCArray })
+    eventBus.dispatch("set-loading-state", { isLoading: true });
+    this.fetchAllDLC()
+      .then(
+        (loans) => (this.setState({ loans: loans }), this.countBalance(loans))
       )
       .then(() => this.setState({ isLoading: false }))
-      .then(() => eventBus.dispatch("setLoadingState", { isLoading: false }));
+      .then(() => eventBus.dispatch("set-loading-state", { isLoading: false }));
   }
 
-  setLoans = async () => {
-    const dlcs = await this.fetchAllDLC();
-    return dlcs;
+  countBalance = (loans) => {
+    let depositAmount = 0;
+    let loanAmount = 0;
+    for (const loan of loans) {
+      if (loan.raw.status === "funded") {
+        depositAmount += Number(loan.raw.vaultCollateral);
+        loanAmount += Number(loan.raw.vaultLoan);
+      }
+    }
+    eventBus.dispatch("change-deposit-amount", {
+      depositAmount: depositAmount,
+    });
+    eventBus.dispatch("change-loan-amount", {
+      loanAmount: loanAmount,
+    });
   };
 
   fetchAllDLC = async () => {
@@ -103,7 +106,7 @@ export default class DLCTable extends React.Component {
                 }}
                 isLoading={this.state.isLoading}
                 variant="outline"
-                onClick={() => this.refreshDLCTable()}
+                onClick={() => this.refreshLoansTable()}
                 color="white"
                 borderRadius="full"
                 width={[25, 35]}
@@ -112,17 +115,17 @@ export default class DLCTable extends React.Component {
                 <RepeatClockIcon color="accent"></RepeatClockIcon>
               </IconButton>
             </HStack>
-            <SimpleGrid columns={[1, 4]} spacing={[0, 15]}>
-              {this.state.loans?.map((dlc) => (
-                <ScaleFade in={!this.state.isLoading} key={dlc.dlcUUID}>
+            <ScaleFade in={!this.state.isLoading}>
+              {this.state.loans?.map((loan) => (
+                <SimpleGrid columns={[1, 4]} spacing={[0, 15]} key={loan.raw.dlcUUID}>
                   <Card
-                    dlc={dlc}
+                    dlc={loan}
                     creator={this.props.address}
                     bitCoinValue={this.state.bitCoinValue}
                   ></Card>
-                </ScaleFade>
+                </SimpleGrid>
               ))}
-            </SimpleGrid>
+            </ScaleFade>
           </VStack>
         </Collapse>
       </>
