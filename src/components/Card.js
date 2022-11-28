@@ -19,11 +19,15 @@ import {
   TimeIcon,
   ArrowRightIcon,
 } from "@chakra-ui/icons";
-import { easyTruncateAddress } from "../utils";
+import { easyTruncateAddress, fixedTwoDecimalUnshift } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { customShiftValue, fixedTwoDecimalShift } from "../utils";
+import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import PaidIcon from '@mui/icons-material/Paid';
 
 export default function Card(props) {
 
@@ -51,10 +55,9 @@ export default function Card(props) {
   };
 
   const countCollateralToDebtRatio = (bitCoinValue, collateral, loan) => {
-    const collateralToDebtRatio = ((bitCoinValue * customShiftValue(collateral, 8, true)) / loan) * 100;
+    const collateralToDebtRatio = ((bitCoinValue * customShiftValue(collateral, 8, true)) / fixedTwoDecimalShift(loan)) * 100;
     const roundedCollateralToDebtRatio =
       Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100;
-      console.log(roundedCollateralToDebtRatio)
     return roundedCollateralToDebtRatio;
   };
 
@@ -164,42 +167,42 @@ export default function Card(props) {
         <Flex>
           {props.dlc.raw.status === "not-ready" && (
             <Tooltip label="DLC is not ready yet">
-              <TimeIcon color="orange" />
+              <HourglassEmptyIcon sx={{ color: "orange" }}  />
             </Tooltip>
           )}
           {props.dlc.raw.status === "unfunded" && (
             <Tooltip label="DLC is not yet funded">
-              <TimeIcon color="orange" />
+              <CurrencyBitcoinIcon sx={{ color: "orange"}} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "pre-repaid" && (
             <Tooltip label="Waiting to be repaid">
-              <TimeIcon color="orange" />
+              <HourglassEmptyIcon sx={{ color: "orange" }} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "pre-liquidated" && (
             <Tooltip label="Waiting to be liquidated">
-              <TimeIcon color="orange" />
+              <HourglassEmptyIcon sx={{ color: "orange" }} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "ready" && (
             <Tooltip label="DLC is ready">
-              <InfoIcon color="orange" />
+              <CurrencyBitcoinIcon sx={{ color: "orange" }} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "funded" && (
             <Tooltip label="DLC is funded">
-              <ArrowRightIcon color="orange" />
+              <CurrencyBitcoinIcon sx={{ color: "green" }} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "liquidated" && (
             <Tooltip label="DLC is liquidated">
-              <UnlockIcon color="green" />
+              <CurrencyExchangeIcon sx={{ color: "green" }} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "repaid" && (
             <Tooltip label="DLC is repaid">
-              <CheckCircleIcon color="green" />
+              <PaidIcon sx={{ color: "green" }} />
             </Tooltip>
           )}
         </Flex>

@@ -66,6 +66,7 @@ export default function DepositModal({ isOpen, closeModal }) {
       liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
       emergencyRefundTime: 5,
     };
+    console.log(loanContract.vaultLoanAmount)
     return loanContract;
   };
 
@@ -290,7 +291,7 @@ export default function DepositModal({ isOpen, closeModal }) {
                   color: "white",
                   bg: "accent",
                 }}
-                // isDisabled={isError}
+                isDisabled={isError}
                 background="white"
                 bgGradient="linear(to-r, primary1, primary2)"
                 bgClip="text"
