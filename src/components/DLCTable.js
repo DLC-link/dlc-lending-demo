@@ -20,31 +20,38 @@ export default class DLCTable extends React.Component {
       bitCoinValue: 0,
       loans: [],
       isLoading: undefined,
+      manualLoading: undefined
     };
   }
 
   async componentDidMount() {
     this.fetchBitcoinValue();
     this.setState({ address: this.props.address });
-    this.refreshLoansTable();
+    this.refreshLoansTable(false);
   }
 
   componentDidUpdate(previousProps) {
     if (previousProps.isConnected !== this.props.isConnected) {
       this.setState({ isConnected: this.props.isConnected });
     }
+    eventBus.on('fetch-loans-bg', () => {
+      this.refreshLoansTable(true);
+    })
   }
 
   openDepositModal() {
     eventBus.dispatch("is-deposit-modal-open", { isDepositOpen: true });
   }
 
-  refreshLoansTable() {
-    this.setState({ isLoading: true });
+  refreshLoansTable(manual) {
+    this.setState({ isLoading: true, manualLoading: manual });
     eventBus.dispatch("set-loading-state", { isLoading: true });
     this.fetchAllDLC()
       .then(
-        (loans) => (this.setState({ loans: loans }), this.countBalance(loans))
+        (loans) => {
+          this.setState({ loans: loans }); 
+          this.countBalance(loans)
+        }
       )
       .then(() => this.setState({ isLoading: false }))
       .then(() => eventBus.dispatch("set-loading-state", { isLoading: false }));
@@ -104,9 +111,9 @@ export default class DLCTable extends React.Component {
                 _hover={{
                   background: "secondary1",
                 }}
-                isLoading={this.state.isLoading}
+                isLoading={this.state.isLoading && this.state.manualLoading}
                 variant="outline"
-                onClick={() => this.refreshLoansTable()}
+                onClick={() => this.refreshLoansTable(true)}
                 color="white"
                 borderRadius="full"
                 width={[25, 35]}
