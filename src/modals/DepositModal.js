@@ -75,7 +75,7 @@ export default function DepositModal({ isOpen, closeModal }) {
     openContractCall({
       network: network,
       anchorMode: 1,
-      contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+      contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
       contractName: "sample-contract-loan-v0",
       functionName: "setup-loan",
       functionArgs: [
@@ -111,6 +111,9 @@ export default function DepositModal({ isOpen, closeModal }) {
     setCollateralToDebtRatio(
       Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100
     );
+    console.log("BitcoinInUSDAsNumber: " + bitcoinInUSDAsNumber)
+    console.log("Collateral: " + collateral)
+    console.log("Loan: " + loan)
   };
 
   const countUSD = () => {
@@ -287,7 +290,7 @@ export default function DepositModal({ isOpen, closeModal }) {
                   color: "white",
                   bg: "accent",
                 }}
-                isDisabled={isError}
+                // isDisabled={isError}
                 background="white"
                 bgGradient="linear(to-r, primary1, primary2)"
                 bgClip="text"

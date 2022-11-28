@@ -7,7 +7,7 @@ const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
 
 function txOptions(contract) {
   return {
-    contractAddress: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+    contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
     contractName: "sample-contract-loan-v0",
     functionName: "setup-loan",
     functionArgs: [

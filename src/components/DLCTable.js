@@ -10,30 +10,23 @@ import {
   SimpleGrid,
   ScaleFade,
 } from "@chakra-ui/react";
-import { customShiftValue, fixedTwoDecimalShift, hex2ascii } from "../utils";
 import Card from "./Card";
 
 export default class DLCTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      address: "",
       isConnected: this.props.isConnected,
       bitCoinValue: 0,
-      formattedDLCArray: [],
-      isLoading: true,
+      loans: [],
+      isLoading: undefined,
     };
   }
 
   async componentDidMount() {
     this.fetchBitcoinValue();
     this.setState({ address: this.props.address });
-    this.setFormattedDLCArray()
-      .then((formattedDLCArray) =>
-        this.setState({ formattedDLCArray: formattedDLCArray })
-      )
-      .then(() => this.setState({ isLoading: false }))
-      .then(() => eventBus.dispatch("setLoadingState", false));
+    this.refreshLoansTable();
   }
 
   componentDidUpdate(previousProps) {
@@ -46,49 +39,45 @@ export default class DLCTable extends React.Component {
     eventBus.dispatch("is-deposit-modal-open", { isDepositOpen: true });
   }
 
-  refreshDLCTable() {
+  refreshLoansTable() {
     this.setState({ isLoading: true });
-    eventBus.dispatch("setLoadingState", false);
-    this.setFormattedDLCArray()
-      .then((formattedDLCArray) =>
-        this.setState({ formattedDLCArray: formattedDLCArray })
+    eventBus.dispatch("set-loading-state", { isLoading: true });
+    this.fetchAllDLC()
+      .then(
+        (loans) => (this.setState({ loans: loans }), this.countBalance(loans))
       )
       .then(() => this.setState({ isLoading: false }))
-      .then(() => eventBus.dispatch("setLoadingState", false));
+      .then(() => eventBus.dispatch("set-loading-state", { isLoading: false }));
   }
 
-  async setFormattedDLCArray() {
-    return this.formatAllDLC(await this.fetchAllDLC());
-  }
+  countBalance = (loans) => {
+    let depositAmount = 0;
+    let loanAmount = 0;
+    for (const loan of loans) {
+      if (loan.raw.status === "funded") {
+        depositAmount += Number(loan.raw.vaultCollateral);
+        loanAmount += Number(loan.raw.vaultLoan);
+      }
+    }
+    eventBus.dispatch("change-deposit-amount", {
+      depositAmount: depositAmount,
+    });
+    eventBus.dispatch("change-loan-amount", {
+      loanAmount: loanAmount,
+    });
+  };
 
-  async fetchAllUUID() {
-    let uuidArray = [];
-    await fetch("/.netlify/functions/get-all-open-dlc", {
+  fetchAllDLC = async () => {
+    let dlcArray = undefined;
+    await fetch("/.netlify/functions/get-dlc?creator=" + this.props.address, {
       headers: { accept: "Accept: application/json" },
     })
       .then((x) => x.json())
       .then(({ msg }) => {
-        uuidArray = msg;
+        dlcArray = msg;
       });
-    return uuidArray;
-  }
-
-  async fetchAllDLC() {
-    const dlcArray = [];
-    const uuidArray = await this.fetchAllUUID();
-    for (const uuid of uuidArray) {
-      await fetch("/.netlify/functions/get-dlc?uuid=" + uuid, {
-        headers: { accept: "Accept: application/json" },
-      })
-        .then((x) => x.json())
-        .then(({ msg }) => {
-          if (msg.owner.value == this.state.address) {
-            dlcArray.push(msg);
-          }
-        });
-    }
     return dlcArray;
-  }
+  };
 
   fetchBitcoinValue = async () => {
     await fetch("/.netlify/functions/get-bitcoin-price", {
@@ -101,31 +90,6 @@ export default class DLCTable extends React.Component {
         });
       });
   };
-
-  formatAllDLC(dlcArray) {
-    const formattedDLCArray = [];
-    for (const dlc of dlcArray) {
-      const formattedDLC = this.formatDLC(dlc);
-      formattedDLCArray.push(formattedDLC);
-    }
-    return formattedDLCArray;
-  }
-
-  formatDLC(dlc) {
-    let formattedDLC = {
-      dlcUUID: hex2ascii(dlc.dlc_uuid.value.value),
-      status: dlc.status.value,
-      owner: dlc.owner.value,
-      liquidationFee: fixedTwoDecimalShift(dlc["liquidation-fee"].value) + " %",
-      liquidationRatio:
-        fixedTwoDecimalShift(dlc["liquidation-ratio"].value) + " %",
-      vaultCollateral:
-        customShiftValue(dlc["vault-collateral"].value, 8, true) + " BTC",
-      vaultLoan: "$ " + fixedTwoDecimalShift(dlc["vault-loan"].value),
-      closingPrice: "$ " + fixedTwoDecimalShift(dlc["closing-price"].value),
-    };
-    return formattedDLC;
-  }
 
   render() {
     return (
@@ -142,7 +106,7 @@ export default class DLCTable extends React.Component {
                 }}
                 isLoading={this.state.isLoading}
                 variant="outline"
-                onClick={() => this.refreshDLCTable()}
+                onClick={() => this.refreshLoansTable()}
                 color="white"
                 borderRadius="full"
                 width={[25, 35]}
@@ -151,23 +115,20 @@ export default class DLCTable extends React.Component {
                 <RepeatClockIcon color="accent"></RepeatClockIcon>
               </IconButton>
             </HStack>
-            <SimpleGrid columns={[1, 4]} spacing={[0, 15]}>
-              {this.state.formattedDLCArray?.map((dlc) => (
-                <ScaleFade in={!this.state.isLoading} key={dlc.dlcUUID}>
+            <ScaleFade in={!this.state.isLoading}>
+              <SimpleGrid
+                columns={[1, 4]}
+                spacing={[0, 15]}
+              >
+                {this.state.loans?.map((loan) => (
                   <Card
+                    dlc={loan}
+                    creator={this.props.address}
                     bitCoinValue={this.state.bitCoinValue}
-                    status={dlc.status}
-                    dlcUUID={dlc.dlcUUID}
-                    owner={dlc.owner}
-                    vaultCollateral={dlc.vaultCollateral}
-                    vaultLoan={dlc.vaultLoan}
-                    liquidationFee={dlc.liquidationFee}
-                    liquidationRatio={dlc.liquidationRatio}
-                    closingPrice={dlc.closingPrice}
                   ></Card>
-                </ScaleFade>
-              ))}
-            </SimpleGrid>
+                ))}
+              </SimpleGrid>
+            </ScaleFade>
           </VStack>
         </Collapse>
       </>
