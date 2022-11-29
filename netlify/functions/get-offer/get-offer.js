@@ -23,8 +23,8 @@ const handler = async function (event, context) {
       body: JSON.stringify({
         "uuid": uuid,
         "acceptCollateral": parseInt(collateral),
-        "offerCollateral": 100000,
-        "totalOutcomes": 1
+        "offerCollateral": 1000,
+        "totalOutcomes": 100
       })
     })
 
