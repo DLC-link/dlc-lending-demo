@@ -78,7 +78,6 @@ const handler = async function (event, context) {
     if (!response.list.length) {
       loans = [];
     } else {
-      console.log(response.list);
       loans = formatAllDLC(response.list);
     }
     return {

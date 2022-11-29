@@ -3,6 +3,7 @@ import eventBus from "../EventBus";
 import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
 import { Button, Text, HStack, Flex, Image } from "@chakra-ui/react";
 import { easyTruncateAddress } from "../utils";
+import { userSession } from "../hiroWalletUserSession";
 
 export default class Header extends React.Component {
   constructor() {
@@ -31,6 +32,9 @@ export default class Header extends React.Component {
   }
 
   disconnect = () => {
+    if(this.state.walletType === "hiro") {
+      userSession.signUserOut("/");
+    }
     eventBus.dispatch("change-address", { address: "" });
     eventBus.dispatch("account-connected", { isConnected: false });
   };
