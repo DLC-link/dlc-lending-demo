@@ -1,76 +1,112 @@
-import { AddressSubscription, DLCStatus, FunctionName, UnwrappedPrintEvent } from './models/types';
-import { NFTHoldingsData } from './models/nft-holdings.interface';
-import { hex2ascii, timestampToDate, liteSignatureToStacksSignature, isValidAddNewDTO, customShiftValue, customPrettyFormat } from './utilities/helper-functions.js';
-import { addNewDLCDTO, requestCreateDLCToBackendDTO } from './models/dtos'
-
-import { StacksMocknet, StacksTestnet } from "@stacks/network";
 import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
-import { ContractCallTransaction, TransactionEventSmartContractLog } from '@stacks/stacks-blockchain-api-types';
-import { 
-  makeContractCall,
-  broadcastTransaction,
-  bufferCVFromString, 
-  cvToValue, 
-  deserializeCV,
-  uintCV, 
-  SignedContractCallOptions,
-  NonFungibleConditionCode,
-  createAssetInfo,
-  makeContractNonFungiblePostCondition,
-  tupleCV,
-  listCV,
-  bufferCV,
-  contractPrincipalCV,
-  parsePrincipalString,
-  ContractPrincipal,
-  addressToString
-} from '@stacks/transactions';
-import redstone from 'redstone-api-extended';
-
-import { Server } from 'socket.io';
 import { io as ioClient } from 'socket.io-client';
-import express from 'express';
-import fetch from 'node-fetch';
-import * as http from 'http';
+import eventBus from "./EventBus";
 
-const app = express();
-app.use(express.json());
-const httpServer = http.createServer(app);
-const io = new Server(httpServer);
-const port = process.env.PORT || 8888;
-const __dirname = process.cwd();
-const environment = process.env.NODE_ENV;
-const productionEnv = environment == 'production';
+const api_base = `http://stx-btc1.dlc.link:3999/extended/v1`;
+const ioclient_uri = `ws://stx-btc1.dlc.link:3999/`;
 
-const network = productionEnv ? new StacksTestnet() : new StacksMocknet();
-const API_BASE = productionEnv ? "stacks-node-api.testnet.stacks.co" : "localhost:3999";
+const contractAddress = "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6";
+const contractName = "sample-contract-loan-v0";
+const contractFullName = contractAddress + '.' + contractName;
 
-const adminAddress = process.env.ADMIN_ADDRESS;
-const adminKey = process.env.ADMIN_PRIVATE_KEY;
-const contractAddress = process.env.CONTRACT_ADDRESS;
-const contractName = process.env.CONTRACT_NAME;
-const dlcManagerContract = contractAddress + '.' + contractName;
-const dlcNFTName = 'open-dlc';
-const regConNFTName = dlcManagerContract + "::registered-contract";
-const functionNames = ['create-dlc', 'create-dlc-internal', 'close-dlc', 'close-dlc-liquidate', 'close-dlc-internal', 'close-dlc-liquidate-internal', 'register-contract', 'unregister-contract'];
-const eventSourceAPIVersion = "v0";
-const eventSources = functionNames.map(name => `dlclink:${name}:${eventSourceAPIVersion}`);
-unwrapEventSource = (es) => { return es.split(':')[1] };
+const dlcManagerAddress = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
+const dlcManagerName = "dlc-manager-loan-v0";
+const dlcManagerFullName = dlcManagerAddress + '.' + dlcManagerName;
 
-const URLAPI = 'http' + (productionEnv ? 's' : '') + '://' + API_BASE + '/extended/v1';
-const registeredContractNFTsURL = `${URLAPI}/tokens/nft/holdings?asset_identifiers=${regConNFTName}&principal=${dlcManagerContract}`;
-const clientString = 'ws' + (productionEnv ? 's' : '') + '://' + API_BASE + '/';
+let userAddress;
 
-unwrapPrintEvent = (tx) =>  {
-    let unwrappedPrintEvent = undefined;
-    const found = tx.events.some(event => {
-      const _ev = event;
-      const _upe = cvToValue(deserializeCV(_ev.contract_log.value.hex));
-      const _ues = _upe['event-source']?.value;
-      if (eventSources.includes(_ues)) {
-        unwrappedPrintEvent = _upe;
-        return true;
-      }
-    });
-    return found ? unwrappedPrintEvent : undefined;
+eventBus.on("change-address", (data) => {
+  userAddress = data.address;
+  console.log(userAddress);
+});
+
+async function fetchTXInfo(txId) {
+  let _tx;
+  const _setTx = (tx) => _tx = tx;
+  const _getTx = () => _tx;
+  
+  console.log(`[Stacks] Fetching tx_info...`);
+  await fetch(api_base + '/tx/' + txId)
+    .then(response => _setTx(response.json()))
+    .catch(err => console.error(err));
+  return _getTx();
+}
+
+function handleTx(txInfo) {
+  console.log(txInfo);
+
+  if (txInfo.tx_type !== 'contract_call') return;
+
+  switch (txInfo.contract_call.function_name) {
+    case ('setup-loan'): {
+      // if (txInfo.sender_address !== userAddress) break;
+      console.log('Setting up loan...');
+      break;
+    }
+    case ('post-create-dlc-handler'): {
+      console.log('Loan has been set up.');
+      break;
+    }
+    case ('repay-loan'): {
+      console.log('Repaying loan...');
+      break;
+    }
+    case ('liquidate-loan'): {
+      console.log('Liquidating loan...');
+      break;
+    }
+    case ('post-close-dlc-handler'): {
+      console.log('DLC closed.');
+      break;
+    }
+    case ('set-status-funded'): {
+      console.log('Status set to funded.');
+      break;
+    }
+    default: {
+      console.log('Unhandled function call')
+    }
   }
+  // NOTE: We are sending a full refetch in any case for now
+  eventBus.dispatch('fetch-loans-bg');
+}
+
+export default function startObserver() {
+
+  // Setting up Stacks API websocket
+  const socket = ioClient(ioclient_uri, {
+    transports: [ "websocket" ]
+  });
+  const stacksSocket = new StacksApiSocketClient(socket);
+
+  stacksSocket.socket.on('disconnect', async (reason) => {
+    console.log(`[Stacks] Disconnecting, reason: ${reason}`);
+    stacksSocket.socket.connect();
+  });
+
+  stacksSocket.socket.on('connect', async () => {
+    console.log('[Stacks] (Re)connected stacksSocket');
+  });
+
+  // Subscribing to Sample Contract's txs
+  stacksSocket.subscribeAddressTransactions(contractFullName);
+  console.log(`Listening to ${contractFullName}...`);
+
+  stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
+  console.log(`Listening to ${dlcManagerFullName}...`);
+
+  // Handling incoming txs
+  stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
+    const _tx = txWithTransfers.tx;
+    const _successful = _tx.tx_status === 'success';
+    if (!_successful) {
+      console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
+      return;
+    }
+
+    const txInfo = await fetchTXInfo(_tx.tx_id);
+
+    handleTx(txInfo);
+  })
+
+}

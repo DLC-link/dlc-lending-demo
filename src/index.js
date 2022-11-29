@@ -4,6 +4,9 @@ import { theme } from "./styles/theme";
 
 import "@fontsource/poppins";
 import App from "./App";
+import startObserver from "./observer";
+
+startObserver();
 
 const container = document.getElementById("root");
 const root = createRoot(container);
