@@ -7,11 +7,8 @@ module.exports = function override(config, env) {
         fs: require.resolve("graceful-fs"),
         path: require.resolve("path-browserify"),
         url: require.resolve("url"),
-        "assert": require.resolve("assert/"),
         "stream": require.resolve("stream-browserify"),
         "constants": require.resolve("constants-browserify"),
-        "http": require.resolve("stream-http"),
-        "https": require.resolve("https-browserify"),
         zlib: require.resolve("browserify-zlib"),
         "process/browser": require.resolve('process/browser'),
         "os": require.resolve("os-browserify/browser")
@@ -30,12 +27,6 @@ module.exports = function override(config, env) {
                 case "util":
                     resource.request = "util";
                     break;
-                case "http":
-                    resource.request = "stream-http";
-                    break;
-                case "https":
-                    resource.request = "https";
-                    break;
                 case "fs":
                     resource.request = "fs";
                     break;
@@ -47,9 +38,6 @@ module.exports = function override(config, env) {
                     break;
                 case "url":
                     resource.request = "url";
-                    break;
-                case "net":
-                    resource.request = "net";
                     break;
                 case "zlib":
                     resource.request = "zlib";

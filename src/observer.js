@@ -67,7 +67,7 @@ function handleTx(txInfo) {
       console.log('Unhandled function call')
     }
   }
-  // NOTE: We are sending a full refetch in any case
+  // NOTE: We are sending a full refetch in any case for now
   eventBus.dispatch('fetch-loans-bg');
 }
 
@@ -84,11 +84,15 @@ export default function startObserver() {
     stacksSocket.socket.connect();
   });
 
+  stacksSocket.socket.on('connect', async () => {
+    console.log('[Stacks] (Re)connected stacksSocket');
+  });
+
   // Subscribing to Sample Contract's txs
   stacksSocket.subscribeAddressTransactions(contractFullName);
   console.log(`Listening to ${contractFullName}...`);
 
-  // stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
+  stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
   console.log(`Listening to ${dlcManagerFullName}...`);
 
   // Handling incoming txs
