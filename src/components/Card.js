@@ -12,25 +12,17 @@ import {
   Tr,
   Td,
 } from "@chakra-ui/react";
-import {
-  CheckCircleIcon,
-  InfoIcon,
-  UnlockIcon,
-  TimeIcon,
-  ArrowRightIcon,
-} from "@chakra-ui/icons";
-import { easyTruncateAddress, fixedTwoDecimalUnshift } from "../utils";
+import { easyTruncateAddress } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { customShiftValue, fixedTwoDecimalShift } from "../utils";
-import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
-import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import PaidIcon from '@mui/icons-material/Paid';
+import CurrencyBitcoinIcon from "@mui/icons-material/CurrencyBitcoin";
+import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import PaidIcon from "@mui/icons-material/Paid";
 
 export default function Card(props) {
-
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
@@ -54,8 +46,11 @@ export default function Card(props) {
     }
   };
 
-  const countCollateralToDebtRatio = (bitCoinValue, collateral, loan) => {
-    const collateralToDebtRatio = ((bitCoinValue * customShiftValue(collateral, 8, true)) / fixedTwoDecimalShift(loan)) * 100;
+  const countCollateralToDebtRatio = (bitCoinValue, vaultCollateral, loan) => {
+    const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true);
+    const formattedVaultLoan = fixedTwoDecimalShift(loan);
+    const collateralToDebtRatio =
+      ((bitCoinValue * formattedVaultCollateral) / formattedVaultLoan) * 100;
     const roundedCollateralToDebtRatio =
       Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100;
     return roundedCollateralToDebtRatio;
@@ -64,7 +59,7 @@ export default function Card(props) {
   const getLoanIDByUUID = async () => {
     let loanContractID = undefined;
     await fetch(
-      "/.netlify/functions/get-load-id-by-uuid?uuid=" +
+      "/.netlify/functions/get-loan-id-by-uuid?uuid=" +
         props.dlc.raw.dlcUUID +
         "&creator=" +
         props.creator,
@@ -82,7 +77,6 @@ export default function Card(props) {
   const repayLoanContract = async () => {
     const network = new StacksMocknet({ url: "http://localhost:3999" });
     const loanContractID = await getLoanIDByUUID(props.dlc.raw.dlcUUID);
-    console.log(loanContractID);
     openContractCall({
       network: network,
       anchorMode: 1,
@@ -143,7 +137,6 @@ export default function Card(props) {
       )
         .then((x) => x.json())
         .then(({ msg }) => {
-          console.log(msg);
           sendOfferForSigning(msg);
         });
     } catch (error) {
@@ -167,12 +160,12 @@ export default function Card(props) {
         <Flex>
           {props.dlc.raw.status === "not-ready" && (
             <Tooltip label="DLC is not ready yet">
-              <HourglassEmptyIcon sx={{ color: "orange" }}  />
+              <HourglassEmptyIcon sx={{ color: "orange" }} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "unfunded" && (
             <Tooltip label="DLC is not yet funded">
-              <CurrencyBitcoinIcon sx={{ color: "orange"}} />
+              <CurrencyBitcoinIcon sx={{ color: "orange" }} />
             </Tooltip>
           )}
           {props.dlc.raw.status === "pre-repaid" && (

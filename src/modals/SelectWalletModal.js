@@ -36,22 +36,39 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
   }
 
   async function requestHiroAccount() {
-    showConnect({
-      appDetails: {
-        name: "DLC.Link",
-        icon: window.location.origin + "/dlc.link_logo.png",
-      },
-      onFinish: () => {
-        eventBus.dispatch("change-address", {
-          address: userSession.loadUserData().profile.stxAddress.testnet,
-        });
-        eventBus.dispatch("account-connected", { isConnected: true });
-        eventBus.dispatch("wallet-type", { walletType: "hiro" });
-        eventBus.remove("change-address");
-        eventBus.remove("account-connected");
-      },
-      userSession,
-    });
+    let isUserSessionStored = true;
+    try {
+      userSession.loadUserData();
+    } catch (error) {
+      isUserSessionStored = false;
+    }
+
+    if (isUserSessionStored) {
+      eventBus.dispatch("change-address", {
+        address: userSession.loadUserData().profile.stxAddress.testnet,
+      });
+      eventBus.dispatch("account-connected", { isConnected: true });
+      eventBus.dispatch("wallet-type", { walletType: "hiro" });
+      eventBus.remove("change-address");
+      eventBus.remove("account-connected");
+    } else {
+      showConnect({
+        appDetails: {
+          name: "DLC.Link",
+          icon: window.location.origin + "public/dlc.link_logo.png",
+        },
+        onFinish: () => {
+          eventBus.dispatch("change-address", {
+            address: userSession.loadUserData().profile.stxAddress.testnet,
+          });
+          eventBus.dispatch("account-connected", { isConnected: true });
+          eventBus.dispatch("wallet-type", { walletType: "hiro" });
+          eventBus.remove("change-address");
+          eventBus.remove("account-connected");
+        },
+        userSession,
+      });
+    }
   }
 
   return (
@@ -78,6 +95,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                 color: "white",
                 bg: "accent",
               }}
+              disabled
               background="white"
               bgGradient="linear(to-r, primary1, primary2)"
               bgClip="text"

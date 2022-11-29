@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { StacksMocknet } from "@stacks/network";
 import { callReadOnlyFunction } from "@stacks/transactions";
 import { principalCV } from "@stacks/transactions/dist/clarity/types/principalCV";
@@ -16,7 +15,6 @@ function toJson(data) {
 
 function formatAllDLC(dlcArray) {
   const formattedDLCArray = [];
-  console.log(dlcArray);
   for (const dlc of dlcArray) {
     const loan = formatDLC(dlc);
     formattedDLCArray.push(loan);
@@ -41,8 +39,6 @@ function formatDLC(dlc) {
       dlcUUID: bytesToUtf8(dlcData.dlc_uuid.value.buffer),
     }),
   };
-
-  console.log(rawData.closingPrice);
 
   const loan = {
     raw: rawData,
