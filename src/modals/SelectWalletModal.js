@@ -55,7 +55,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       showConnect({
         appDetails: {
           name: "DLC.Link",
-          icon: window.location.origin + "/dlc.link_color_logo.svg",
+          icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
         },
         onFinish: () => {
           eventBus.dispatch("change-address", {
