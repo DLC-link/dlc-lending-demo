@@ -52,7 +52,7 @@ function formatDLC(dlc) {
       formattedVaultLoan: "$ " + fixedTwoDecimalShift(rawData.vaultLoan),
       ...(rawData.hasOwnProperty("closingPrice") && {
         formattedClosingPrice:
-          "$ " + customShiftValue(rawData.closingPrice, 8, true),
+          "$ " + Math.round(((customShiftValue(rawData.closingPrice, 8, true)) + Number.EPSILON) * 100) / 100,
       }),
     },
   };

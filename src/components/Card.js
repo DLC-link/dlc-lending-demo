@@ -282,7 +282,7 @@ export default function Card(props) {
                     </Text>
                   </Td>
                   <Td>
-                    <Text fontSize={8} color="white">
+                    <Text fontSize={12} color="white">
                       {props.dlc.formatted.formattedClosingPrice}
                     </Text>
                   </Td>
