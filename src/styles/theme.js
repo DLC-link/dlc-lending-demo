@@ -1,4 +1,4 @@
-import { extendTheme } from '@chakra-ui/react'
+import { extendTheme } from "@chakra-ui/react";
 
 export const theme = extendTheme({
   styles: {
@@ -16,25 +16,10 @@ export const theme = extendTheme({
     secondary2: "#2C039E",
     accent: "#07E8D8",
     background1: "#500056",
-    background2: "#001372"
+    background2: "#001372",
   },
 
   fonts: {
-    body: "'Poppins', poppins"
+    body: "'Poppins', poppins",
   },
-
-  // textStyles: {
-  //   header: {
-  //     fontSize: ['48px', '72px'],
-  //     fontWeight: 'bold',
-  //     lineHeight: '110%',
-  //     letterSpacing: '-2%',
-  //   },
-  //   button: {
-  //     fontSize: ['36px', '48px'],
-  //     fontWeight: 'semibold',
-  //     lineHeight: '110%',
-  //     letterSpacing: '-1%',
-  //   },
-  // },
 });
