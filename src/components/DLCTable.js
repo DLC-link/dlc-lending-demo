@@ -28,15 +28,15 @@ export default class DLCTable extends React.Component {
     this.fetchBitcoinValue();
     this.setState({ address: this.props.address });
     this.refreshLoansTable(false);
+    eventBus.on('fetch-loans-bg', () => {
+      this.refreshLoansTable(true);
+    })
   }
 
   componentDidUpdate(previousProps) {
     if (previousProps.isConnected !== this.props.isConnected) {
       this.setState({ isConnected: this.props.isConnected });
     }
-    eventBus.on('fetch-loans-bg', () => {
-      this.refreshLoansTable(true);
-    })
   }
 
   openDepositModal() {
