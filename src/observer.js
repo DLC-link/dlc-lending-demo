@@ -1,5 +1,7 @@
 import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
 import { io as ioClient } from 'socket.io-client';
+import { ethers } from "ethers";
+import { abi as loanManagerABI } from "./loanManagerABI";
 import eventBus from "./EventBus";
 
 const api_base = `http://stx-btc1.dlc.link:3999/extended/v1`;
@@ -71,8 +73,7 @@ function handleTx(txInfo) {
   eventBus.dispatch('fetch-loans-bg');
 }
 
-export default function startObserver() {
-
+function startStacksObserver() {
   // Setting up Stacks API websocket
   const socket = ioClient(ioclient_uri, {
     transports: [ "websocket" ]
@@ -86,14 +87,12 @@ export default function startObserver() {
 
   stacksSocket.socket.on('connect', async () => {
     console.log('[Stacks] (Re)connected stacksSocket');
+    console.log(`Listening to ${contractFullName}...`);
+    console.log(`Listening to ${dlcManagerFullName}...`);
   });
 
-  // Subscribing to Sample Contract's txs
   stacksSocket.subscribeAddressTransactions(contractFullName);
-  console.log(`Listening to ${contractFullName}...`);
-
   stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
-  console.log(`Listening to ${dlcManagerFullName}...`);
 
   // Handling incoming txs
   stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
@@ -108,5 +107,25 @@ export default function startObserver() {
 
     handleTx(txInfo);
   })
+}
 
+function startEthObserver() {
+  const { ethereum } = window;
+  const provider = new ethers.providers.Web3Provider(ethereum);
+  const signer = provider.getSigner();
+
+  const loanManagerETH = new ethers.Contract(
+    "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
+    loanManagerABI,
+    signer
+  );
+
+  loanManagerETH.on('CreateDLC', () => eventBus.dispatch('fetch-loans-bg'));
+  loanManagerETH.on('CreateDLCInternal', () => eventBus.dispatch('fetch-loans-bg'));
+  loanManagerETH.on('CloseDLC', () => eventBus.dispatch('fetch-loans-bg'));
+}
+
+export default function startObserver() {
+  startStacksObserver();
+  startEthObserver();
 }
