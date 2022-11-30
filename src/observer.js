@@ -122,6 +122,7 @@ function startEthObserver() {
 
   loanManagerETH.on('CreateDLC', () => eventBus.dispatch('fetch-loans-bg'));
   loanManagerETH.on('CreateDLCInternal', () => eventBus.dispatch('fetch-loans-bg'));
+  loanManagerETH.on('SetStatusFunded', () => eventBus.dispatch('fetch-loans-bg'));
   loanManagerETH.on('CloseDLC', () => eventBus.dispatch('fetch-loans-bg'));
 }
 
