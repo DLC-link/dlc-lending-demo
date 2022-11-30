@@ -28,8 +28,16 @@ import { customShiftValue, fixedTwoDecimalUnshift } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
+import { ethers } from "ethers";
+import { abi as loanManagerABI } from "../loanManagerABI";
+import eventBus from "../EventBus";
 
-export default function DepositModal({ isOpen, closeModal }) {
+export default function DepositModal({
+  isOpen,
+  closeModal,
+  walletType,
+  address,
+}) {
   const [collateral, setCollateral] = useState();
   const [loan, setLoan] = useState();
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -72,7 +80,7 @@ export default function DepositModal({ isOpen, closeModal }) {
     return loanContract;
   };
 
-  const sendLoanContract = (loanContract) => {
+  const sendLoanContractToStacks = (loanContract) => {
     const network = new StacksMocknet({ url: "http://localhost:3999" });
     openContractCall({
       network: network,
@@ -101,6 +109,34 @@ export default function DepositModal({ isOpen, closeModal }) {
         console.log("onCancel:", "Transaction was canceled");
       },
     });
+  };
+
+  const sendLoanContractToEthereum = async (loanContract) => {
+    const { ethereum } = window;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const signer = provider.getSigner();
+
+    const loanManagerETH = new ethers.Contract(
+      "0x93F10D458721F6A3D9d88f14E42f2225D9Ead1b8",
+      loanManagerABI,
+      signer
+    );
+    loanManagerETH.setupLoan(
+      loanContract.vaultLoanAmount,
+      loanContract.BTCDeposit,
+      loanContract.liquidationRatio,
+      loanContract.liquidationFee,
+      loanContract.emergencyRefundTime
+    ).then(() => closeModal())
+  };
+
+  const sendLoanContract = (loanContract) => {
+    switch (walletType) {
+      case "hiro":
+        sendLoanContractToStacks(loanContract);
+      case "metamask":
+        sendLoanContractToEthereum(loanContract);
+    }
   };
 
   const createAndSendLoanContract = () => {

@@ -95,7 +95,6 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                 color: "white",
                 bg: "accent",
               }}
-              disabled
               background="white"
               bgGradient="linear(to-r, primary1, primary2)"
               bgClip="text"

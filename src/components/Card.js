@@ -21,6 +21,8 @@ import CurrencyBitcoinIcon from "@mui/icons-material/CurrencyBitcoin";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import PaidIcon from "@mui/icons-material/Paid";
+import { ethers } from "ethers";
+import { abi as loanManagerABI } from "../loanManagerABI";
 
 export default function Card(props) {
   const sendOfferForSigning = async (msg) => {

@@ -17,6 +17,7 @@ export default class App extends React.Component {
       isConnected: false,
       isLoading: true,
       address: "",
+      walletType: undefined,
     };
   }
 
@@ -27,14 +28,14 @@ export default class App extends React.Component {
     eventBus.on("is-deposit-modal-open", (data) =>
       this.setState({ isDepositOpen: data.isDepositOpen })
     );
-  };
-
-  componentDidUpdate = () => {
     eventBus.on(
       "account-connected",
       (data) =>
         this.state.isConnected !== data.isConnected &&
         this.setState({ isConnected: data.isConnected })
+    );
+    eventBus.on("wallet-type", (data) =>
+      this.setState({ walletType: data.walletType })
     );
     eventBus.on(
       "change-address",
@@ -58,6 +59,8 @@ export default class App extends React.Component {
         <Box height="auto">
           <Header></Header>
           <DepositModal
+            walletType={this.state.walletType}
+            address={this.state.address}
             isOpen={this.state.isDepositOpen}
             closeModal={this.onDepositClose}
           />
@@ -72,6 +75,7 @@ export default class App extends React.Component {
                 isConnected={this.state.isConnected}
               ></DepositWithdraw>
               <DLCTable
+                walletType={this.state.walletType}
                 isConnected={this.state.isConnected}
                 address={this.state.address}
               ></DLCTable>

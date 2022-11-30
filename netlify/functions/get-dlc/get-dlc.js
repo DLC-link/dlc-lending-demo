@@ -52,7 +52,7 @@ function formatDLC(dlc) {
       formattedVaultLoan: "$ " + fixedTwoDecimalShift(rawData.vaultLoan),
       ...(rawData.hasOwnProperty("closingPrice") && {
         formattedClosingPrice:
-          "$ " + Math.round(((customShiftValue(rawData.closingPrice, 8, true)) + Number.EPSILON) * 100) / 100,
+          "$ " + customShiftValue(rawData.closingPrice, 8, true),
       }),
     },
   };
@@ -80,6 +80,7 @@ const handler = async function (event, context) {
     } else {
       loans = formatAllDLC(response.list);
     }
+    console.log(loans)
     return {
       statusCode: 200,
       body: JSON.stringify({ msg: loans }),

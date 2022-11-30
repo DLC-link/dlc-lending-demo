@@ -11,6 +11,8 @@ import {
   ScaleFade,
 } from "@chakra-ui/react";
 import Card from "./Card";
+import { ethers } from "ethers";
+import { abi as loanManagerABI } from "../loanManagerABI";
 
 export default class DLCTable extends React.Component {
   constructor(props) {
@@ -20,7 +22,8 @@ export default class DLCTable extends React.Component {
       bitCoinValue: 0,
       loans: [],
       isLoading: undefined,
-      manualLoading: undefined
+      manualLoading: undefined,
+      walletType: props.walletType,
     };
   }
 
@@ -28,9 +31,9 @@ export default class DLCTable extends React.Component {
     this.fetchBitcoinValue();
     this.setState({ address: this.props.address });
     this.refreshLoansTable(false);
-    eventBus.on('fetch-loans-bg', () => {
+    eventBus.on("fetch-loans-bg", () => {
       this.refreshLoansTable(true);
-    })
+    });
   }
 
   componentDidUpdate(previousProps) {
@@ -47,12 +50,10 @@ export default class DLCTable extends React.Component {
     this.setState({ isLoading: true, manualLoading: manual });
     eventBus.dispatch("set-loading-state", { isLoading: true });
     this.fetchAllDLC()
-      .then(
-        (loans) => {
-          this.setState({ loans: loans }); 
-          this.countBalance(loans)
-        }
-      )
+      .then((loans) => {
+        this.setState({ loans: loans });
+        this.countBalance(loans);
+      })
       .then(() => this.setState({ isLoading: false }))
       .then(() => eventBus.dispatch("set-loading-state", { isLoading: false }));
   }
@@ -76,13 +77,29 @@ export default class DLCTable extends React.Component {
 
   fetchAllDLC = async () => {
     let dlcArray = undefined;
-    await fetch("/.netlify/functions/get-dlc?creator=" + this.props.address, {
-      headers: { accept: "Accept: application/json" },
-    })
-      .then((x) => x.json())
-      .then(({ msg }) => {
-        dlcArray = msg;
-      });
+    let creator = this.props.address;
+    switch (this.state.walletType) {
+      case "hiro":
+        await fetch("/.netlify/functions/get-dlc?creator=" + creator, {
+          headers: { accept: "Accept: application/json" },
+        })
+          .then((x) => x.json())
+          .then(({ msg }) => {
+            dlcArray = msg;
+          });
+      case "metamask":
+        const { ethereum } = window;
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+
+        const loanManagerETH = new ethers.Contract(
+          "0x93F10D458721F6A3D9d88f14E42f2225D9Ead1b8",
+          loanManagerABI,
+          signer
+        );
+        dlcArray = await loanManagerETH.getAllLoansForAddress(creator);
+        console.log(dlcArray);
+    }
     return dlcArray;
   };
 
@@ -123,10 +140,7 @@ export default class DLCTable extends React.Component {
               </IconButton>
             </HStack>
             <ScaleFade in={!this.state.isLoading}>
-              <SimpleGrid
-                columns={[1, 4]}
-                spacing={[0, 15]}
-              >
+              <SimpleGrid columns={[1, 4]} spacing={[0, 15]}>
                 {this.state.loans?.map((loan) => (
                   <Card
                     dlc={loan}
