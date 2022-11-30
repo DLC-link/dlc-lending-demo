@@ -24,6 +24,7 @@ import PaidIcon from "@mui/icons-material/Paid";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 
+
 export default function Card(props) {
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
@@ -60,45 +61,76 @@ export default function Card(props) {
 
   const getLoanIDByUUID = async () => {
     let loanContractID = undefined;
-    await fetch(
-      "/.netlify/functions/get-loan-id-by-uuid?uuid=" +
-        props.dlc.raw.dlcUUID +
-        "&creator=" +
-        props.creator,
-      {
-        headers: { accept: "Accept: application/json" },
-      }
-    )
-      .then((x) => x.json())
-      .then(({ msg }) => {
-        loanContractID = msg;
-      });
+    switch (props.walletType) {
+      case "hiro":
+        await fetch(
+          "/.netlify/functions/get-loan-id-by-uuid?uuid=" +
+            props.dlc.raw.dlcUUID +
+            "&creator=" +
+            props.creator,
+          {
+            headers: { accept: "Accept: application/json" },
+          }
+        )
+          .then((x) => x.json())
+          .then(({ msg }) => {
+            loanContractID = msg;
+          });
+        break;
+      case "metamask":
+        const { ethereum } = window;
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+
+        const loanManagerETH = new ethers.Contract(
+          "0xa72965884D9C0FD02C90a5b4899fADBe6BB79D42",
+          loanManagerABI,
+          signer
+        );
+    }
     return loanContractID;
   };
 
   const repayLoanContract = async () => {
-    const network = new StacksMocknet({ url: "http://localhost:3999" });
-    const loanContractID = await getLoanIDByUUID(props.dlc.raw.dlcUUID);
-    openContractCall({
-      network: network,
-      anchorMode: 1,
-      contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
-      contractName: "sample-contract-loan-v0",
-      functionName: "repay-loan",
-      functionArgs: [uintCV(parseInt(loanContractID))],
-      onFinish: (data) => {
-        console.log("onFinish:", data);
-        window
-          .open(
-            `http://localhost:8000/txid/${data.txId}?chain=mainnet`,
-            "_blank"
-          )
-          .focus();
-      },
-      onCancel: () => {
-        console.log("onCancel:", "Transaction was canceled");
-      },
-    });
+    switch (props.walletType) {
+      case "hiro":
+        const network = new StacksMocknet({ url: "http://localhost:3999" });
+        const loanContractID = await getLoanIDByUUID(props.dlc.raw.dlcUUID);
+        console.log(loanContractID);
+        openContractCall({
+          network: network,
+          anchorMode: 1,
+          contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
+          contractName: "sample-contract-loan-v0",
+          functionName: "repay-loan",
+          functionArgs: [uintCV(parseInt(loanContractID))],
+          onFinish: (data) => {
+            console.log("onFinish:", data);
+            window
+              .open(
+                `http://localhost:8000/txid/${data.txId}?chain=mainnet`,
+                "_blank"
+              )
+              .focus();
+          },
+          onCancel: () => {
+            console.log("onCancel:", "Transaction was canceled");
+          },
+        });
+        break;
+      case "metamask":
+        const { ethereum } = window;
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+
+        const loanManagerETH = new ethers.Contract(
+          "0xa72965884D9C0FD02C90a5b4899fADBe6BB79D42",
+          loanManagerABI,
+          signer
+        );
+
+        break;
+    }
   };
 
   const liquidateLoanContract = async () => {

@@ -117,7 +117,7 @@ export default function DepositModal({
     const signer = provider.getSigner();
 
     const loanManagerETH = new ethers.Contract(
-      "0x93F10D458721F6A3D9d88f14E42f2225D9Ead1b8",
+      "0xa72965884D9C0FD02C90a5b4899fADBe6BB79D42",
       loanManagerABI,
       signer
     );
@@ -134,8 +134,10 @@ export default function DepositModal({
     switch (walletType) {
       case "hiro":
         sendLoanContractToStacks(loanContract);
+        break;
       case "metamask":
         sendLoanContractToEthereum(loanContract);
+        break;
     }
   };
 

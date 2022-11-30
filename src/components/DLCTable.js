@@ -13,6 +13,7 @@ import {
 import Card from "./Card";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
+import loanFormatter from "../LoanFormatter";
 
 export default class DLCTable extends React.Component {
   constructor(props) {
@@ -54,8 +55,10 @@ export default class DLCTable extends React.Component {
         this.setState({ loans: loans });
         this.countBalance(loans);
       })
-      .then(() => this.setState({ isLoading: false }))
-      .then(() => eventBus.dispatch("set-loading-state", { isLoading: false }));
+      .then(() => {
+        this.setState({ isLoading: false });
+        eventBus.dispatch("set-loading-state", { isLoading: false });
+      });
   }
 
   countBalance = (loans) => {
@@ -76,31 +79,38 @@ export default class DLCTable extends React.Component {
   };
 
   fetchAllDLC = async () => {
-    let dlcArray = undefined;
+    let loans = undefined;
     let creator = this.props.address;
     switch (this.state.walletType) {
-      case "hiro":
-        await fetch("/.netlify/functions/get-dlc?creator=" + creator, {
-          headers: { accept: "Accept: application/json" },
-        })
+      case ("hiro"):
+        await fetch(
+          "/.netlify/functions/get-dlc?creator=" + this.props.address,
+          {
+            headers: { accept: "Accept: application/json" },
+          }
+        )
           .then((x) => x.json())
           .then(({ msg }) => {
-            dlcArray = msg;
+            loans = msg;
           });
-      case "metamask":
+        break;
+      case ("metamask"):
         const { ethereum } = window;
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
 
         const loanManagerETH = new ethers.Contract(
-          "0x93F10D458721F6A3D9d88f14E42f2225D9Ead1b8",
+          "0xa72965884D9C0FD02C90a5b4899fADBe6BB79D42",
           loanManagerABI,
           signer
         );
-        dlcArray = await loanManagerETH.getAllLoansForAddress(creator);
-        console.log(dlcArray);
+
+        loans = loanFormatter.formatAllDLC(
+          await loanManagerETH.getAllLoansForAddress(creator),
+          "solidity"
+        );
     }
-    return dlcArray;
+    return loans;
   };
 
   fetchBitcoinValue = async () => {
@@ -145,6 +155,7 @@ export default class DLCTable extends React.Component {
                   <Card
                     dlc={loan}
                     creator={this.props.address}
+                    walletType={this.props.walletType}
                     bitCoinValue={this.state.bitCoinValue}
                   ></Card>
                 ))}
