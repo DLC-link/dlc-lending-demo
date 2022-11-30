@@ -3,7 +3,6 @@
 import {
   Flex,
   Text,
-  Tooltip,
   VStack,
   Button,
   TableContainer,
@@ -11,6 +10,7 @@ import {
   Table,
   Tr,
   Td,
+  HStack,
 } from "@chakra-ui/react";
 import { easyTruncateAddress } from "../utils";
 import { StacksMocknet } from "@stacks/network";
@@ -23,7 +23,6 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import PaidIcon from "@mui/icons-material/Paid";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
-
 
 export default function Card(props) {
   const sendOfferForSigning = async (msg) => {
@@ -61,33 +60,19 @@ export default function Card(props) {
 
   const getLoanIDByUUID = async () => {
     let loanContractID = undefined;
-    switch (props.walletType) {
-      case "hiro":
-        await fetch(
-          "/.netlify/functions/get-loan-id-by-uuid?uuid=" +
-            props.dlc.raw.dlcUUID +
-            "&creator=" +
-            props.creator,
-          {
-            headers: { accept: "Accept: application/json" },
-          }
-        )
-          .then((x) => x.json())
-          .then(({ msg }) => {
-            loanContractID = msg;
-          });
-        break;
-      case "metamask":
-        const { ethereum } = window;
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner();
-
-        const loanManagerETH = new ethers.Contract(
-          "0xa72965884D9C0FD02C90a5b4899fADBe6BB79D42",
-          loanManagerABI,
-          signer
-        );
-    }
+    await fetch(
+      "/.netlify/functions/get-loan-id-by-uuid?uuid=" +
+        props.dlc.raw.dlcUUID +
+        "&creator=" +
+        props.creator,
+      {
+        headers: { accept: "Accept: application/json" },
+      }
+    )
+      .then((x) => x.json())
+      .then(({ msg }) => {
+        loanContractID = msg;
+      });
     return loanContractID;
   };
 
@@ -100,7 +85,7 @@ export default function Card(props) {
         openContractCall({
           network: network,
           anchorMode: 1,
-          contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
+          contractAddress: "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
           contractName: "sample-contract-loan-v0",
           functionName: "repay-loan",
           functionArgs: [uintCV(parseInt(loanContractID))],
@@ -124,38 +109,57 @@ export default function Card(props) {
         const signer = provider.getSigner();
 
         const loanManagerETH = new ethers.Contract(
-          "0xa72965884D9C0FD02C90a5b4899fADBe6BB79D42",
+          "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
           loanManagerABI,
           signer
         );
-
+        loanManagerETH.repayLoan(props.dlc.raw.id);
         break;
     }
   };
 
   const liquidateLoanContract = async () => {
-    const network = new StacksMocknet({ url: "http://localhost:3999" });
-    const loanContractID = await getLoanIDByUUID(props.dlc.raw.dlcUUID);
-    openContractCall({
-      network: network,
-      anchorMode: 1,
-      contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
-      contractName: "sample-contract-loan-v0",
-      functionName: "liquidate-loan",
-      functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
-      onFinish: (data) => {
-        console.log("onFinish:", data);
-        window
-          .open(
-            `http://localhost:8000/txid/${data.txId}?chain=mainnet`,
-            "_blank"
-          )
-          .focus();
-      },
-      onCancel: () => {
-        console.log("onCancel:", "Transaction was canceled");
-      },
-    });
+    switch (props.walletType) {
+      case "hiro":
+        const network = new StacksMocknet({ url: "http://localhost:3999" });
+        const loanContractID = await getLoanIDByUUID(props.dlc.raw.dlcUUID);
+        openContractCall({
+          network: network,
+          anchorMode: 1,
+          contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
+          contractName: "sample-contract-loan-v0",
+          functionName: "liquidate-loan",
+          functionArgs: [
+            uintCV(parseInt(loanContractID)),
+            uintCV(240000000000),
+          ],
+          onFinish: (data) => {
+            console.log("onFinish:", data);
+            window
+              .open(
+                `http://localhost:8000/txid/${data.txId}?chain=mainnet`,
+                "_blank"
+              )
+              .focus();
+          },
+          onCancel: () => {
+            console.log("onCancel:", "Transaction was canceled");
+          },
+        });
+        break;
+      case "metamask":
+        const { ethereum } = window;
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+
+        const loanManagerETH = new ethers.Contract(
+          "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
+          loanManagerABI,
+          signer
+        );
+        loanManagerETH.liquidateLoan(props.dlc.raw.id);
+        break;
+    }
   };
 
   const sendBTC = () => {
@@ -193,44 +197,52 @@ export default function Card(props) {
       <VStack margin={15}>
         <Flex>
           {props.dlc.raw.status === "not-ready" && (
-            <Tooltip label="DLC is not ready yet">
+            <HStack spacing={2}>
               <HourglassEmptyIcon sx={{ color: "orange" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Not ready</Text>
+            </HStack>
           )}
           {props.dlc.raw.status === "unfunded" && (
-            <Tooltip label="DLC is not yet funded">
+            <HStack spacing={2}>
               <CurrencyBitcoinIcon sx={{ color: "orange" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Unfunded</Text>
+            </HStack>
           )}
           {props.dlc.raw.status === "pre-repaid" && (
-            <Tooltip label="Waiting to be repaid">
+            <HStack spacing={2}>
               <HourglassEmptyIcon sx={{ color: "orange" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Waiting to be repaid</Text>
+            </HStack>
           )}
           {props.dlc.raw.status === "pre-liquidated" && (
-            <Tooltip label="Waiting to be liquidated">
+            <HStack spacing={2}>
               <HourglassEmptyIcon sx={{ color: "orange" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Waiting to be liquidated</Text>
+            </HStack>
           )}
           {props.dlc.raw.status === "ready" && (
-            <Tooltip label="DLC is ready">
+            <HStack spacing={2}>
               <CurrencyBitcoinIcon sx={{ color: "orange" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Ready</Text>
+            </HStack>
           )}
           {props.dlc.raw.status === "funded" && (
-            <Tooltip label="DLC is funded">
+            <HStack spacing={2}>
               <CurrencyBitcoinIcon sx={{ color: "green" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Funded</Text>
+            </HStack>
           )}
           {props.dlc.raw.status === "liquidated" && (
-            <Tooltip label="DLC is liquidated">
+            <HStack spacing={2}>
               <CurrencyExchangeIcon sx={{ color: "green" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Liquidated</Text>
+            </HStack>
           )}
           {props.dlc.raw.status === "repaid" && (
-            <Tooltip label="DLC is repaid">
+            <HStack spacing={2}>
               <PaidIcon sx={{ color: "green" }} />
-            </Tooltip>
+              <Text color="white" fontSize={12}>Repaid</Text>
+            </HStack>
           )}
         </Flex>
         <TableContainer width={250}>
@@ -342,7 +354,7 @@ export default function Card(props) {
                 fontWeight="bold"
                 onClick={sendBTC}
               >
-                SEND BTC
+                LOCK BTC
               </Button>
             </VStack>
           )}

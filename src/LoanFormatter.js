@@ -27,6 +27,7 @@ const loanFormatter = {
 
   formatSolidityResponse(dlc) {
     const rawData = {
+      id: parseInt(dlc.id._hex),
       status: dlc.status,
       owner: dlc.owner,
       liquidationFee: parseInt(dlc.liquidationFee._hex),
@@ -71,7 +72,6 @@ const loanFormatter = {
 
   formatAllDLC(dlcArray, responseType) {
     const loans = [];
-    console.log(responseType);
     switch (responseType) {
       case "solidity":
         for (const dlc of dlcArray) {

@@ -100,11 +100,10 @@ export default class DLCTable extends React.Component {
         const signer = provider.getSigner();
 
         const loanManagerETH = new ethers.Contract(
-          "0xa72965884D9C0FD02C90a5b4899fADBe6BB79D42",
+          "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
           loanManagerABI,
           signer
         );
-
         loans = loanFormatter.formatAllDLC(
           await loanManagerETH.getAllLoansForAddress(creator),
           "solidity"
