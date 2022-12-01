@@ -25,7 +25,6 @@ import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 
 export default function Card(props) {
-
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
@@ -105,16 +104,20 @@ export default function Card(props) {
   };
 
   const repayEthereumLoanContract = async () => {
-    const { ethereum } = window;
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
+    try {
+      const { ethereum } = window;
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
 
-    const loanManagerETH = new ethers.Contract(
-      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-      loanManagerABI,
-      signer
-    );
-    loanManagerETH.repayLoan(props.loan.raw.id);
+      const loanManagerETH = new ethers.Contract(
+        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+        loanManagerABI,
+        signer
+      );
+      loanManagerETH.repayLoan(props.loan.raw.id);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const liquidateLoanContract = async () => {
@@ -154,16 +157,20 @@ export default function Card(props) {
   };
 
   const liquidateEthereumLoanContract = async () => {
-    const { ethereum } = window;
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
+    try {
+      const { ethereum } = window;
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
 
-    const loanManagerETH = new ethers.Contract(
-      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-      loanManagerABI,
-      signer
-    );
-    loanManagerETH.liquidateLoan(props.loan.raw.id);
+      const loanManagerETH = new ethers.Contract(
+        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+        loanManagerABI,
+        signer
+      );
+      loanManagerETH.liquidateLoan(props.loan.raw.id);
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   const sendBTC = () => {

@@ -74,7 +74,7 @@ export default function DLCTable(props) {
   };
 
   const fetchStacksLoans = async () => {
-    let loans = undefined;
+    let loans = [];
     await fetch("/.netlify/functions/get-stacks-loans?creator=" + address, {
       headers: { accept: "Accept: application/json" },
     })
@@ -86,20 +86,24 @@ export default function DLCTable(props) {
   };
 
   const fetchEthereumLoans = async () => {
-    let loans = undefined;
-    const { ethereum } = window;
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
+    let loans = [];
+    try {
+      const { ethereum } = window;
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
 
-    const loanManagerETH = new ethers.Contract(
-      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-      loanManagerABI,
-      signer
-    );
-    loans = loanFormatter.formatAllDLC(
-      await loanManagerETH.getAllLoansForAddress(address),
-      "solidity"
-    );
+      const loanManagerETH = new ethers.Contract(
+        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+        loanManagerABI,
+        signer
+      );
+      loans = loanFormatter.formatAllDLC(
+        await loanManagerETH.getAllLoansForAddress(address),
+        "solidity"
+      );
+    } catch (error) {
+      console.log(error);
+    }
     return loans;
   };
 
