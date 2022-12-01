@@ -20,24 +20,19 @@ import {
 import { customShiftValue, fixedTwoDecimalShift } from "../utils";
 
 export default function DepositWithdraw(props) {
-  const [isConnected, setConnected] = useState(false);
-  const [isLoading, setLoading] = useState(undefined);
+  const isConnected = props.isConnected;
+  const isLoading = props.isLoading;
   const [depositAmount, setDepositAmount] = useState(0);
   const [loanAmount, setLoanAmount] = useState(0);
 
   useEffect(() => {
-    setConnected(props.isConnected);
-  }, [props]);
-
-  useEffect(() => {
-    eventBus.on("set-loading-state", (data) => setLoading(data.isLoading));
     eventBus.on("change-deposit-amount", (data) =>
       setDepositAmount(customShiftValue(data.depositAmount, 8, true))
     );
     eventBus.on("change-loan-amount", (data) =>
       setLoanAmount(fixedTwoDecimalShift(data.loanAmount))
     );
-  });
+  }, []);
 
   const openDepositModal = () => {
     eventBus.dispatch("is-deposit-modal-open", { isDepositOpen: true });

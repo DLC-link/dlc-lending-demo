@@ -16,7 +16,7 @@ import { abi as loanManagerABI } from "../loanManagerABI";
 import loanFormatter from "../LoanFormatter";
 
 export default function DLCTable(props) {
-  const [isConnected, setConnected] = useState(props.isConnected);
+  const isConnected = props.isConnected;
   const address = props.address;
   const walletType = props.walletType;
   const [bitCoinValue, setBitCoinValue] = useState(0);
@@ -31,10 +31,6 @@ export default function DLCTable(props) {
       refreshLoansTable(true);
     });
   }, []);
-
-  useEffect(() => {
-    setConnected(props.isConnected);
-  }, [props.isConnected]);
 
   const fetchBitcoinValue = async () => {
     let bitCoinValue = undefined;

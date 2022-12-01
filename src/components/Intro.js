@@ -5,7 +5,7 @@ export default function Header(props) {
   const isConnected = props.isConnected;
 
   return (
-    <Collapse in={!this.state.isConnected}>
+    <Collapse in={!isConnected}>
       <Box width="auto" margin={25}>
         <Box bgGradient="linear(to-r, primary1, primary2)" borderRadius="lg">
           <Text padding={[1, 15]} fontSize={[25, 100]} color="white">

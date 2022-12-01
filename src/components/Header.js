@@ -7,19 +7,15 @@ import { userSession } from "../hiroWalletUserSession";
 
 export default function Header(props) {
   const address = props.address;
-  const [isConnected, setConnected] = useState(props.isConnected);
+  const isConnected = props.isConnected;
   const walletType = props.walletType;
-
-  useEffect(() => {
-    setConnected(props.isConnected)
-  }, [props.isConnected]);
 
   const disconnect = () => {
     if (walletType === "hiro") {
       userSession.signUserOut("/");
     }
-    eventBus.dispatch("change-address", { address: "" });
-    eventBus.dispatch("account-connected", { isConnected: false });
+    eventBus.dispatch("set-address", { address: "" });
+    eventBus.dispatch("is-account-connected", { isConnected: false });
   };
 
   const openSelectWalletModal = () => {

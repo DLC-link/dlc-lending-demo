@@ -16,6 +16,7 @@ import { userSession } from "../hiroWalletUserSession";
 import { showConnect } from "@stacks/connect";
 
 export default function SelectWalletModal({ isOpen, closeModal }) {
+  
   async function requestMetaMaskAccount() {
     try {
       const { ethereum } = window;
@@ -26,9 +27,8 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       const accounts = await ethereum.request({
         method: "eth_requestAccounts",
       });
-      console.log("Connected", accounts[0]);
-      eventBus.dispatch("change-address", { address: accounts[0] });
-      eventBus.dispatch("account-connected", { isConnected: true });
+      eventBus.dispatch("set-address", { address: accounts[0] });
+      eventBus.dispatch("is-account-connected", { isConnected: true });
       eventBus.dispatch("wallet-type", { walletType: "metamask" });
     } catch (error) {
       console.log(error);
@@ -44,13 +44,11 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
     }
 
     if (isUserSessionStored) {
-      eventBus.dispatch("change-address", {
+      eventBus.dispatch("set-address", {
         address: userSession.loadUserData().profile.stxAddress.testnet,
       });
-      eventBus.dispatch("account-connected", { isConnected: true });
+      eventBus.dispatch("is-account-connected", { isConnected: true });
       eventBus.dispatch("wallet-type", { walletType: "hiro" });
-      eventBus.remove("change-address");
-      eventBus.remove("account-connected");
     } else {
       showConnect({
         appDetails: {
@@ -58,13 +56,11 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
           icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
         },
         onFinish: () => {
-          eventBus.dispatch("change-address", {
+          eventBus.dispatch("set-address", {
             address: userSession.loadUserData().profile.stxAddress.testnet,
           });
-          eventBus.dispatch("account-connected", { isConnected: true });
+          eventBus.dispatch("is-account-connected", { isConnected: true });
           eventBus.dispatch("wallet-type", { walletType: "hiro" });
-          eventBus.remove("change-address");
-          eventBus.remove("account-connected");
         },
         userSession,
       });
