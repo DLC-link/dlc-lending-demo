@@ -1,7 +1,5 @@
 import fetch from 'node-fetch'
 
-const WALLET_DOMAIN = "https://dev-oracle.dlc.link/wallet";
-
 const handler = async function (event, context) {
   if (!context.clientContext && !context.clientContext.identity) {
     return {
@@ -16,7 +14,7 @@ const handler = async function (event, context) {
   try {
     const uuid = event.queryStringParameters.uuid;
     const collateral = event.queryStringParameters.collateral;
-    const URL = WALLET_DOMAIN + `/offer`;
+    const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
     const response = await fetch(URL, { 
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
