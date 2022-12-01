@@ -4,60 +4,9 @@ import { principalCV } from "@stacks/transactions/dist/clarity/types/principalCV
 import { bytesToUtf8 } from "micro-stacks/common";
 import { addressToString } from "@stacks/transactions";
 import { customShiftValue, fixedTwoDecimalShift } from "../../../src/utils";
+import loanFormatter from "../../../src/LoanFormatter";
 
 const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
-
-function toJson(data) {
-  return JSON.stringify(data, (_, v) =>
-    typeof v === "bigint" ? `${v}n` : v
-  ).replace(/"(-?\d+)n"/g, (_, a) => a);
-}
-
-function formatAllDLC(dlcArray) {
-  const formattedDLCArray = [];
-  for (const dlc of dlcArray) {
-    const loan = formatDLC(dlc);
-    formattedDLCArray.push(loan);
-  }
-  return formattedDLCArray;
-}
-
-function formatDLC(dlc) {
-  const dlcData = dlc.value.data;
-
-  const rawData = {
-    status: dlcData.status.data,
-    owner: addressToString(dlcData.owner.address),
-    liquidationFee: toJson(dlcData["liquidation-fee"].value),
-    liquidationRatio: toJson(dlcData["liquidation-ratio"].value),
-    vaultCollateral: toJson(dlcData["vault-collateral"].value),
-    vaultLoan: toJson(dlcData["vault-loan"].value),
-    ...(dlcData["closing-price"].hasOwnProperty("value") && {
-      closingPrice: Number(dlcData["closing-price"].value.value),
-    }),
-    ...(dlcData.dlc_uuid.hasOwnProperty("value") && {
-      dlcUUID: bytesToUtf8(dlcData.dlc_uuid.value.buffer),
-    }),
-  };
-
-  const loan = {
-    raw: rawData,
-    formatted: {
-      formattedLiquidationFee:
-        fixedTwoDecimalShift(rawData.liquidationFee) + " %",
-      formattedLiquidationRatio:
-        fixedTwoDecimalShift(rawData.liquidationRatio) + " %",
-      formattedVaultCollateral:
-        customShiftValue(rawData.vaultCollateral, 8, true) + " BTC",
-      formattedVaultLoan: "$ " + fixedTwoDecimalShift(rawData.vaultLoan),
-      ...(rawData.hasOwnProperty("closingPrice") && {
-        formattedClosingPrice:
-          "$ " + Math.round(((customShiftValue(rawData.closingPrice, 8, true)) + Number.EPSILON) * 100) / 100,
-      }),
-    },
-  };
-  return loan;
-}
 
 function txOptions(creator) {
   return {
@@ -78,7 +27,7 @@ const handler = async function (event, context) {
     if (!response.list.length) {
       loans = [];
     } else {
-      loans = formatAllDLC(response.list);
+      loans = loanFormatter.formatAllDLC(response.list, "clarity");
     }
     return {
       statusCode: 200,

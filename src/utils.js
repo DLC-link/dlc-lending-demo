@@ -45,3 +45,9 @@ export function fixedTwoDecimalShift(value) {
 export function fixedTwoDecimalUnshift(value) {
   return customShiftValue(value, 2, false);
 }
+
+export function toJson(value) {
+  return JSON.stringify(value, (_, v) =>
+    typeof v === "bigint" ? `${v}n` : v
+  ).replace(/"(-?\d+)n"/g, (_, a) => a);
+}
