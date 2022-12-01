@@ -85,7 +85,7 @@ export default function Card(props) {
         openContractCall({
           network: network,
           anchorMode: 1,
-          contractAddress: "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
+          contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
           contractName: "sample-contract-loan-v0",
           functionName: "repay-loan",
           functionArgs: [uintCV(parseInt(loanContractID))],

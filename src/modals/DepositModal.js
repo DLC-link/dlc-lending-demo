@@ -66,8 +66,8 @@ export default function DepositModal({
   const isCollateralError = collateral < 0 || collateral == undefined;
   const isLoanError = loan < 1 || loan == undefined;
   const isCollateralToDebtRatioError = collateralToDebtRatio < 140;
-  const isError = false;
-    // isLoanError || isCollateralError || isCollateralToDebtRatioError;
+  const isError = 
+    isLoanError || isCollateralError || isCollateralToDebtRatioError;
 
   const createLoanContract = () => {
     let loanContract = {
