@@ -30,7 +30,6 @@ import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
-import eventBus from "../EventBus";
 
 export default function DepositModal({
   isOpen,

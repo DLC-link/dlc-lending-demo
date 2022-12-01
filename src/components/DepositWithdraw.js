@@ -24,7 +24,6 @@ export default function DepositWithdraw(props) {
   const [isLoading, setLoading] = useState(undefined);
   const [depositAmount, setDepositAmount] = useState(0);
   const [loanAmount, setLoanAmount] = useState(0);
-  const [walletType, setWalletType] = useState();
 
   useEffect(() => {
     setConnected(props.isConnected);

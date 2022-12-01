@@ -57,7 +57,11 @@ export default class App extends React.Component {
     return (
       <>
         <Box height="auto">
-          <Header></Header>
+          <Header
+            walletType={this.state.walletType}
+            address={this.state.address}
+            isConnected={this.state.isConnected}
+          ></Header>
           <DepositModal
             walletType={this.state.walletType}
             address={this.state.address}
