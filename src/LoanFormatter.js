@@ -4,7 +4,6 @@ import { bytesToUtf8 } from "micro-stacks/common";
 import { toJson } from "./utils";
 
 const loanFormatter = {
-
   formatClarityResponse(dlc) {
     const dlcData = dlc.value.data;
 
@@ -84,6 +83,9 @@ const loanFormatter = {
           const loan = this.formatClarityResponse(dlc);
           loans.push(loan);
         }
+        break;
+      default:
+        console.log("Unsupported language!");
         break;
     }
     return loans;

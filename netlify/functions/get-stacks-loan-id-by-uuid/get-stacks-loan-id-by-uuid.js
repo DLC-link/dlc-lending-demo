@@ -1,5 +1,4 @@
-import fetch from "node-fetch"
-import { StacksMainnet, StacksMocknet, StacksTestnet } from "@stacks/network";
+import { StacksMocknet } from "@stacks/network";
 import { bufferCVFromString, callReadOnlyFunction,cvToValue, cvTo } from "@stacks/transactions";
 
 const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });

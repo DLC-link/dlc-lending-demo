@@ -69,6 +69,9 @@ export default function DLCTable(props) {
       case "metamask":
         loans = fetchEthereumLoans();
         break;
+      default:
+        console.log("Unsupported wallet type!");
+        break;
     }
     return loans;
   };

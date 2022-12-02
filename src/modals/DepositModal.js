@@ -32,8 +32,8 @@ import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
-  const [collateral, setCollateral] = useState();
-  const [loan, setLoan] = useState();
+  const [collateral, setCollateral] = useState(undefined);
+  const [loan, setLoan] = useState(undefined);
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
   //setLiquidation, setLiquidationFee will be used in the future
   const [liquidationRatio, setLiquidationRatio] = useState(140);
@@ -41,6 +41,11 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
   const [USDAmount, setUSDAmount] = useState(0);
+  const [isError, setError] = useState(true)
+  const [isCollateralError, setCollateralError] = useState(true);
+  const [isLoanError, setLoanError] = useState(true);
+  const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] = useState(false);
+  const errorArray = [isCollateralError, isLoanError, isCollateralToDebtRatioError];
 
   useEffect(() => {
     async function fetchData() {
@@ -52,33 +57,29 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   useEffect(() => {
     countUSDAmount();
     countCollateralToDebtRatio();
-  }, [collateral, loan]);
+
+    setCollateralError((collateral < 0.0001 || collateral === undefined));
+    setLoanError((loan < 1 || loan === undefined));
+    setCollateralToDebtRatioError(collateralToDebtRatio < 140);
+    setError(errorArray.includes(true));
+  }, [collateral, loan, collateralToDebtRatio, isCollateralToDebtRatioError]);
 
   const handleCollateralChange = (collateral) =>
     setCollateral(collateral.target.value);
 
   const handleLoanChange = (loan) => setLoan(loan.target.value);
 
-  const isCollateralError = collateral < 0 || collateral == undefined;
-  const isLoanError = loan < 1 || loan == undefined;
-  const isCollateralToDebtRatioError = collateralToDebtRatio < 140;
-  const isError =
-    isLoanError || isCollateralError || isCollateralToDebtRatioError;
-
   const createAndSendLoanContract = () => {
     sendLoanContract(createLoanContract());
   };
 
-  const createLoanContract = () => {
-    let loanContract = {
-      vaultLoanAmount: fixedTwoDecimalUnshift(loan),
-      BTCDeposit: customShiftValue(collateral, 8, false),
-      liquidationRatio: fixedTwoDecimalUnshift(liquidationRatio),
-      liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
-      emergencyRefundTime: 5,
-    };
-    return loanContract;
-  };
+  const createLoanContract = () => ({
+    vaultLoanAmount: fixedTwoDecimalUnshift(loan),
+    BTCDeposit: customShiftValue(collateral, 8, false),
+    liquidationRatio: fixedTwoDecimalUnshift(liquidationRatio),
+    liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
+    emergencyRefundTime: 5,
+  });
 
   const sendLoanContract = (loanContract) => {
     switch (walletType) {
@@ -87,6 +88,9 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
         break;
       case "metamask":
         sendLoanContractToEthereum(loanContract);
+        break;
+      default:
+        console.log("Unsupported wallet type!");
         break;
     }
   };

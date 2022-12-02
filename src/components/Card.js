@@ -10,19 +10,15 @@ import {
   Table,
   Tr,
   Td,
-  HStack,
 } from "@chakra-ui/react";
 import { easyTruncateAddress } from "../utils";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { customShiftValue, fixedTwoDecimalShift } from "../utils";
-import CurrencyBitcoinIcon from "@mui/icons-material/CurrencyBitcoin";
-import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import PaidIcon from "@mui/icons-material/Paid";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
+import Status from "./Status";
 
 export default function Card(props) {
   const sendOfferForSigning = async (msg) => {
@@ -73,6 +69,9 @@ export default function Card(props) {
         break;
       case "metamask":
         repayEthereumLoanContract();
+        break;
+      default:
+        console.log("Unsupported wallet type!");
         break;
     }
   };
@@ -128,6 +127,9 @@ export default function Card(props) {
       case "metamask":
         liquidateEthereumLoanContract();
         break;
+      default:
+        console.log("Unsupported wallet type!");ç
+        break;
     }
   };
 
@@ -169,11 +171,11 @@ export default function Card(props) {
       );
       loanManagerETH.liquidateLoan(props.loan.raw.id);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
 
-  const sendBTC = () => {
+  const lockBTC = () => {
     try {
       fetch(
         "/.netlify/functions/get-offer/?uuid=" +
@@ -217,70 +219,7 @@ export default function Card(props) {
     >
       <VStack margin={15}>
         <Flex>
-          {props.loan.raw.status === "not-ready" && (
-            <HStack spacing={2}>
-              <HourglassEmptyIcon sx={{ color: "orange" }} />
-              <Text color="white" fontSize={12}>
-                Not ready
-              </Text>
-            </HStack>
-          )}
-          {props.loan.raw.status === "unfunded" && (
-            <HStack spacing={2}>
-              <CurrencyBitcoinIcon sx={{ color: "orange" }} />
-              <Text color="white" fontSize={12}>
-                Unfunded
-              </Text>
-            </HStack>
-          )}
-          {props.loan.raw.status === "pre-repaid" && (
-            <HStack spacing={2}>
-              <HourglassEmptyIcon sx={{ color: "orange" }} />
-              <Text color="white" fontSize={12}>
-                Waiting to be repaid
-              </Text>
-            </HStack>
-          )}
-          {props.loan.raw.status === "pre-liquidated" && (
-            <HStack spacing={2}>
-              <HourglassEmptyIcon sx={{ color: "orange" }} />
-              <Text color="white" fontSize={12}>
-                Waiting to be liquidated
-              </Text>
-            </HStack>
-          )}
-          {props.loan.raw.status === "ready" && (
-            <HStack spacing={2}>
-              <CurrencyBitcoinIcon sx={{ color: "orange" }} />
-              <Text color="white" fontSize={12}>
-                Ready
-              </Text>
-            </HStack>
-          )}
-          {props.loan.raw.status === "funded" && (
-            <HStack spacing={2}>
-              <CurrencyBitcoinIcon sx={{ color: "green" }} />
-              <Text color="white" fontSize={12}>
-                Funded
-              </Text>
-            </HStack>
-          )}
-          {props.loan.raw.status === "liquidated" && (
-            <HStack spacing={2}>
-              <CurrencyExchangeIcon sx={{ color: "green" }} />
-              <Text color="white" fontSize={12}>
-                Liquidated
-              </Text>
-            </HStack>
-          )}
-          {props.loan.raw.status === "repaid" && (
-            <HStack spacing={2}>
-              <PaidIcon sx={{ color: "green" }} />
-              <Text color="white" fontSize={12}>
-                Repaid
-              </Text>
-            </HStack>
-          )}
+          <Status status={props.loan.raw.status}></Status>
         </Flex>
         <TableContainer width={250}>
           <Table size="sm" variant="unstyled">
@@ -389,7 +328,7 @@ export default function Card(props) {
                 variant="outline"
                 fontSize="sm"
                 fontWeight="bold"
-                onClick={sendBTC}
+                onClick={lockBTC}
               >
                 LOCK BTC
               </Button>
