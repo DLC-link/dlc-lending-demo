@@ -22,6 +22,7 @@ import {
   Td,
   Tbody,
   TableContainer,
+  Toast,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { customShiftValue, fixedTwoDecimalUnshift } from "../utils";
@@ -30,6 +31,8 @@ import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
+import { useToast } from "@chakra-ui/react";
+import { ContentPasteSearchOutlined } from "@mui/icons-material";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
   const [collateral, setCollateral] = useState(undefined);
@@ -41,11 +44,17 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
   const [USDAmount, setUSDAmount] = useState(0);
-  const [isError, setError] = useState(true)
+  const [isError, setError] = useState(true);
   const [isCollateralError, setCollateralError] = useState(true);
   const [isLoanError, setLoanError] = useState(true);
-  const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] = useState(false);
-  const errorArray = [isCollateralError, isLoanError, isCollateralToDebtRatioError];
+  const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] =
+    useState(false);
+  const errorArray = [
+    isCollateralError,
+    isLoanError,
+    isCollateralToDebtRatioError,
+  ];
+  const toast = useToast();
 
   useEffect(() => {
     async function fetchData() {
@@ -58,8 +67,8 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     countUSDAmount();
     countCollateralToDebtRatio();
 
-    setCollateralError((collateral < 0.0001 || collateral === undefined));
-    setLoanError((loan < 1 || loan === undefined));
+    setCollateralError(collateral < 0.0001 || collateral === undefined);
+    setLoanError(loan < 1 || loan === undefined);
     setCollateralToDebtRatioError(collateralToDebtRatio < 140);
     setError(errorArray.includes(true));
   }, [collateral, loan, collateralToDebtRatio, isCollateralToDebtRatioError]);
@@ -112,39 +121,52 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       ],
       onFinish: (data) => {
         closeModal();
-        console.log("onFinish:", data);
-        window
-          .open(
-            `http://localhost:8000/txid/${data.txId}?chain=mainnet`,
-            "_blank"
-          )
-          .focus();
+        toast({
+          title: "Loan created!",
+          description: data.txId,
+          status: "success",
+          duration: 3500,
+          isClosable: true,
+        });
       },
       onCancel: () => {
-        console.log("onCancel:", "Transaction was canceled");
+        toast({
+          title: "Loan cancelled!",
+          status: "error",
+          duration: 3500,
+          isClosable: true,
+        });
       },
     });
   };
 
   const sendLoanContractToEthereum = async (loanContract) => {
-    const { ethereum } = window;
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
+      const { ethereum } = window;
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
 
-    const loanManagerETH = new ethers.Contract(
-      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-      loanManagerABI,
-      signer
-    );
-    loanManagerETH
-      .setupLoan(
-        loanContract.vaultLoanAmount,
-        loanContract.BTCDeposit,
-        loanContract.liquidationRatio,
-        loanContract.liquidationFee,
-        loanContract.emergencyRefundTime
-      )
-      .then(() => closeModal());
+      const loanManagerETH = new ethers.Contract(
+        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+        loanManagerABI,
+        signer
+      );
+      loanManagerETH
+        .setupLoan(
+          loanContract.vaultLoanAmount,
+          loanContract.BTCDeposit,
+          loanContract.liquidationRatio,
+          loanContract.liquidationFee,
+          loanContract.emergencyRefundTime
+        )
+        .then((response) =>
+          toast({
+            title: "Loan created!",
+            description: response.hash,
+            status: "success",
+            duration: 3500,
+            isClosable: true,
+          })
+        );
   };
 
   const fetchBitcoinPrice = async () => {

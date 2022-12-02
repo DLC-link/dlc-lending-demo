@@ -128,7 +128,7 @@ export default function Card(props) {
         liquidateEthereumLoanContract();
         break;
       default:
-        console.log("Unsupported wallet type!");ç
+        console.log("Unsupported wallet type!");
         break;
     }
   };

@@ -9,6 +9,7 @@ import {
   IconButton,
   SimpleGrid,
   ScaleFade,
+  useToast,
 } from "@chakra-ui/react";
 import Card from "./Card";
 import { ethers } from "ethers";
@@ -23,12 +24,52 @@ export default function DLCTable(props) {
   const [loans, setLoans] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [isManualLoading, setManualLoading] = useState(undefined);
+  const toast = useToast();
+
+
+  const setToast = (status, txId) => {
+    switch (status) {
+      case "setup":
+        return toast({
+          title: "Passz1",
+          description: txId,
+          status: "success",
+          duration: 3500,
+          isClosable: true,
+        });
+      case "ready":
+        return toast({
+          title: "Passz2",
+          description: txId,
+          status: "success",
+          duration: 3500,
+          isClosable: true,
+        });
+      case "funded":
+        return toast({
+          title: "Loan funded!",
+          description: txId,
+          status: "success",
+          duration: 3500,
+          isClosable: true,
+        });
+      case "closed":
+        return toast({
+          title: "Loan closed!",
+          description: txId,
+          status: "success",
+          duration: 3500,
+          isClosable: true,
+        });
+    }
+  };
 
   useEffect(() => {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
-    eventBus.on("fetch-loans-bg", () => {
+    eventBus.on("fetch-loans-bg", (data) => {
       refreshLoansTable(true);
+      setToast(data.status, data.txId);
     });
   }, []);
 

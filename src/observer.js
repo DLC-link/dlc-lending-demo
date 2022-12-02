@@ -42,35 +42,33 @@ function handleTx(txInfo) {
   switch (txInfo.contract_call.function_name) {
     case "setup-loan": {
       // if (txInfo.sender_address !== userAddress) break;
-      console.log("Setting up loan...");
+      eventBus.dispatch("fetch-loans-bg", { status: "setup", txId: txInfo.tx_id})
       break;
     }
     case "post-create-dlc-handler": {
-      console.log("Loan has been set up.");
+      eventBus.dispatch("fetch-loans-bg", { status: "ready", txId: txInfo.tx_id})
       break;
     }
     case "repay-loan": {
-      console.log("Repaying loan...");
+      eventBus.dispatch("fetch-loans-bg", { status: "repaying", txId: txInfo.tx_id})
       break;
     }
     case "liquidate-loan": {
-      console.log("Liquidating loan...");
+      eventBus.dispatch("fetch-loans-bg", { status: "liquidateing", txId: txInfo.tx_id})
       break;
     }
     case "post-close-dlc-handler": {
-      console.log("DLC closed.");
+      eventBus.dispatch("fetch-loans-bg", { status: "closed", txId: txInfo.tx_id})
       break;
     }
     case "set-status-funded": {
-      console.log("Status set to funded.");
+      eventBus.dispatch("fetch-loans-bg", { status: "funded", txId: txInfo.tx_id})
       break;
     }
     default: {
       console.log("Unhandled function call");
     }
   }
-  // NOTE: We are sending a full refetch in any case for now
-  eventBus.dispatch("fetch-loans-bg");
 }
 
 function startStacksObserver() {
@@ -119,18 +117,18 @@ function startEthObserver() {
     const signer = provider.getSigner();
 
     const loanManagerETH = new ethers.Contract(
-      "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
+      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
       loanManagerABI,
       signer
     );
-    loanManagerETH.on("CreateDLC", () => eventBus.dispatch("fetch-loans-bg"));
+    loanManagerETH.on("CreateDLC", () => eventBus.dispatch("fetch-loans-bg", { status: "unknown"} ));
     loanManagerETH.on("CreateDLCInternal", () =>
-      eventBus.dispatch("fetch-loans-bg")
+      eventBus.dispatch("fetch-loans-bg", { status: "ready"})
     );
     loanManagerETH.on("SetStatusFunded", () =>
-      eventBus.dispatch("fetch-loans-bg")
+      eventBus.dispatch("fetch-loans-bg", { status: "funded"})
     );
-    loanManagerETH.on("CloseDLC", () => eventBus.dispatch("fetch-loans-bg"));
+    loanManagerETH.on("CloseDLC", () => eventBus.dispatch("fetch-loans-bg", { status: "closed"}));
   } catch (error) {
     console.log(error);
   }
