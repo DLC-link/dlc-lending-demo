@@ -367,7 +367,7 @@ export default function Card(props) {
                 fontWeight="bold"
                 onClick={() => repayLoanContract()}
               >
-                WITHDRAW
+                REPAY LOAN 
               </Button>
               {countCollateralToDebtRatio(
                 props.bitCoinValue,
