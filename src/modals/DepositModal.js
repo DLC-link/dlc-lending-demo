@@ -22,7 +22,8 @@ import {
   Td,
   Tbody,
   TableContainer,
-  Toast,
+  useToast,
+  Link,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { customShiftValue, fixedTwoDecimalUnshift } from "../utils";
@@ -31,10 +32,10 @@ import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
-import { bytesToUtf8 } from "micro-stacks/common";
-import { useToast } from "@chakra-ui/react";
+import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
+  const toast = useToast();
   const [collateral, setCollateral] = useState(undefined);
   const [loan, setLoan] = useState(undefined);
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -54,7 +55,6 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     isLoanError,
     isCollateralToDebtRatioError,
   ];
-  const toast = useToast();
 
   useEffect(() => {
     async function fetchData() {
@@ -121,10 +121,10 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       ],
       onFinish: (data) => {
         closeModal();
-        createToast({ status: "created", txId: data.txId});
+        handleEvent({ status: "created", txId: data.txId }, walletType);
       },
       onCancel: () => {
-        createToast({ status: "cancelled" });
+        handleEvent({ status: "cancelled" });
       },
     });
   };
@@ -147,7 +147,9 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
         loanContract.liquidationFee,
         loanContract.emergencyRefundTime
       )
-      .then((response) => createToast({ status: "created", txId: response.hash}))
+      .then((response) =>
+        handleEvent({ status: "created", txId: response.hash }, walletType)
+      )
       .then(() => closeModal());
   };
 
@@ -177,24 +179,77 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     );
   };
 
-  const createToast = (data) => {
+  const handleEvent = (data) => {
+    let success = undefined;
+    let message = undefined;
+    let explorerAddress = undefined;
+
+    switch (walletType) {
+      case "hiro":
+        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
+        break;
+      case "metamask":
+        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
+        break;
+    }
+
     switch (data.status) {
       case "created":
-        return toast({
-          title: "Loan created!",
-          description: data.txId,
-          status: "success",
-          duration: 3500,
-          isClosable: true,
-        });
+        success = true;
+        message = "Loan created!";
+        break;
       case "cancelled":
-        return toast({
-          title: "Transaction cancelled!",
-          status: "error",
-          duration: 3500,
-          isClosable: true,
-        });
+        success = false;
+        message = "Transaction cancelled!";
+        break;
     }
+
+    return toast({
+      position: "bottom",
+      render: () => (
+        <Link
+          href={explorerAddress}
+          isExternal
+          _hover={{
+            textDecoration: "none",
+          }}
+        >
+          <Flex
+            color="white"
+            opacity="75%"
+            bgGradient="linear(to-r, primary1, primary2)"
+            borderRadius="2xl"
+            boxShadow="dark-lg"
+            height={100}
+            width={500}
+            justifyContent="center"
+            alignItems="center"
+            _hover={{
+              opacity: "100%",
+              bg: "secondary1",
+            }}
+          >
+            <VStack spacing={1.5}>
+              <HStack spacing={1.5}>
+                {success === true ? (
+                  <CheckCircleIcon color="green"></CheckCircleIcon>
+                ) : (
+                  <WarningIcon color="red"></WarningIcon>
+                )}
+                <Text fontSize={18} fontWeight="extrabold">
+                  {message}
+                </Text>
+              </HStack>
+              {success && (
+                <Text fontSize={12} fontWeight="bold">
+                  Click to show transaction in the explorer!
+                </Text>
+              )}
+            </VStack>
+          </Flex>
+        </Link>
+      ),
+    });
   };
 
   return (

@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import eventBus from "../EventBus";
-import { RepeatClockIcon } from "@chakra-ui/icons";
+import {
+  RepeatClockIcon,
+  CheckCircleIcon,
+  WarningIcon,
+} from "@chakra-ui/icons";
 import {
   VStack,
   Text,
@@ -10,6 +14,8 @@ import {
   SimpleGrid,
   ScaleFade,
   useToast,
+  Link,
+  Flex,
 } from "@chakra-ui/react";
 import Card from "./Card";
 import { ethers } from "ethers";
@@ -26,51 +32,101 @@ export default function DLCTable(props) {
   const [isManualLoading, setManualLoading] = useState(undefined);
   const toast = useToast();
 
+  const handleEvent = (data) => {
+    let success = undefined;
+    let message = undefined;
+    let explorerAddress = undefined;
 
-  const setToast = (status, txId) => {
-    switch (status) {
-      case "setup":
-        return toast({
-          title: "Loan established!",
-          description: txId,
-          status: "success",
-          duration: 3500,
-          isClosable: true,
-        });
-      case "ready":
-        return toast({
-          title: "Loan is ready!",
-          description: txId,
-          status: "success",
-          duration: 3500,
-          isClosable: true,
-        });
-      case "funded":
-        return toast({
-          title: "Loan funded!",
-          description: txId,
-          status: "success",
-          duration: 3500,
-          isClosable: true,
-        });
-      case "closed":
-        return toast({
-          title: "Loan closed!",
-          description: txId,
-          status: "success",
-          duration: 3500,
-          isClosable: true,
-        });
+    switch (walletType) {
+      case "hiro":
+        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
+        break;
+      case "metamask":
+        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
+        break;
     }
+
+    switch (data.status) {
+      case "setup":
+        success = true;
+        message = "Loan established!";
+        break;
+      case "ready":
+        success = true;
+        message = "Loan is ready!";
+        break;
+      case "repaying":
+        success = true;
+        message = "Processing repayment!";
+        break;
+      case "liquidateing":
+        success = true;
+        message = "Processing liquidation!";
+        break;
+      case "funded":
+        success = true;
+        message = "Loan funded!";
+        break;
+      case "closed":
+        success = true;
+        message = "Loan closed!";
+        break;
+    }
+
+    return toast({
+      position: "bottom",
+      render: () => (
+        <Link
+          href={explorerAddress}
+          isExternal
+          _hover={{
+            textDecoration: "none",
+          }}
+        >
+          <Flex
+            color="white"
+            opacity="75%"
+            bgGradient="linear(to-r, primary1, primary2)"
+            borderRadius="2xl"
+            boxShadow="dark-lg"
+            height={100}
+            width={500}
+            justifyContent="center"
+            alignItems="center"
+            _hover={{
+              opacity: "100%",
+              bg: "secondary1",
+            }}
+          >
+            <VStack spacing={1.5}>
+              <HStack spacing={1.5}>
+                {success === true ? (
+                  <CheckCircleIcon color="green"></CheckCircleIcon>
+                ) : (
+                  <WarningIcon color="red"></WarningIcon>
+                )}
+                <Text fontSize={18} fontWeight="extrabold">
+                  {message}
+                </Text>
+              </HStack>
+              {success && (
+                <Text fontSize={12} fontWeight="bold">
+                  Click to show transaction in the explorer!
+                </Text>
+              )}
+            </VStack>
+          </Flex>
+        </Link>
+      ),
+    });
   };
 
   useEffect(() => {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on("fetch-loans-bg", (data) => {
-      console.log("event" + data)
       refreshLoansTable(true);
-      setToast(data.status, data.txId);
+      handleEvent(data);
     });
   }, []);
 

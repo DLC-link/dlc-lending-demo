@@ -4,8 +4,8 @@ import { ethers } from "ethers";
 import { abi as loanManagerABI } from "./loanManagerABI";
 import eventBus from "./EventBus";
 
-const api_base = `http://stx-btc1.dlc.link:3999/extended/v1`;
-const ioclient_uri = `ws://stx-btc1.dlc.link:3999/`;
+const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
+const ioclient_uri = `wss://dev-oracle.dlc.link`;
 
 const contractAddress = "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6";
 const contractName = "sample-contract-loan-v0";
@@ -35,6 +35,8 @@ async function fetchTXInfo(txId) {
 }
 
 function handleTx(txInfo) {
+  let status = undefined;
+  const txId = txInfo.tx_id;
   console.log(txInfo);
 
   if (txInfo.tx_type !== 'contract_call') return;
@@ -42,27 +44,27 @@ function handleTx(txInfo) {
   switch (txInfo.contract_call.function_name) {
     case ('setup-loan'): {
       // if (txInfo.sender_address !== userAddress) break;
-      console.log('Setting up loan...');
+      status = "setup"
       break;
     }
     case ('post-create-dlc-handler'): {
-      console.log('Loan has been set up.');
+      status = "ready"
       break;
     }
     case ('repay-loan'): {
-      console.log('Repaying loan...');
+      status = "repaying"
       break;
     }
     case ('liquidate-loan'): {
-      console.log('Liquidating loan...');
+      status = "liquidateing"
       break;
     }
     case ('post-close-dlc-handler'): {
-      console.log('DLC closed.');
+      status = "closed";
       break;
     }
     case ('set-status-funded'): {
-      console.log('Status set to funded.');
+      status = "funded";
       break;
     }
     default: {
@@ -70,7 +72,7 @@ function handleTx(txInfo) {
     }
   }
   // NOTE: We are sending a full refetch in any case for now
-  eventBus.dispatch('fetch-loans-bg');
+  eventBus.dispatch('fetch-loans-bg', { status: status, txId: txId });
 }
 
 function startStacksObserver() {
@@ -108,60 +110,6 @@ function startStacksObserver() {
     handleTx(txInfo);
   })
 }
-
-// function handleTx(txInfo) {
-//   console.log(txInfo);
-//   let event = undefined
-
-//   if (txInfo.tx_type !== "contract_call") return;
-
-//   switch (txInfo.contract_call.function_name) {
-//     case "setup-loan": {
-//       // if (txInfo.sender_address !== userAddress) break;
-//       event = {
-//         status: "setup",
-//         txId: txInfo.tx_id,
-//       };
-//       break;
-//     }
-//     case "create-dlc-internal": {
-//       event =  {
-//         status: "ready",
-//         txId: txInfo.tx_id,
-//       };
-//       break;
-//     }
-//     case "repay-loan": {
-//       event =  {
-//         status: "repaying",
-//         txId: txInfo.tx_id,
-//       };
-//       break;
-//     }
-//     case "liquidate-loan": {
-//       event = {
-//         status: "liquidateing",
-//         txId: txInfo.tx_id,
-//       };
-//       break;
-//     }
-//     case "post-close-dlc-handler": {
-//       event = {
-//         status: "closed",
-//         txId: txInfo.tx_id,
-//       };
-//       break;
-//     }
-//     case "set-status-funded": {
-//       break;
-//     }
-//     default: {
-//       console.log(txInfo.contract_call.function_name);
-//       console.log("Unhandled function call");
-//     }
-//   }
-//   eventBus.dispatch("fetch-loans-bg", event);
-// }
 
 function startEthObserver() {
   try {
