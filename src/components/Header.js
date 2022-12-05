@@ -1,7 +1,7 @@
 import React from "react";
 import eventBus from "../EventBus";
 import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
-import { Button, Text, HStack, Flex, Image } from "@chakra-ui/react";
+import { Button, Text, HStack, Flex, Image, Spacer } from "@chakra-ui/react";
 import { easyTruncateAddress } from "../utils";
 import { userSession } from "../hiroWalletUserSession";
 
@@ -32,7 +32,7 @@ export default class Header extends React.Component {
   }
 
   disconnect = () => {
-    if(this.state.walletType === "hiro") {
+    if (this.state.walletType === "hiro") {
       userSession.signUserOut("/");
     }
     eventBus.dispatch("change-address", { address: "" });
@@ -48,14 +48,15 @@ export default class Header extends React.Component {
   render() {
     return (
       <>
-        <Flex
-          height="auto"
-          marginTop={[5, 25]}
-          marginBottom={[5, 25]}
-          marginLeft={[1, 25]}
-          marginRight={[1, 25]}
-        >
-          <HStack spacing={[5, 55]} margin={5}>
+          <HStack
+            height="auto"
+            width="auto"
+            spacing={[5, 55]}
+            marginTop={[5, 25]}
+            marginBottom={[5, 25]}
+            marginLeft={5}
+            marginRight={25}
+          >
             <Button
               as="a"
               href="https://www.dlc.link/"
@@ -64,6 +65,7 @@ export default class Header extends React.Component {
               }}
               variant="ghost"
               height={[25, 65]}
+              width={100}
             >
               <Image
                 src="/dlc.link_logo.png"
@@ -72,6 +74,7 @@ export default class Header extends React.Component {
                 width={[25, 65]}
               />
             </Button>
+            <Spacer></Spacer>
             {!this.state.isConnected ? (
               <HStack>
                 <Button
@@ -137,14 +140,13 @@ export default class Header extends React.Component {
               ) : (
                 <HStack>
                   <WarningIcon boxSize={[1, 3]} color="primary2" />
-                  <Text padding={3} color="white" fontSize={[5, 10]}>
+                  <Text padding={3} color="white" fontSize={[4, 10]} width={[50, 100]}>
                     Account: Not connected
                   </Text>
                 </HStack>
               )}
             </Flex>
           </HStack>
-        </Flex>
       </>
     );
   }

@@ -165,7 +165,7 @@ export default function DepositWithdraw(props) {
                   fontWeight="bold"
                   onClick={openDepositModal}
                 >
-                  DEPOSIT
+                  CREATE LOAN
                 </Button>
               </VStack>
             </Flex>
