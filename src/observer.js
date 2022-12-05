@@ -36,51 +36,48 @@ async function fetchTXInfo(txId) {
 
 function handleTx(txInfo) {
   console.log(txInfo);
+  let event = undefined
 
   if (txInfo.tx_type !== "contract_call") return;
 
   switch (txInfo.contract_call.function_name) {
     case "setup-loan": {
       // if (txInfo.sender_address !== userAddress) break;
-      eventBus.dispatch("fetch-loans-bg", {
+      event = {
         status: "setup",
         txId: txInfo.tx_id,
-      });
+      };
       break;
     }
     case "post-create-dlc-handler": {
-      eventBus.dispatch("fetch-loans-bg", {
+      event =  {
         status: "ready",
         txId: txInfo.tx_id,
-      });
+      };
       break;
     }
     case "repay-loan": {
-      eventBus.dispatch("fetch-loans-bg", {
+      event =  {
         status: "repaying",
         txId: txInfo.tx_id,
-      });
+      };
       break;
     }
     case "liquidate-loan": {
-      eventBus.dispatch("fetch-loans-bg", {
+      event = {
         status: "liquidateing",
         txId: txInfo.tx_id,
-      });
+      };
       break;
     }
     case "post-close-dlc-handler": {
-      eventBus.dispatch("fetch-loans-bg", {
+      event = {
         status: "closed",
         txId: txInfo.tx_id,
-      });
+      };
       break;
     }
     case "set-status-funded": {
-      eventBus.dispatch("fetch-loans-bg", {
-        status: "funded",
-        txId: txInfo.tx_id,
-      });
       break;
     }
     default: {
@@ -88,6 +85,7 @@ function handleTx(txInfo) {
       console.log("Unhandled function call");
     }
   }
+  eventBus.dispatch("fetch-loans-bg", event);
 }
 
 function startStacksObserver() {
