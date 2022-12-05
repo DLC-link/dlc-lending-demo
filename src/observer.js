@@ -4,104 +4,89 @@ import { ethers } from "ethers";
 import { abi as loanManagerABI } from "./loanManagerABI";
 import eventBus from "./EventBus";
 
-const api_base =
-  process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + `:3999/extended/v1`;
+const api_base = `http://stx-btc1.dlc.link:3999/extended/v1`;
 const ioclient_uri = `ws://stx-btc1.dlc.link:3999/`;
 
-const contractAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
-const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
-const contractFullName = contractAddress + "." + contractName;
+const contractAddress = "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6";
+const contractName = "sample-contract-loan-v0";
+const contractFullName = contractAddress + '.' + contractName;
 
-const dlcManagerAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
-const dlcManagerName = process.env.REACT_APP_STACKS_MANAGER_NAME;
-const dlcManagerFullName = dlcManagerAddress + "." + dlcManagerName;
+const dlcManagerAddress = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
+const dlcManagerName = "dlc-manager-loan-v0";
+const dlcManagerFullName = dlcManagerAddress + '.' + dlcManagerName;
 
 let userAddress;
 
 eventBus.on("change-address", (data) => {
   userAddress = data.address;
+  console.log(userAddress);
 });
 
 async function fetchTXInfo(txId) {
   let _tx;
-  const _setTx = (tx) => (_tx = tx);
+  const _setTx = (tx) => _tx = tx;
   const _getTx = () => _tx;
-
+  
   console.log(`[Stacks] Fetching tx_info...`);
-  await fetch(api_base + "/tx/" + txId)
-    .then((response) => _setTx(response.json()))
-    .catch((err) => console.error(err));
+  await fetch(api_base + '/tx/' + txId)
+    .then(response => _setTx(response.json()))
+    .catch(err => console.error(err));
   return _getTx();
 }
 
 function handleTx(txInfo) {
   console.log(txInfo);
-  let event = undefined
 
-  if (txInfo.tx_type !== "contract_call") return;
+  if (txInfo.tx_type !== 'contract_call') return;
 
   switch (txInfo.contract_call.function_name) {
-    case "setup-loan": {
+    case ('setup-loan'): {
       // if (txInfo.sender_address !== userAddress) break;
-      event = {
-        status: "setup",
-        txId: txInfo.tx_id,
-      };
+      console.log('Setting up loan...');
       break;
     }
-    case "post-create-dlc-handler": {
-      event =  {
-        status: "ready",
-        txId: txInfo.tx_id,
-      };
+    case ('post-create-dlc-handler'): {
+      console.log('Loan has been set up.');
       break;
     }
-    case "repay-loan": {
-      event =  {
-        status: "repaying",
-        txId: txInfo.tx_id,
-      };
+    case ('repay-loan'): {
+      console.log('Repaying loan...');
       break;
     }
-    case "liquidate-loan": {
-      event = {
-        status: "liquidateing",
-        txId: txInfo.tx_id,
-      };
+    case ('liquidate-loan'): {
+      console.log('Liquidating loan...');
       break;
     }
-    case "post-close-dlc-handler": {
-      event = {
-        status: "closed",
-        txId: txInfo.tx_id,
-      };
+    case ('post-close-dlc-handler'): {
+      console.log('DLC closed.');
       break;
     }
-    case "set-status-funded": {
+    case ('set-status-funded'): {
+      console.log('Status set to funded.');
       break;
     }
     default: {
-      console.log(txInfo.contract_call.function_name);
-      console.log("Unhandled function call");
+      console.log('Unhandled function call')
     }
   }
-  eventBus.dispatch("fetch-loans-bg", event);
+  // NOTE: We are sending a full refetch in any case for now
+  eventBus.dispatch('fetch-loans-bg');
 }
 
 function startStacksObserver() {
   // Setting up Stacks API websocket
   const socket = ioClient(ioclient_uri, {
-    transports: ["websocket"],
+    transports: [ "websocket" ]
   });
   const stacksSocket = new StacksApiSocketClient(socket);
 
-  stacksSocket.socket.on("disconnect", async (reason) => {
+  stacksSocket.socket.on('disconnect', async (reason) => {
     console.log(`[Stacks] Disconnecting, reason: ${reason}`);
     stacksSocket.socket.connect();
   });
 
-  stacksSocket.socket.on("connect", async () => {
-    console.log("[Stacks] (Re)connected stacksSocket");
+  stacksSocket.socket.on('connect', async () => {
+    console.log('[Stacks] (Re)connected stacksSocket');
     console.log(`Listening to ${contractFullName}...`);
     console.log(`Listening to ${dlcManagerFullName}...`);
   });
@@ -110,22 +95,73 @@ function startStacksObserver() {
   stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
 
   // Handling incoming txs
-  stacksSocket.socket.on(
-    "address-transaction",
-    async (address, txWithTransfers) => {
-      const _tx = txWithTransfers.tx;
-      const _successful = _tx.tx_status === "success";
-      if (!_successful) {
-        console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
-        return;
-      }
-
-      const txInfo = await fetchTXInfo(_tx.tx_id);
-
-      handleTx(txInfo);
+  stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
+    const _tx = txWithTransfers.tx;
+    const _successful = _tx.tx_status === 'success';
+    if (!_successful) {
+      console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
+      return;
     }
-  );
+
+    const txInfo = await fetchTXInfo(_tx.tx_id);
+
+    handleTx(txInfo);
+  })
 }
+
+// function handleTx(txInfo) {
+//   console.log(txInfo);
+//   let event = undefined
+
+//   if (txInfo.tx_type !== "contract_call") return;
+
+//   switch (txInfo.contract_call.function_name) {
+//     case "setup-loan": {
+//       // if (txInfo.sender_address !== userAddress) break;
+//       event = {
+//         status: "setup",
+//         txId: txInfo.tx_id,
+//       };
+//       break;
+//     }
+//     case "create-dlc-internal": {
+//       event =  {
+//         status: "ready",
+//         txId: txInfo.tx_id,
+//       };
+//       break;
+//     }
+//     case "repay-loan": {
+//       event =  {
+//         status: "repaying",
+//         txId: txInfo.tx_id,
+//       };
+//       break;
+//     }
+//     case "liquidate-loan": {
+//       event = {
+//         status: "liquidateing",
+//         txId: txInfo.tx_id,
+//       };
+//       break;
+//     }
+//     case "post-close-dlc-handler": {
+//       event = {
+//         status: "closed",
+//         txId: txInfo.tx_id,
+//       };
+//       break;
+//     }
+//     case "set-status-funded": {
+//       break;
+//     }
+//     default: {
+//       console.log(txInfo.contract_call.function_name);
+//       console.log("Unhandled function call");
+//     }
+//   }
+//   eventBus.dispatch("fetch-loans-bg", event);
+// }
 
 function startEthObserver() {
   try {
