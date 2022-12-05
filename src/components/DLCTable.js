@@ -31,7 +31,7 @@ export default function DLCTable(props) {
     switch (status) {
       case "setup":
         return toast({
-          title: "Passz1",
+          title: "Loan established!",
           description: txId,
           status: "success",
           duration: 3500,
@@ -39,7 +39,7 @@ export default function DLCTable(props) {
         });
       case "ready":
         return toast({
-          title: "Passz2",
+          title: "Loan is ready!",
           description: txId,
           status: "success",
           duration: 3500,
@@ -68,6 +68,7 @@ export default function DLCTable(props) {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on("fetch-loans-bg", (data) => {
+      console.log("event" + data)
       refreshLoansTable(true);
       setToast(data.status, data.txId);
     });

@@ -31,8 +31,8 @@ import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
+import { bytesToUtf8 } from "micro-stacks/common";
 import { useToast } from "@chakra-ui/react";
-import { ContentPasteSearchOutlined } from "@mui/icons-material";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
   const [collateral, setCollateral] = useState(undefined);
@@ -121,52 +121,34 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       ],
       onFinish: (data) => {
         closeModal();
-        toast({
-          title: "Loan created!",
-          description: data.txId,
-          status: "success",
-          duration: 3500,
-          isClosable: true,
-        });
+        createToast({ status: "created", txId: data.txId});
       },
       onCancel: () => {
-        toast({
-          title: "Loan cancelled!",
-          status: "error",
-          duration: 3500,
-          isClosable: true,
-        });
+        createToast({ status: "cancelled" });
       },
     });
   };
 
   const sendLoanContractToEthereum = async (loanContract) => {
-      const { ethereum } = window;
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
+    const { ethereum } = window;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const signer = provider.getSigner();
 
-      const loanManagerETH = new ethers.Contract(
-        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-        loanManagerABI,
-        signer
-      );
-      loanManagerETH
-        .setupLoan(
-          loanContract.vaultLoanAmount,
-          loanContract.BTCDeposit,
-          loanContract.liquidationRatio,
-          loanContract.liquidationFee,
-          loanContract.emergencyRefundTime
-        )
-        .then((response) =>
-          toast({
-            title: "Loan created!",
-            description: response.hash,
-            status: "success",
-            duration: 3500,
-            isClosable: true,
-          })
-        );
+    const loanManagerETH = new ethers.Contract(
+      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+      loanManagerABI,
+      signer
+    );
+    loanManagerETH
+      .setupLoan(
+        loanContract.vaultLoanAmount,
+        loanContract.BTCDeposit,
+        loanContract.liquidationRatio,
+        loanContract.liquidationFee,
+        loanContract.emergencyRefundTime
+      )
+      .then((response) => createToast({ status: "created", txId: response.hash}))
+      .then(() => closeModal());
   };
 
   const fetchBitcoinPrice = async () => {
@@ -193,6 +175,26 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     setUSDAmount(
       new Intl.NumberFormat().format(bitCoinInUSDAsNumber * collateral)
     );
+  };
+
+  const createToast = (data) => {
+    switch (data.status) {
+      case "created":
+        return toast({
+          title: "Loan created!",
+          description: data.txId,
+          status: "success",
+          duration: 3500,
+          isClosable: true,
+        });
+      case "cancelled":
+        return toast({
+          title: "Transaction cancelled!",
+          status: "error",
+          duration: 3500,
+          isClosable: true,
+        });
+    }
   };
 
   return (

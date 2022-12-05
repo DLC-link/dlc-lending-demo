@@ -4,22 +4,22 @@ import { ethers } from "ethers";
 import { abi as loanManagerABI } from "./loanManagerABI";
 import eventBus from "./EventBus";
 
-const api_base = `http://stx-btc1.dlc.link:3999/extended/v1`;
+const api_base =
+  process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + `:3999/extended/v1`;
 const ioclient_uri = `ws://stx-btc1.dlc.link:3999/`;
 
-const contractAddress = "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6";
-const contractName = "sample-contract-loan-v0";
+const contractAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
+const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
 const contractFullName = contractAddress + "." + contractName;
 
-const dlcManagerAddress = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
-const dlcManagerName = "dlc-manager-loan-v0";
+const dlcManagerAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
+const dlcManagerName = process.env.REACT_APP_STACKS_MANAGER_NAME;
 const dlcManagerFullName = dlcManagerAddress + "." + dlcManagerName;
 
 let userAddress;
 
 eventBus.on("change-address", (data) => {
   userAddress = data.address;
-  console.log(userAddress);
 });
 
 async function fetchTXInfo(txId) {
@@ -42,30 +42,49 @@ function handleTx(txInfo) {
   switch (txInfo.contract_call.function_name) {
     case "setup-loan": {
       // if (txInfo.sender_address !== userAddress) break;
-      eventBus.dispatch("fetch-loans-bg", { status: "setup", txId: txInfo.tx_id})
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "setup",
+        txId: txInfo.tx_id,
+      });
       break;
     }
     case "post-create-dlc-handler": {
-      eventBus.dispatch("fetch-loans-bg", { status: "ready", txId: txInfo.tx_id})
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "ready",
+        txId: txInfo.tx_id,
+      });
       break;
     }
     case "repay-loan": {
-      eventBus.dispatch("fetch-loans-bg", { status: "repaying", txId: txInfo.tx_id})
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "repaying",
+        txId: txInfo.tx_id,
+      });
       break;
     }
     case "liquidate-loan": {
-      eventBus.dispatch("fetch-loans-bg", { status: "liquidateing", txId: txInfo.tx_id})
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "liquidateing",
+        txId: txInfo.tx_id,
+      });
       break;
     }
     case "post-close-dlc-handler": {
-      eventBus.dispatch("fetch-loans-bg", { status: "closed", txId: txInfo.tx_id})
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "closed",
+        txId: txInfo.tx_id,
+      });
       break;
     }
     case "set-status-funded": {
-      eventBus.dispatch("fetch-loans-bg", { status: "funded", txId: txInfo.tx_id})
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "funded",
+        txId: txInfo.tx_id,
+      });
       break;
     }
     default: {
+      console.log(txInfo.contract_call.function_name);
       console.log("Unhandled function call");
     }
   }
@@ -121,14 +140,31 @@ function startEthObserver() {
       loanManagerABI,
       signer
     );
-    loanManagerETH.on("CreateDLC", () => eventBus.dispatch("fetch-loans-bg", { status: "unknown"} ));
-    loanManagerETH.on("CreateDLCInternal", () =>
-      eventBus.dispatch("fetch-loans-bg", { status: "ready"})
+    loanManagerETH.on("CreateDLC", (...args) => {
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "setup",
+        txId: args[args.length - 1].transactionHash,
+      });
+    });
+    loanManagerETH.on("CreateDLCInternal", (...args) => {
+      console.log(args[args.length - 1].transactionHash);
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "ready",
+        txId: args[args.length - 1].transactionHash,
+      });
+    });
+    loanManagerETH.on("SetStatusFunded", (...args) =>
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "funded",
+        txId: args[args.length - 1].transactionHash,
+      })
     );
-    loanManagerETH.on("SetStatusFunded", () =>
-      eventBus.dispatch("fetch-loans-bg", { status: "funded"})
+    loanManagerETH.on("CloseDLC", (...args) =>
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "closed",
+        txId: args[args.length - 1].transactionHash,
+      })
     );
-    loanManagerETH.on("CloseDLC", () => eventBus.dispatch("fetch-loans-bg", { status: "closed"}));
   } catch (error) {
     console.log(error);
   }
