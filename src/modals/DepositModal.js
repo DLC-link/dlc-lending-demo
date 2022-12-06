@@ -121,10 +121,10 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       ],
       onFinish: (data) => {
         closeModal();
-        eventBus.dispatch("loan-event", { status: "created", txId: data.txId })
+        eventBus.dispatch("loan-event", { status: "created", txId: data.txId });
       },
       onCancel: () => {
-        eventBus.dispatch("loan-event", { status: "cancelled" })
+        eventBus.dispatch("loan-event", { status: "cancelled" });
       },
     });
   };
@@ -148,7 +148,10 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
         loanContract.emergencyRefundTime
       )
       .then((response) =>
-      eventBus.dispatch("loan-event", { status: "created", txId: response.hash })
+        eventBus.dispatch("loan-event", {
+          status: "created",
+          txId: response.hash,
+        })
       )
       .then(() => closeModal());
   };
@@ -166,11 +169,9 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   };
 
   const countCollateralToDebtRatio = () => {
-    const collateralToDebtRatio =
-      ((bitCoinInUSDAsNumber * collateral) / loan) * 100;
-    setCollateralToDebtRatio(
-      Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100
-    );
+    const collateralInUSD = collateral * bitCoinInUSDAsNumber;
+    const collateralToDebtRatio = collateralInUSD / loan;
+    setCollateralToDebtRatio(Math.round(collateralToDebtRatio * 100));
   };
 
   const countUSDAmount = () => {
