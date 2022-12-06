@@ -60,9 +60,17 @@ export default function DLCTable(props) {
         success = true;
         message = "Processing repayment!";
         break;
+      case "repaid":
+        success = true;
+        message = "Loan repaid!";
+        break;
       case "liquidateing":
         success = true;
         message = "Processing liquidation!";
+        break;
+      case "liquidated":
+        success = true;
+        message = "Loan liquidated!";
         break;
       case "funded":
         success = true;

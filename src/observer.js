@@ -58,11 +58,11 @@ function handleTx(txInfo) {
       break;
     }
     case ('close-dlc-internal'): {
-      status = "closed";
+      status = "repaid";
       break;
     }
     case ('close-dlc-liquidate-internal'): {
-      status = "liquidated"; // TODO:
+      status = "liquidated";
       break;
     }
     case ('set-status-funded'): {
@@ -124,19 +124,18 @@ function startEthObserver() {
       loanManagerABI,
       signer
     );
-    loanManagerETH.on("CreateDLC", (...args) => {
+    loanManagerETH.on("CreateDLC", (...args) => 
       eventBus.dispatch("fetch-loans-bg", {
         status: "setup",
         txId: args[args.length - 1].transactionHash,
-      });
-    });
-    loanManagerETH.on("CreateDLCInternal", (...args) => {
-      console.log(args[args.length - 1].transactionHash);
+      })
+    );
+    loanManagerETH.on("CreateDLCInternal", (...args) => 
       eventBus.dispatch("fetch-loans-bg", {
         status: "ready",
         txId: args[args.length - 1].transactionHash,
-      });
-    });
+      })
+    );
     loanManagerETH.on("SetStatusFunded", (...args) =>
       eventBus.dispatch("fetch-loans-bg", {
         status: "funded",

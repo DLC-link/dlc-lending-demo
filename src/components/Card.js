@@ -19,8 +19,12 @@ import { customShiftValue, fixedTwoDecimalShift } from "../utils";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 import Status from "./Status";
+import { useToast } from "@chakra-ui/react";
+import CustomToast from "./CustomToast";
 
 export default function Card(props) {
+const toast = useToast();
+
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
@@ -89,12 +93,7 @@ export default function Card(props) {
       functionArgs: [uintCV(parseInt(loanContractID))],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        window
-          .open(
-            `http://localhost:8000/txid/${data.txId}?chain=mainnet`,
-            "_blank"
-          )
-          .focus();
+        handleEvent({ status: "repay-requested", txId: data.txId });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -113,7 +112,8 @@ export default function Card(props) {
         loanManagerABI,
         signer
       );
-      loanManagerETH.repayLoan(props.loan.raw.id);
+      loanManagerETH.repayLoan(props.loan.raw.id).then((response) =>
+      handleEvent({ status: "repay-requested", txId: response.hash }));
     } catch (error) {
       console.log(error);
     }
@@ -145,12 +145,7 @@ export default function Card(props) {
       functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        window
-          .open(
-            `http://localhost:8000/txid/${data.txId}?chain=mainnet`,
-            "_blank"
-          )
-          .focus();
+        handleEvent({ status: "liquidation-requested", txId: data.txId });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -169,7 +164,8 @@ export default function Card(props) {
         loanManagerABI,
         signer
       );
-      loanManagerETH.liquidateLoan(props.loan.raw.id);
+      loanManagerETH.liquidateLoan(props.loan.raw.id).then((response) =>
+      handleEvent({ status: "liquidation-requested", txId: response.hash }));
     } catch (error) {
       console.log(error);
     }
@@ -203,6 +199,43 @@ export default function Card(props) {
     const roundedCollateralToDebtRatio =
       Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100;
     return roundedCollateralToDebtRatio;
+  };
+
+  const handleEvent = (data) => {
+    let success = undefined;
+    let message = undefined;
+    let explorerAddress = undefined;
+
+    switch (props.walletType) {
+      case "hiro":
+        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
+        break;
+      case "metamask":
+        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
+        break;
+    }
+
+    switch (data.status) {
+      case "repay-requested":
+        success = true;
+        message = "Requested repayment!";
+        break;
+      case "liquidation-requested":
+        success = true;
+        message = "Requested liquidation!";
+        break;
+    }
+
+    return toast({
+      position: "bottom",
+      render: () => (
+        <CustomToast
+          explorerAddress={explorerAddress}
+          message={message}
+          success={success}
+        ></CustomToast>
+      ),
+    });
   };
 
   return (
