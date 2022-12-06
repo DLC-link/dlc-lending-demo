@@ -1,5 +1,4 @@
-import fetch from "node-fetch"
-import { StacksMainnet, StacksMocknet, StacksTestnet } from "@stacks/network";
+import { StacksMocknet } from "@stacks/network";
 import { bufferCVFromString, callReadOnlyFunction,cvToValue, cvTo } from "@stacks/transactions";
 
 const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
@@ -13,8 +12,8 @@ function toJson(data) {
 
 function txOptions(UUID, creator) {
   return {
-    contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
-    contractName: "sample-contract-loan-v0",
+    contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+    contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
     functionName: "get-loan-id-by-uuid",
     functionArgs: [
       bufferCVFromString(UUID),

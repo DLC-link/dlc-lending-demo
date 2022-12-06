@@ -6,6 +6,7 @@
     "@chakra-ui/icon": "^3.0.11",
     "@chakra-ui/icons": "^2.0.11",
     "@chakra-ui/react": "^2.3.7",
+    "@emotion/styled": "^11.10.5",
     "@fontsource/poppins": "^4.5.10",
     "@mui/icons-material": "^5.10.16",
     "@stacks/blockchain-api-client": "^6.2.1",
@@ -23,7 +24,6 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "constants-browserify": "^1.0.0",
-    "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
     "graceful-fs": "^4.2.10",
     "https-browserify": "^1.0.0",
@@ -42,7 +42,7 @@
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "web-vitals": "^2.1.4",
-    "web3": "^1.8.0"
+    "web3": "^1.8.1"
   },
   "scripts": {
     "start": "GENERATE_SOURCEMAP=false react-app-rewired start",

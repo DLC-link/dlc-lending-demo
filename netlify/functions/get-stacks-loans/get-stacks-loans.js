@@ -1,17 +1,14 @@
 import { StacksMocknet } from "@stacks/network";
 import { callReadOnlyFunction } from "@stacks/transactions";
 import { principalCV } from "@stacks/transactions/dist/clarity/types/principalCV";
-import { bytesToUtf8 } from "micro-stacks/common";
-import { addressToString } from "@stacks/transactions";
-import { customShiftValue, fixedTwoDecimalShift } from "../../../src/utils";
 import loanFormatter from "../../../src/LoanFormatter";
 
-const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
+const network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + ":3999" });
 
 function txOptions(creator) {
   return {
-    contractAddress: "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6",
-    contractName: "sample-contract-loan-v0",
+    contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+    contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
     functionName: "get-creator-loans",
     functionArgs: [principalCV(creator)],
     senderAddress: creator,

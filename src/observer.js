@@ -1,11 +1,11 @@
-import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
-import { io as ioClient } from 'socket.io-client';
+import { StacksApiSocketClient } from "@stacks/blockchain-api-client";
+import { io as ioClient } from "socket.io-client";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "./loanManagerABI";
 import eventBus from "./EventBus";
 
-const api_base = `http://stx-btc1.dlc.link:3999/extended/v1`;
-const ioclient_uri = `ws://stx-btc1.dlc.link:3999/`;
+const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
+const ioclient_uri = `wss://dev-oracle.dlc.link`;
 
 const contractAddress = "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6";
 const contractName = "sample-contract-loan-v0";
@@ -23,54 +23,59 @@ eventBus.on("change-address", (data) => {
 });
 
 async function fetchTXInfo(txId) {
-  let _tx;
-  const _setTx = (tx) => _tx = tx;
-  const _getTx = () => _tx;
-  
   console.log(`[Stacks] Fetching tx_info...`);
-  await fetch(api_base + '/tx/' + txId)
-    .then(response => _setTx(response.json()))
-    .catch(err => console.error(err));
-  return _getTx();
+  try {
+    const response = await fetch(api_base + '/tx/' + txId);
+    return response.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 }
 
 function handleTx(txInfo) {
+  let status = undefined;
+  const txId = txInfo.tx_id;
   console.log(txInfo);
 
   if (txInfo.tx_type !== 'contract_call') return;
 
   switch (txInfo.contract_call.function_name) {
     case ('setup-loan'): {
-      // if (txInfo.sender_address !== userAddress) break;
-      console.log('Setting up loan...');
+      status = "setup"
       break;
     }
-    case ('post-create-dlc-handler'): {
-      console.log('Loan has been set up.');
+    case ('create-dlc-internal'): {
+      status = "ready"
       break;
     }
     case ('repay-loan'): {
-      console.log('Repaying loan...');
+      status = "repaying"
       break;
     }
     case ('liquidate-loan'): {
-      console.log('Liquidating loan...');
+      status = "liquidateing"
       break;
     }
-    case ('post-close-dlc-handler'): {
-      console.log('DLC closed.');
+    case ('close-dlc-internal'): {
+      status = "repaid";
+      break;
+    }
+    case ('close-dlc-liquidate-internal'): {
+      status = "liquidated";
       break;
     }
     case ('set-status-funded'): {
-      console.log('Status set to funded.');
+      status = "funded";
       break;
     }
     default: {
+      console.log(txInfo.contract_call)
       console.log('Unhandled function call')
     }
   }
   // NOTE: We are sending a full refetch in any case for now
-  eventBus.dispatch('fetch-loans-bg');
+  eventBus.dispatch('fetch-loans-bg', { status: status, txId: txId });
 }
 
 function startStacksObserver() {
@@ -91,16 +96,15 @@ function startStacksObserver() {
     console.log(`Listening to ${dlcManagerFullName}...`);
   });
 
-  stacksSocket.subscribeAddressTransactions(contractFullName);
   stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
+  stacksSocket.subscribeAddressTransactions(contractFullName);
 
   // Handling incoming txs
   stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
     const _tx = txWithTransfers.tx;
-    const _successful = _tx.tx_status === 'success';
-    if (!_successful) {
+    if (!_tx.tx_status === 'success') {
       console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
-      return;
+      // TODO: show error toast....
     }
 
     const txInfo = await fetchTXInfo(_tx.tx_id);
@@ -110,20 +114,43 @@ function startStacksObserver() {
 }
 
 function startEthObserver() {
-  const { ethereum } = window;
-  const provider = new ethers.providers.Web3Provider(ethereum);
-  const signer = provider.getSigner();
+  try {
+    const { ethereum } = window;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const signer = provider.getSigner();
 
-  const loanManagerETH = new ethers.Contract(
-    "0x64Cc7aC2463cb44D8A5B8e7D57A0d7E38869bbe1",
-    loanManagerABI,
-    signer
-  );
-
-  loanManagerETH.on('CreateDLC', () => eventBus.dispatch('fetch-loans-bg'));
-  loanManagerETH.on('CreateDLCInternal', () => eventBus.dispatch('fetch-loans-bg'));
-  loanManagerETH.on('SetStatusFunded', () => eventBus.dispatch('fetch-loans-bg'));
-  loanManagerETH.on('CloseDLC', () => eventBus.dispatch('fetch-loans-bg'));
+    const loanManagerETH = new ethers.Contract(
+      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+      loanManagerABI,
+      signer
+    );
+    loanManagerETH.on("CreateDLC", (...args) => 
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "setup",
+        txId: args[args.length - 1].transactionHash,
+      })
+    );
+    loanManagerETH.on("CreateDLCInternal", (...args) => 
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "ready",
+        txId: args[args.length - 1].transactionHash,
+      })
+    );
+    loanManagerETH.on("SetStatusFunded", (...args) =>
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "funded",
+        txId: args[args.length - 1].transactionHash,
+      })
+    );
+    loanManagerETH.on("CloseDLC", (...args) =>
+      eventBus.dispatch("fetch-loans-bg", {
+        status: "closed",
+        txId: args[args.length - 1].transactionHash,
+      })
+    );
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 export default function startObserver() {

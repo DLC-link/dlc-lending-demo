@@ -3,86 +3,77 @@ import eventBus from "./EventBus";
 import DepositWithdraw from "./components/DepositWithdraw";
 import Header from "./components/Header";
 import Intro from "./components/Intro";
-import React from "react";
+import React, { useEffect } from "react";
 import DepositModal from "./modals/DepositModal";
 import DLCTable from "./components/DLCTable";
 import { Box } from "@chakra-ui/react";
+import { useState } from "react";
 
-export default class App extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      isSelectWalletOpen: false,
-      isDepositOpen: false,
-      isConnected: false,
-      isLoading: true,
-      address: "",
-      walletType: undefined,
-    };
-  }
+export default function App() {
+  const [isConnected, setConnected] = useState(false);
+  const [address, setAddress] = useState("");
+  const [walletType, setWalletType] = useState("");
+  const [isLoading, setLoading] = useState(true);
+  const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
+  const [isDepositModalOpen, setDepositModalOpen] = useState(false);
 
-  componentDidMount = () => {
+  useEffect(() => {
+    eventBus.on("is-account-connected", (data) =>
+      setConnected(data.isConnected)
+    );
+    eventBus.on("set-address", (data) => setAddress(data.address));
+    eventBus.on("wallet-type", (data) => setWalletType(data.walletType));
+    eventBus.on("set-loading-state", (data) => setLoading(data.isLoading));
     eventBus.on("is-select-wallet-modal-open", (data) =>
-      this.setState({ isSelectWalletOpen: data.isSelectWalletOpen })
+      setSelectWalletModalOpen(data.isSelectWalletOpen)
     );
     eventBus.on("is-deposit-modal-open", (data) =>
-      this.setState({ isDepositOpen: data.isDepositOpen })
+      setDepositModalOpen(data.isDepositOpen)
     );
-    eventBus.on(
-      "account-connected",
-      (data) =>
-        this.state.isConnected !== data.isConnected &&
-        this.setState({ isConnected: data.isConnected })
-    );
-    eventBus.on("wallet-type", (data) =>
-      this.setState({ walletType: data.walletType })
-    );
-    eventBus.on(
-      "change-address",
-      (data) =>
-        this.state.address !== data.address &&
-        this.setState({ address: data.address })
-    );
+  }, []);
+
+  const onSelectWalletModalClose = () => {
+    setSelectWalletModalOpen(false);
   };
 
-  onSelectWalletClose = () => {
-    this.setState({ isSelectWalletOpen: false });
+  const onDepositModalClose = () => {
+    setDepositModalOpen(false);
   };
 
-  onDepositClose = () => {
-    this.setState({ isDepositOpen: false });
-  };
-
-  render() {
-    return (
-      <>
-        <Box height="auto">
-          <Header></Header>
-          <DepositModal
-            walletType={this.state.walletType}
-            address={this.state.address}
-            isOpen={this.state.isDepositOpen}
-            closeModal={this.onDepositClose}
-          />
-          <SelectWalletModal
-            isOpen={this.state.isSelectWalletOpen}
-            closeModal={this.onSelectWalletClose}
-          />
-          <Intro isConnected={this.state.isConnected}></Intro>
-          {this.state.isConnected && (
-            <>
-              <DepositWithdraw
-                isConnected={this.state.isConnected}
-              ></DepositWithdraw>
-              <DLCTable
-                walletType={this.state.walletType}
-                isConnected={this.state.isConnected}
-                address={this.state.address}
-              ></DLCTable>
-            </>
-          )}
-        </Box>
-      </>
-    );
-  }
+  return (
+    <>
+      <Box height="auto">
+        <Header
+          isConnected={isConnected}
+          walletType={walletType}
+          address={address}
+        ></Header>
+        <DepositModal
+          walletType={walletType}
+          address={address}
+          isOpen={isDepositModalOpen}
+          closeModal={onDepositModalClose}
+        />
+        <SelectWalletModal
+          isOpen={isSelectWalletModalOpen}
+          closeModal={onSelectWalletModalClose}
+        />
+        <Intro isConnected={isConnected}></Intro>
+        {isConnected && (
+          <>
+            <DepositWithdraw
+              isConnected={isConnected}
+              isLoading={isLoading}
+            ></DepositWithdraw>
+            <DLCTable
+              isConnected={isConnected}
+              walletType={walletType}
+              address={address}
+              isLoading={isLoading}
+            ></DLCTable>
+          </>
+        )}
+      </Box>
+    </>
+  );
 }
