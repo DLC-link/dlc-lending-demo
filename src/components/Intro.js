@@ -17,8 +17,9 @@ export default function Header(props) {
           fontSize={[25, 50]}
           fontWeight="semibold"
           color="accent"
+          height={50}
         >
-          Use native Bitcoin
+          Use Native Bitcoin
         </Text>
         <Text
           fontWeight="normal"
