@@ -202,43 +202,6 @@ const toast = useToast();
     return roundedCollateralToDebtRatio;
   };
 
-  const handleEvent = (data) => {
-    let success = undefined;
-    let message = undefined;
-    let explorerAddress = undefined;
-
-    switch (props.walletType) {
-      case "hiro":
-        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
-        break;
-      case "metamask":
-        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
-        break;
-    }
-
-    switch (data.status) {
-      case "repay-requested":
-        success = true;
-        message = "Requested repayment!";
-        break;
-      case "liquidation-requested":
-        success = true;
-        message = "Requested liquidation!";
-        break;
-    }
-
-    return toast({
-      position: "left-top",
-      render: () => (
-        <CustomToast
-          explorerAddress={explorerAddress}
-          message={message}
-          success={success}
-        ></CustomToast>
-      ),
-    });
-  };
-
   return (
     <Flex
       bgGradient="linear(to-d, secondary1, secondary2)"

@@ -14,7 +14,7 @@ export default function CustomToast({ explorerAddress, message, success }) {
       paddingRight={15}>
         <Flex
           color="white"
-          bgColor="rgba(4, 186, 178, 0.2)"
+          bgColor="rgba(4, 186, 178, 0.8)"
           borderRadius="sm"
           boxShadow="dark-lg"
           height={45}

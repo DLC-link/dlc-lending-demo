@@ -15,8 +15,8 @@ export const theme = extendTheme({
     secondary1: "#04BAB2",
     secondary2: "#2C039E",
     accent: "#07E8D8",
-    background1: "#500056",
-    background2: "#001372",
+    background1: "#49004e",
+    background2: "#010a34",
   },
 
   fonts: {

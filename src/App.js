@@ -80,6 +80,10 @@ export default function App() {
         success = true;
         message = "Loan is ready!";
         break;
+      case "repay-requested":
+        success = true;
+        message = "Requested repayment!";
+        break;
       case "repaying":
         success = true;
         message = "Processing repayment!";
@@ -87,6 +91,10 @@ export default function App() {
       case "repaid":
         success = true;
         message = "Loan repaid!";
+        break;
+      case "liquidation-requested":
+        success = true;
+        message = "Requested liquidation!";
         break;
       case "liquidateing":
         success = true;
@@ -120,8 +128,7 @@ export default function App() {
 
   return (
     <>
-      <Box height="auto"
-      padding={0}>
+      <Box height="auto" padding={0}>
         <Header
           isConnected={isConnected}
           walletType={walletType}
