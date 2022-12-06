@@ -34,6 +34,7 @@ export default function DLCTable(props) {
   const toast = useToast();
 
   const handleEvent = (data) => {
+    console.log("Toast event")
     let success = undefined;
     let message = undefined;
     let explorerAddress = undefined;
@@ -98,8 +99,8 @@ export default function DLCTable(props) {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on("fetch-loans-bg", (data) => {
-      refreshLoansTable(true);
       handleEvent(data);
+      refreshLoansTable(true);
     });
   }, []);
 
