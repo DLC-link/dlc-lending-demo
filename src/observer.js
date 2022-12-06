@@ -68,6 +68,7 @@ function handleTx(txInfo) {
       break;
     }
     default: {
+      console.log(txInfo.contract_call)
       console.log('Unhandled function call')
     }
   }

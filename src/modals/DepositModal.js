@@ -23,7 +23,6 @@ import {
   Tbody,
   TableContainer,
   useToast,
-  Link,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { customShiftValue, fixedTwoDecimalUnshift } from "../utils";
@@ -32,10 +31,9 @@ import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
-import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
+import CustomToast from "../components/CustomToast";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
-  const toast = useToast();
   const [collateral, setCollateral] = useState(undefined);
   const [loan, setLoan] = useState(undefined);
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -55,6 +53,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     isLoanError,
     isCollateralToDebtRatioError,
   ];
+  const toast = useToast();
 
   useEffect(() => {
     async function fetchData() {
@@ -207,47 +206,11 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     return toast({
       position: "bottom",
       render: () => (
-        <Link
-          href={explorerAddress}
-          isExternal
-          _hover={{
-            textDecoration: "none",
-          }}
-        >
-          <Flex
-            color="white"
-            opacity="75%"
-            bgGradient="linear(to-r, primary1, primary2)"
-            borderRadius="2xl"
-            boxShadow="dark-lg"
-            height={100}
-            width={500}
-            justifyContent="center"
-            alignItems="center"
-            _hover={{
-              opacity: "100%",
-              bg: "secondary1",
-            }}
-          >
-            <VStack spacing={1.5}>
-              <HStack spacing={1.5}>
-                {success === true ? (
-                  <CheckCircleIcon color="green"></CheckCircleIcon>
-                ) : (
-                  <WarningIcon color="red"></WarningIcon>
-                )}
-                <Text fontSize={18} fontWeight="extrabold">
-                  {message}
-                </Text>
-              </HStack>
-              {success && (
-                <Text fontSize={12} fontWeight="bold">
-                  Click to show transaction in the explorer!
-                </Text>
-              )}
-            </VStack>
-          </Flex>
-        </Link>
+        <CustomToast
+          explorerAddress={explorerAddress}
+          message={message}
+          success={success}
+        ></CustomToast>
       ),
     });
   };
