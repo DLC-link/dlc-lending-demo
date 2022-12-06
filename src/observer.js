@@ -23,15 +23,14 @@ eventBus.on("change-address", (data) => {
 });
 
 async function fetchTXInfo(txId) {
-  let _tx;
-  const _setTx = (tx) => _tx = tx;
-  const _getTx = () => _tx;
-  
   console.log(`[Stacks] Fetching tx_info...`);
-  await fetch(api_base + '/tx/' + txId)
-    .then(response => _setTx(response.json()))
-    .catch(err => console.error(err));
-  return _getTx();
+  try {
+    const response = await fetch(api_base + '/tx/' + txId);
+    return response.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 }
 
 function handleTx(txInfo) {
@@ -43,11 +42,10 @@ function handleTx(txInfo) {
 
   switch (txInfo.contract_call.function_name) {
     case ('setup-loan'): {
-      // if (txInfo.sender_address !== userAddress) break;
       status = "setup"
       break;
     }
-    case ('post-create-dlc-handler'): {
+    case ('create-dlc-internal'): {
       status = "ready"
       break;
     }
@@ -59,8 +57,12 @@ function handleTx(txInfo) {
       status = "liquidateing"
       break;
     }
-    case ('post-close-dlc-handler'): {
+    case ('close-dlc-internal'): {
       status = "closed";
+      break;
+    }
+    case ('close-dlc-liquidate-internal'): {
+      status = "liquidated"; // TODO:
       break;
     }
     case ('set-status-funded'): {
@@ -94,16 +96,15 @@ function startStacksObserver() {
     console.log(`Listening to ${dlcManagerFullName}...`);
   });
 
-  stacksSocket.subscribeAddressTransactions(contractFullName);
   stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
+  stacksSocket.subscribeAddressTransactions(contractFullName);
 
   // Handling incoming txs
   stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
     const _tx = txWithTransfers.tx;
-    const _successful = _tx.tx_status === 'success';
-    if (!_successful) {
+    if (!_tx.tx_status === 'success') {
       console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
-      return;
+      // TODO: show error toast....
     }
 
     const txInfo = await fetchTXInfo(_tx.tx_id);
