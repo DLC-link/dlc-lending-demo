@@ -227,7 +227,7 @@ const toast = useToast();
     }
 
     return toast({
-      position: "bottom",
+      position: "left-top",
       render: () => (
         <CustomToast
           explorerAddress={explorerAddress}

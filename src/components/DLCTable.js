@@ -84,7 +84,7 @@ export default function DLCTable(props) {
     }
 
     return toast({
-      position: "bottom",
+      position: "left-top",
       render: () => (
         <CustomToast
           explorerAddress={explorerAddress}

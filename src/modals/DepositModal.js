@@ -204,7 +204,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     }
 
     return toast({
-      position: "bottom",
+      position: "left-top",
       render: () => (
         <CustomToast
           explorerAddress={explorerAddress}
