@@ -46,7 +46,7 @@ export default function Header(props) {
           width={100}
         >
           <Image
-            src="/dlc.link_logo.png"
+            src="/dlc.link_logo.svg"
             alt="DLC.Link Logo"
             height={[25, 65]}
             width={[25, 65]}

@@ -10,7 +10,7 @@ export default function CustomToast({ explorerAddress, message, success }) {
         textDecoration: "none",
       }}
     >
-      <Box paddingTop={100}
+      <Box py={100}
       paddingRight={15}>
         <Flex
           color="white"
