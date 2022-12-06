@@ -21,6 +21,7 @@ import { abi as loanManagerABI } from "../loanManagerABI";
 import Status from "./Status";
 import { useToast } from "@chakra-ui/react";
 import CustomToast from "./CustomToast";
+import eventBus from "../EventBus";
 
 export default function Card(props) {
 const toast = useToast();
@@ -93,7 +94,7 @@ const toast = useToast();
       functionArgs: [uintCV(parseInt(loanContractID))],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        handleEvent({ status: "repay-requested", txId: data.txId });
+        eventBus.dispatch("loan-event", { status: "repay-requested", txId: data.txId });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -113,7 +114,7 @@ const toast = useToast();
         signer
       );
       loanManagerETH.repayLoan(props.loan.raw.id).then((response) =>
-      handleEvent({ status: "repay-requested", txId: response.hash }));
+      eventBus.dispatch("loan-event", { status: "repay-requested", txId: response.hash }));
     } catch (error) {
       console.log(error);
     }
@@ -145,7 +146,7 @@ const toast = useToast();
       functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        handleEvent({ status: "liquidation-requested", txId: data.txId });
+        eventBus.dispatch("loan-event", { status: "liquidation-requested", txId: data.txId });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -165,7 +166,7 @@ const toast = useToast();
         signer
       );
       loanManagerETH.liquidateLoan(props.loan.raw.id).then((response) =>
-      handleEvent({ status: "liquidation-requested", txId: response.hash }));
+      eventBus.dispatch("loan-event", { status: "liquidation-requested", txId: response.hash }));
     } catch (error) {
       console.log(error);
     }

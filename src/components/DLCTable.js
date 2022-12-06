@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import React, { useEffect, useState } from "react";
 import eventBus from "../EventBus";
 import {
@@ -33,73 +35,10 @@ export default function DLCTable(props) {
   const [isManualLoading, setManualLoading] = useState(undefined);
   const toast = useToast();
 
-  const handleEvent = (data) => {
-    console.log("Toast event")
-    let success = undefined;
-    let message = undefined;
-    let explorerAddress = undefined;
-
-    switch (walletType) {
-      case "hiro":
-        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
-        break;
-      case "metamask":
-        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
-        break;
-    }
-
-    switch (data.status) {
-      case "setup":
-        success = true;
-        message = "Loan established!";
-        break;
-      case "ready":
-        success = true;
-        message = "Loan is ready!";
-        break;
-      case "repaying":
-        success = true;
-        message = "Processing repayment!";
-        break;
-      case "repaid":
-        success = true;
-        message = "Loan repaid!";
-        break;
-      case "liquidateing":
-        success = true;
-        message = "Processing liquidation!";
-        break;
-      case "liquidated":
-        success = true;
-        message = "Loan liquidated!";
-        break;
-      case "funded":
-        success = true;
-        message = "Loan funded!";
-        break;
-      case "closed":
-        success = true;
-        message = "Loan closed!";
-        break;
-    }
-
-    return toast({
-      position: "left-top",
-      render: () => (
-        <CustomToast
-          explorerAddress={explorerAddress}
-          message={message}
-          success={success}
-        ></CustomToast>
-      ),
-    });
-  };
-
   useEffect(() => {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on("fetch-loans-bg", (data) => {
-      handleEvent(data);
       refreshLoansTable(true);
     });
   }, []);

@@ -6,8 +6,9 @@ import Intro from "./components/Intro";
 import React, { useEffect } from "react";
 import DepositModal from "./modals/DepositModal";
 import DLCTable from "./components/DLCTable";
-import { Box } from "@chakra-ui/react";
+import { Box, useToast } from "@chakra-ui/react";
 import { useState } from "react";
+import CustomToast from "./components/CustomToast";
 
 export default function App() {
   const [isConnected, setConnected] = useState(false);
@@ -16,11 +17,18 @@ export default function App() {
   const [isLoading, setLoading] = useState(true);
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [isDepositModalOpen, setDepositModalOpen] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     eventBus.on("is-account-connected", (data) =>
       setConnected(data.isConnected)
     );
+    eventBus.on("fetch-loans-bg", (data) => {
+      handleEvent(data);
+    });
+    eventBus.on("loan-event", (data) => {
+      handleEvent(data);
+    });
     eventBus.on("set-address", (data) => setAddress(data.address));
     eventBus.on("wallet-type", (data) => setWalletType(data.walletType));
     eventBus.on("set-loading-state", (data) => setLoading(data.isLoading));
@@ -40,9 +48,80 @@ export default function App() {
     setDepositModalOpen(false);
   };
 
+  const handleEvent = (data) => {
+    console.log("Toast event");
+    let success = undefined;
+    let message = undefined;
+    let explorerAddress = undefined;
+
+    switch (walletType) {
+      case "hiro":
+        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
+        break;
+      case "metamask":
+        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
+        break;
+    }
+
+    switch (data.status) {
+      case "created":
+        success = true;
+        message = "Loan created!";
+        break;
+      case "cancelled":
+        success = false;
+        message = "Transaction cancelled!";
+        break;
+      case "setup":
+        success = true;
+        message = "Loan established!";
+        break;
+      case "ready":
+        success = true;
+        message = "Loan is ready!";
+        break;
+      case "repaying":
+        success = true;
+        message = "Processing repayment!";
+        break;
+      case "repaid":
+        success = true;
+        message = "Loan repaid!";
+        break;
+      case "liquidateing":
+        success = true;
+        message = "Processing liquidation!";
+        break;
+      case "liquidated":
+        success = true;
+        message = "Loan liquidated!";
+        break;
+      case "funded":
+        success = true;
+        message = "Loan funded!";
+        break;
+      case "closed":
+        success = true;
+        message = "Loan closed!";
+        break;
+    }
+
+    return toast({
+      position: "right-top",
+      render: () => (
+        <CustomToast
+          explorerAddress={explorerAddress}
+          message={message}
+          success={success}
+        ></CustomToast>
+      ),
+    });
+  };
+
   return (
     <>
-      <Box height="auto">
+      <Box height="auto"
+      padding={0}>
         <Header
           isConnected={isConnected}
           walletType={walletType}

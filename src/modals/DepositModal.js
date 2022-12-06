@@ -32,6 +32,7 @@ import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 import CustomToast from "../components/CustomToast";
+import eventBus from "../EventBus";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
   const [collateral, setCollateral] = useState(undefined);
@@ -120,10 +121,10 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       ],
       onFinish: (data) => {
         closeModal();
-        handleEvent({ status: "created", txId: data.txId }, walletType);
+        eventBus.dispatch("loan-event", { status: "created", txId: data.txId })
       },
       onCancel: () => {
-        handleEvent({ status: "cancelled" });
+        eventBus.dispatch("loan-event", { status: "cancelled" })
       },
     });
   };
@@ -147,7 +148,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
         loanContract.emergencyRefundTime
       )
       .then((response) =>
-        handleEvent({ status: "created", txId: response.hash }, walletType)
+      eventBus.dispatch("loan-event", { status: "created", txId: response.hash })
       )
       .then(() => closeModal());
   };
@@ -176,43 +177,6 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     setUSDAmount(
       new Intl.NumberFormat().format(bitCoinInUSDAsNumber * collateral)
     );
-  };
-
-  const handleEvent = (data) => {
-    let success = undefined;
-    let message = undefined;
-    let explorerAddress = undefined;
-
-    switch (walletType) {
-      case "hiro":
-        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
-        break;
-      case "metamask":
-        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
-        break;
-    }
-
-    switch (data.status) {
-      case "created":
-        success = true;
-        message = "Loan created!";
-        break;
-      case "cancelled":
-        success = false;
-        message = "Transaction cancelled!";
-        break;
-    }
-
-    return toast({
-      position: "left-top",
-      render: () => (
-        <CustomToast
-          explorerAddress={explorerAddress}
-          message={message}
-          success={success}
-        ></CustomToast>
-      ),
-    });
   };
 
   return (
