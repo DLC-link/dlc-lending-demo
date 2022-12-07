@@ -20,7 +20,6 @@ import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 import Status from "./Status";
 import { useToast } from "@chakra-ui/react";
-import CustomToast from "./CustomToast";
 import eventBus from "../EventBus";
 
 export default function Card(props) {

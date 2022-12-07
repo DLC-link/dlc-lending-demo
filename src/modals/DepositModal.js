@@ -31,7 +31,6 @@ import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
-import CustomToast from "../components/CustomToast";
 import eventBus from "../EventBus";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {

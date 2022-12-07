@@ -1,8 +1,6 @@
 import React from "react";
 import eventBus from "../EventBus";
-import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
 import { Button, Text, HStack, Flex, Image, Spacer } from "@chakra-ui/react";
-import { easyTruncateAddress } from "../utils";
 import { userSession } from "../hiroWalletUserSession";
 import Account from "./Account";
 

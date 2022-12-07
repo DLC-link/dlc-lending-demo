@@ -1,4 +1,4 @@
-import { Link, Flex, VStack, HStack, Text, Box } from "@chakra-ui/react";
+import { Link, Flex, HStack, Text, Box } from "@chakra-ui/react";
 import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
 
 export default function CustomToast({ explorerAddress, message, success }) {

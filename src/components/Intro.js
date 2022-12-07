@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, Box, Collapse, Image, VStack } from "@chakra-ui/react";
+import { Text, Collapse, Image, VStack } from "@chakra-ui/react";
 
 export default function Header(props) {
   const isConnected = props.isConnected;

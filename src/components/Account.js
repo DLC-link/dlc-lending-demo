@@ -1,6 +1,6 @@
 import React from "react";
 import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
-import { Text, HStack, Box, Image, Flex } from "@chakra-ui/react";
+import { Text, HStack, Image } from "@chakra-ui/react";
 import { easyTruncateAddress } from "../utils";
 
 export default function Account({ address, isConnected, walletType }) {
@@ -29,7 +29,7 @@ export default function Account({ address, isConnected, walletType }) {
     case false:
       return (
         <HStack
-          height={[25, 65]}
+          height={[25, 50]}
           width={[150, 350]}
           borderRadius="lg"
           shadow="dark-lg"
