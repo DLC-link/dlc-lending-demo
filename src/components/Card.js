@@ -21,9 +21,10 @@ import { abi as loanManagerABI } from "../loanManagerABI";
 import Status from "./Status";
 import { useToast } from "@chakra-ui/react";
 import eventBus from "../EventBus";
+import { abi as usdcForDLCsABI } from "../usdcForDLCsABI";
 
 export default function Card(props) {
-const toast = useToast();
+  const toast = useToast();
 
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
@@ -93,7 +94,10 @@ const toast = useToast();
       functionArgs: [uintCV(parseInt(loanContractID))],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        eventBus.dispatch("loan-event", { status: "repay-requested", txId: data.txId });
+        eventBus.dispatch("loan-event", {
+          status: "repay-requested",
+          txId: data.txId,
+        });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -102,20 +106,68 @@ const toast = useToast();
   };
 
   const repayEthereumLoanContract = async () => {
-    try {
-      const { ethereum } = window;
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
+    if (await isAllowedInMetamask()) {
+      try {
+        const { ethereum } = window;
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
 
-      const loanManagerETH = new ethers.Contract(
-        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-        loanManagerABI,
-        signer
-      );
-      loanManagerETH.repayLoan(props.loan.raw.id).then((response) =>
-      eventBus.dispatch("loan-event", { status: "repay-requested", txId: response.hash }));
-    } catch (error) {
-      console.log(error);
+        const loanManagerETH = new ethers.Contract(
+          process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+          loanManagerABI,
+          signer
+        );
+        loanManagerETH.repayLoan(props.loan.raw.id).then((response) =>
+          eventBus.dispatch("loan-event", {
+            status: "repay-requested",
+            txId: response.hash,
+          })
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const isAllowedInMetamask = async () => {
+    const { ethereum } = window;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const signer = provider.getSigner();
+
+    const desiredAmount = 1000000n * 10n ** 18n;
+
+    const usdcContract = new ethers.Contract(
+      process.env.REACT_APP_USDC_CONTRACT_ADDRESS,
+      usdcForDLCsABI,
+      signer
+    );
+
+    const allowedAmount = await usdcContract.allowance(
+      props.creator,
+      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS
+    );
+
+    if (
+      fixedTwoDecimalShift(props.loan.raw.vaultLoan) > parseInt(allowedAmount)
+    ) {
+      try {
+        await usdcContract
+          .approve(
+            process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+            desiredAmount
+          )
+          .then((response) =>
+            eventBus.dispatch("loan-event", {
+              status: "approve-requested",
+              txId: response.hash,
+            })
+          );
+        return false;
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      return true;
     }
   };
 
@@ -145,7 +197,10 @@ const toast = useToast();
       functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        eventBus.dispatch("loan-event", { status: "liquidation-requested", txId: data.txId });
+        eventBus.dispatch("loan-event", {
+          status: "liquidation-requested",
+          txId: data.txId,
+        });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -165,7 +220,11 @@ const toast = useToast();
         signer
       );
       loanManagerETH.liquidateLoan(props.loan.raw.id).then((response) =>
-      eventBus.dispatch("loan-event", { status: "liquidation-requested", txId: response.hash }));
+        eventBus.dispatch("loan-event", {
+          status: "liquidation-requested",
+          txId: response.hash,
+        })
+      );
     } catch (error) {
       console.log(error);
     }
@@ -363,7 +422,7 @@ const toast = useToast();
                 fontWeight="bold"
                 onClick={() => repayLoanContract()}
               >
-                REPAY LOAN 
+                REPAY LOAN
               </Button>
               {countCollateralToDebtRatio(
                 props.bitCoinValue,

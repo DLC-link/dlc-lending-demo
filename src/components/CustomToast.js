@@ -1,7 +1,19 @@
 import { Link, Flex, HStack, Text, Box } from "@chakra-ui/react";
 import { CheckCircleIcon, WarningIcon } from "@chakra-ui/icons";
+import { useEffect, useState } from "react";
 
-export default function CustomToast({ explorerAddress, message, success }) {
+export default function CustomToast(props) {
+  const [explorerAddress, setExplorerAddress] = useState(props.explorerAddress)
+  const [message, setMessage] = useState(props.message)
+  const [success, setSuccess] = useState(props.success)
+
+  useEffect(() => {
+    setExplorerAddress(props.explorerAddress)
+    setMessage(props.message)
+    setSuccess(props.success)
+  }, [props])
+
+  console.log(explorerAddress + ' ' + message + ' ' + success)
   return (
     <Link
       href={explorerAddress}
@@ -10,7 +22,8 @@ export default function CustomToast({ explorerAddress, message, success }) {
         textDecoration: "none",
       }}
     >
-      <Box py={100}
+      <Box 
+      marginTop={150}
       paddingRight={15}>
         <Flex
           color="white"

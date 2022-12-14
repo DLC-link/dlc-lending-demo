@@ -38,7 +38,11 @@ export default function App() {
     eventBus.on("is-deposit-modal-open", (data) =>
       setDepositModalOpen(data.isDepositOpen)
     );
-  }, []);
+  }, [walletType]);
+
+  useEffect(() => {
+    console.log(walletType + ' ' + address)
+  })
 
   const onSelectWalletModalClose = () => {
     setSelectWalletModalOpen(false);
@@ -49,7 +53,6 @@ export default function App() {
   };
 
   const handleEvent = (data) => {
-    console.log("Toast event");
     let success = undefined;
     let message = undefined;
     let explorerAddress = undefined;
@@ -59,6 +62,7 @@ export default function App() {
         explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
         break;
       case "metamask":
+        console.log("here")
         explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
         break;
     }
@@ -112,6 +116,13 @@ export default function App() {
         success = true;
         message = "Loan closed!";
         break;
+      case "approve-requested":
+        success = true;
+        message = "Approve requested!";
+        break;
+      case "approved":
+        success = true;
+        message = "Approved!";
     }
 
     return toast({
