@@ -13,7 +13,6 @@ export default function CustomToast(props) {
     setSuccess(props.success)
   }, [props])
 
-  console.log(explorerAddress + ' ' + message + ' ' + success)
   return (
     <Link
       href={explorerAddress}

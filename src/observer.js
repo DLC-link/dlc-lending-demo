@@ -20,7 +20,6 @@ let userAddress;
 
 eventBus.on("change-address", (data) => {
   userAddress = data.address;
-  console.log(userAddress);
 });
 
 async function fetchTXInfo(txId) {
@@ -28,53 +27,28 @@ async function fetchTXInfo(txId) {
   try {
     const response = await fetch(api_base + "/tx/" + txId);
     return response.json();
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     return null;
   }
 }
 
 function handleTx(txInfo) {
-  let status = undefined;
+  const txMap = {
+    'setup-loan': "setup",
+    'create-dlc-internal': "ready",
+    'repay-loan': "repaying", 
+    'liquidate-loan': "liquidate-loan",
+    'close-dlc-internal': "repaid",
+    'close-dlc-liquidate-internal': "liquidated",
+    'set-status-funded': "funded"
+
+  }
+  let status = txMap[txInfo.contract_call.function_name];
   const txId = txInfo.tx_id;
-  console.log(txInfo);
 
   if (txInfo.tx_type !== "contract_call") return;
 
-  switch (txInfo.contract_call.function_name) {
-    case "setup-loan": {
-      status = "setup";
-      break;
-    }
-    case "create-dlc-internal": {
-      status = "ready";
-      break;
-    }
-    case "repay-loan": {
-      status = "repaying";
-      break;
-    }
-    case "liquidate-loan": {
-      status = "liquidateing";
-      break;
-    }
-    case "close-dlc-internal": {
-      status = "repaid";
-      break;
-    }
-    case "close-dlc-liquidate-internal": {
-      status = "liquidated";
-      break;
-    }
-    case "set-status-funded": {
-      status = "funded";
-      break;
-    }
-    default: {
-      console.log(txInfo.contract_call);
-      console.log("Unhandled function call");
-    }
-  }
   // NOTE: We are sending a full refetch in any case for now
   eventBus.dispatch("fetch-loans-bg", { status: status, txId: txId });
 }
@@ -167,7 +141,7 @@ function startEthObserver() {
       })}
     );
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 

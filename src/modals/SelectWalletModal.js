@@ -31,7 +31,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       eventBus.dispatch("is-account-connected", { isConnected: true });
       eventBus.dispatch("wallet-type", { walletType: "metamask" });
     } catch (error) {
-      console.log(error);
+      ;
     }
   }
 

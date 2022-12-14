@@ -40,10 +40,6 @@ export default function App() {
     );
   }, [walletType]);
 
-  useEffect(() => {
-    console.log(walletType + ' ' + address)
-  })
-
   const onSelectWalletModalClose = () => {
     setSelectWalletModalOpen(false);
   };
@@ -53,79 +49,39 @@ export default function App() {
   };
 
   const handleEvent = (data) => {
-    let success = undefined;
-    let message = undefined;
-    let explorerAddress = undefined;
+    const toastMap = {
+      'created': "Loan created!",
+      'cancelled': "Transaction cancelled!",
+      'setup': "Loan established!",
+      'ready': "Loan is ready!",
+      'repay-requested': "Requested repayment!",
+      'repaying': "Processing repayment!",
+      'repaid': "Loan repaid!",
+      'liquidation-requested': "Requested liquidation!",
+      'liquidateing': "Processing liquidation!",
+      'liquidated': "Loan liquidated!",
+      'funded': "Loan funded!",
+      'closed': "Loan closed!",
+      'approve-requested': "Approve requested!",
+      'approved': "Approved!"
+    };
+
+    let success = data.status === 'cancelled' ? false : true
+    let message = toastMap[data.status];
+    let explorerAddress;
 
     switch (walletType) {
       case "hiro":
         explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
         break;
       case "metamask":
-        console.log("here")
         explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
         break;
     }
 
-    switch (data.status) {
-      case "created":
-        success = true;
-        message = "Loan created!";
-        break;
-      case "cancelled":
-        success = false;
-        message = "Transaction cancelled!";
-        break;
-      case "setup":
-        success = true;
-        message = "Loan established!";
-        break;
-      case "ready":
-        success = true;
-        message = "Loan is ready!";
-        break;
-      case "repay-requested":
-        success = true;
-        message = "Requested repayment!";
-        break;
-      case "repaying":
-        success = true;
-        message = "Processing repayment!";
-        break;
-      case "repaid":
-        success = true;
-        message = "Loan repaid!";
-        break;
-      case "liquidation-requested":
-        success = true;
-        message = "Requested liquidation!";
-        break;
-      case "liquidateing":
-        success = true;
-        message = "Processing liquidation!";
-        break;
-      case "liquidated":
-        success = true;
-        message = "Loan liquidated!";
-        break;
-      case "funded":
-        success = true;
-        message = "Loan funded!";
-        break;
-      case "closed":
-        success = true;
-        message = "Loan closed!";
-        break;
-      case "approve-requested":
-        success = true;
-        message = "Approve requested!";
-        break;
-      case "approved":
-        success = true;
-        message = "Approved!";
-    }
-
+    if (!toast.isActive(1))
     return toast({
+      id: 1,
       position: "right-top",
       render: () => (
         <CustomToast

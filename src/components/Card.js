@@ -84,7 +84,6 @@ export default function Card(props) {
   const repayStacksLoanContract = async () => {
     const network = new StacksMocknet({ url: "http://localhost:3999" });
     const loanContractID = await getStacksLoanIDByUUID(props.loan.raw.dlcUUID);
-    console.log(loanContractID);
     openContractCall({
       network: network,
       anchorMode: 1,
@@ -124,7 +123,7 @@ export default function Card(props) {
           })
         );
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
   };
@@ -164,7 +163,7 @@ export default function Card(props) {
           );
         return false;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     } else {
       return true;
@@ -226,7 +225,7 @@ export default function Card(props) {
         })
       );
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -246,7 +245,7 @@ export default function Card(props) {
           sendOfferForSigning(msg);
         });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

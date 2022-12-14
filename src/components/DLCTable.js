@@ -115,7 +115,7 @@ export default function DLCTable(props) {
         "solidity"
       );
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
     return loans;
   };
