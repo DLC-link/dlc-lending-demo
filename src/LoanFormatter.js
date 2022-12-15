@@ -1,6 +1,6 @@
 import { customShiftValue, fixedTwoDecimalShift } from "./utils";
 import { addressToString } from "@stacks/transactions";
-import { bytesToUtf8 } from "micro-stacks/common";
+import { bytesToHex, bytesToUtf8 } from "micro-stacks/common";
 import { toJson } from "./utils";
 
 const loanFormatter = {
@@ -18,7 +18,7 @@ const loanFormatter = {
         closingPrice: Number(dlcData["closing-price"].value.value),
       }),
       ...(dlcData.dlc_uuid.hasOwnProperty("value") && {
-        dlcUUID: bytesToUtf8(dlcData.dlc_uuid.value.buffer),
+        dlcUUID: bytesToHex(dlcData.dlc_uuid.value.buffer),
       }),
     };
     return this.formatToReadable(rawData);
@@ -47,6 +47,7 @@ const loanFormatter = {
     const loan = {
       raw: rawData,
       formatted: {
+        formattedUUID: `0x${rawData.dlcUUID}`,
         formattedLiquidationFee:
           fixedTwoDecimalShift(rawData.liquidationFee) + " %",
         formattedLiquidationRatio:

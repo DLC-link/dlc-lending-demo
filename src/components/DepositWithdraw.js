@@ -66,10 +66,10 @@ export default function DepositWithdraw(props) {
                     <TableCaption fontSize={12}>Deposit Bitcoin</TableCaption>
                     <Thead>
                       <Tr>
-                        <Th fontSize={8} color="white">
+                        <Th fontSize={[8, 12]} color="white">
                           Asset
                         </Th>
-                        <Th fontSize={8} color="white">
+                        <Th fontSize={[8, 12]} color="white">
                           Deposit Balance
                         </Th>
                       </Tr>
@@ -106,10 +106,10 @@ export default function DepositWithdraw(props) {
                     </Tbody>
                     <Thead>
                       <Tr>
-                        <Th fontSize={8} color="white">
+                        <Th fontSize={[8, 12]} color="white">
                           Asset
                         </Th>
-                        <Th fontSize={8} color="white">
+                        <Th fontSize={[8, 12]} color="white">
                           Loan Balance
                         </Th>
                       </Tr>

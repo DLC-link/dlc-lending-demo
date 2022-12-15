@@ -31,7 +31,6 @@ import { uintCV } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
-import CustomToast from "../components/CustomToast";
 import eventBus from "../EventBus";
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
@@ -121,10 +120,10 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       ],
       onFinish: (data) => {
         closeModal();
-        eventBus.dispatch("loan-event", { status: "created", txId: data.txId })
+        eventBus.dispatch("loan-event", { status: "created", txId: data.txId });
       },
       onCancel: () => {
-        eventBus.dispatch("loan-event", { status: "cancelled" })
+        eventBus.dispatch("loan-event", { status: "cancelled" });
       },
     });
   };
@@ -148,7 +147,10 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
         loanContract.emergencyRefundTime
       )
       .then((response) =>
-      eventBus.dispatch("loan-event", { status: "created", txId: response.hash })
+        eventBus.dispatch("loan-event", {
+          status: "created",
+          txId: response.hash,
+        })
       )
       .then(() => closeModal());
   };
@@ -166,11 +168,9 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   };
 
   const countCollateralToDebtRatio = () => {
-    const collateralToDebtRatio =
-      ((bitCoinInUSDAsNumber * collateral) / loan) * 100;
-    setCollateralToDebtRatio(
-      Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100
-    );
+    const collateralInUSD = collateral * bitCoinInUSDAsNumber;
+    const collateralToDebtRatio = collateralInUSD / loan;
+    setCollateralToDebtRatio(Math.round(collateralToDebtRatio * 100));
   };
 
   const countUSDAmount = () => {
@@ -197,13 +197,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
           />
           <ModalBody>
             <FormControl isInvalid={isCollateralError}>
-              <FormLabel
-                marginTop={25}
-                marginLeft={50}
-                marginRight={50}
-                bgGradient="linear(to-r, primary1, primary2)"
-                bgClip="text"
-              >
+              <FormLabel>
                 Collateral Amount
               </FormLabel>
               {!isCollateralError ? (
@@ -248,13 +242,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
               </Text>
             </FormControl>
             <FormControl isInvalid={isLoanError}>
-              <FormLabel
-                marginTop={25}
-                marginLeft={50}
-                marginRight={50}
-                bgGradient="linear(to-r, primary1, primary2)"
-                bgClip="text"
-              >
+              <FormLabel>
                 Loan Amount
               </FormLabel>
               {!isLoanError ? (

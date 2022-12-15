@@ -1,5 +1,6 @@
 import { StacksMocknet } from "@stacks/network";
-import { bufferCVFromString, callReadOnlyFunction,cvToValue, cvTo } from "@stacks/transactions";
+import { bufferCVFromString, callReadOnlyFunction,cvToValue, cvTo, bufferCV } from "@stacks/transactions";
+import { hexToBytes } from "../../../src/utils";
 
 const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
 
@@ -16,7 +17,7 @@ function txOptions(UUID, creator) {
     contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
     functionName: "get-loan-id-by-uuid",
     functionArgs: [
-      bufferCVFromString(UUID),
+      bufferCV(hexToBytes(UUID)),
     ],
     senderAddress: creator,
     network,
@@ -35,7 +36,7 @@ const handler = async function (event, context) {
     }
   } catch (error) {
     // output to netlify function log
-    console.log(error)
+    console.error(error);
     return {
       statusCode: 500,
       // Could be a custom message or object i.e. JSON.stringify(err)

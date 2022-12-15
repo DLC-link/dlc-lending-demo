@@ -16,7 +16,6 @@ import { userSession } from "../hiroWalletUserSession";
 import { showConnect } from "@stacks/connect";
 
 export default function SelectWalletModal({ isOpen, closeModal }) {
-  
   async function requestMetaMaskAccount() {
     try {
       const { ethereum } = window;
@@ -30,9 +29,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       eventBus.dispatch("set-address", { address: accounts[0] });
       eventBus.dispatch("is-account-connected", { isConnected: true });
       eventBus.dispatch("wallet-type", { walletType: "metamask" });
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   }
 
   async function requestHiroAccount() {
@@ -53,7 +50,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       showConnect({
         appDetails: {
           name: "DLC.Link",
-          icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
+          icon: "https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg",
         },
         onFinish: () => {
           eventBus.dispatch("set-address", {
@@ -70,7 +67,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
   return (
     <Modal isOpen={isOpen} onClose={closeModal} isCentered>
       <ModalOverlay />
-      <ModalContent borderColor="black" color="white" w="300px">
+      <ModalContent w="300px">
         <ModalHeader
           bgGradient="linear(to-r, primary1, primary2)"
           bgClip="text"
@@ -78,27 +75,18 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
           Select Wallet
         </ModalHeader>
         <ModalCloseButton
+          color="white"
           _focus={{
             boxShadow: "none",
           }}
           bgGradient="linear(to-r, primary1, primary2)"
-          borderRadius="md"
         />
-        <ModalBody paddingBottom="1.5rem">
+        <ModalBody padding='25px'>
           <VStack>
             <Button
-              _hover={{
-                color: "white",
-                bg: "accent",
-              }}
-              background="white"
-              bgGradient="linear(to-r, primary1, primary2)"
-              bgClip="text"
-              width="100%"
-              shadow="2xl"
+            isDisabled
               variant="outline"
-              fontSize="sm"
-              fontWeight="bold"
+              width="100%"
               onClick={() => {
                 requestMetaMaskAccount();
                 closeModal();
@@ -110,24 +98,13 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                   alt="Metamask Logo"
                   width={25}
                   height={25}
-                  borderRadius="3px"
                 />
-                <Text>Metamask</Text>
+                <Text variant="selector">Metamask</Text>
               </HStack>
             </Button>
             <Button
-              _hover={{
-                color: "white",
-                bg: "accent",
-              }}
-              background="white"
-              bgGradient="linear(to-r, primary1, primary2)"
-              bgClip="text"
               width="100%"
-              shadow="2xl"
               variant="outline"
-              fontSize="sm"
-              fontWeight="bold"
               onClick={() => {
                 requestHiroAccount();
                 closeModal();
@@ -139,9 +116,8 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                   alt="Hiro Wallet Logo"
                   width={27}
                   height={25}
-                  borderRadius="3px"
                 />
-                <Text>Hiro Wallet</Text>
+                <Text variant='selector'>Hiro Wallet</Text>
               </HStack>
             </Button>
           </VStack>

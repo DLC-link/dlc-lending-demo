@@ -20,14 +20,15 @@ import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 import Status from "./Status";
 import { useToast } from "@chakra-ui/react";
-import CustomToast from "./CustomToast";
 import eventBus from "../EventBus";
+import { abi as usdcForDLCsABI } from "../usdcForDLCsABI";
 
 export default function Card(props) {
-const toast = useToast();
+  const toast = useToast();
 
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
+      "nminefocgojkadkocbddiddjmoooonhe",
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
       "kmidoigmjbbecngmenanflcogbjojlhf",
       "niinmdkjgghdkkmlilpngkccihjmefin",
@@ -84,7 +85,6 @@ const toast = useToast();
   const repayStacksLoanContract = async () => {
     const network = new StacksMocknet({ url: "http://localhost:3999" });
     const loanContractID = await getStacksLoanIDByUUID(props.loan.raw.dlcUUID);
-    console.log(loanContractID);
     openContractCall({
       network: network,
       anchorMode: 1,
@@ -94,7 +94,10 @@ const toast = useToast();
       functionArgs: [uintCV(parseInt(loanContractID))],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        eventBus.dispatch("loan-event", { status: "repay-requested", txId: data.txId });
+        eventBus.dispatch("loan-event", {
+          status: "repay-requested",
+          txId: data.txId,
+        });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -103,20 +106,68 @@ const toast = useToast();
   };
 
   const repayEthereumLoanContract = async () => {
-    try {
-      const { ethereum } = window;
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
+    if (await isAllowedInMetamask()) {
+      try {
+        const { ethereum } = window;
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
 
-      const loanManagerETH = new ethers.Contract(
-        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-        loanManagerABI,
-        signer
-      );
-      loanManagerETH.repayLoan(props.loan.raw.id).then((response) =>
-      eventBus.dispatch("loan-event", { status: "repay-requested", txId: response.hash }));
-    } catch (error) {
-      console.log(error);
+        const loanManagerETH = new ethers.Contract(
+          process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+          loanManagerABI,
+          signer
+        );
+        loanManagerETH.repayLoan(props.loan.raw.id).then((response) =>
+          eventBus.dispatch("loan-event", {
+            status: "repay-requested",
+            txId: response.hash,
+          })
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  const isAllowedInMetamask = async () => {
+    const { ethereum } = window;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const signer = provider.getSigner();
+
+    const desiredAmount = 1000000n * 10n ** 18n;
+
+    const usdcContract = new ethers.Contract(
+      process.env.REACT_APP_USDC_CONTRACT_ADDRESS,
+      usdcForDLCsABI,
+      signer
+    );
+
+    const allowedAmount = await usdcContract.allowance(
+      props.creator,
+      process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS
+    );
+
+    if (
+      fixedTwoDecimalShift(props.loan.raw.vaultLoan) > parseInt(allowedAmount)
+    ) {
+      try {
+        await usdcContract
+          .approve(
+            process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
+            desiredAmount
+          )
+          .then((response) =>
+            eventBus.dispatch("loan-event", {
+              status: "approve-requested",
+              txId: response.hash,
+            })
+          );
+        return false;
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      return true;
     }
   };
 
@@ -142,11 +193,14 @@ const toast = useToast();
       anchorMode: 1,
       contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
       contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-      functionName: "liquidate-loan",
-      functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
+      functionName: "attempt-liquidate",
+      functionArgs: [uintCV(parseInt(loanContractID))],
       onFinish: (data) => {
         console.log("onFinish:", data);
-        eventBus.dispatch("loan-event", { status: "liquidation-requested", txId: data.txId });
+        eventBus.dispatch("loan-event", {
+          status: "liquidation-requested",
+          txId: data.txId,
+        });
       },
       onCancel: () => {
         console.log("onCancel:", "Transaction was canceled");
@@ -166,9 +220,13 @@ const toast = useToast();
         signer
       );
       loanManagerETH.liquidateLoan(props.loan.raw.id).then((response) =>
-      eventBus.dispatch("loan-event", { status: "liquidation-requested", txId: response.hash }));
+        eventBus.dispatch("loan-event", {
+          status: "liquidation-requested",
+          txId: response.hash,
+        })
+      );
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -176,7 +234,7 @@ const toast = useToast();
     try {
       fetch(
         "/.netlify/functions/get-offer/?uuid=" +
-          props.loan.raw.dlcUUID +
+          props.loan.formatted.formattedUUID +
           "&collateral=" +
           props.loan.raw.vaultCollateral,
         {
@@ -188,7 +246,7 @@ const toast = useToast();
           sendOfferForSigning(msg);
         });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -223,72 +281,72 @@ const toast = useToast();
             <Tbody>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     UUID
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
-                    {props.loan.raw.dlcUUID}
+                  <Text>
+                    {easyTruncateAddress(props.loan.formatted.formattedUUID)}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Owner
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {easyTruncateAddress(props.loan.raw.owner)}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Vault Collateral
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedVaultCollateral}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Vault Loan
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedVaultLoan}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Liquidation Fee
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedLiquidationFee}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Liquidation Ratio
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedLiquidationRatio}
                   </Text>
                 </Td>
@@ -296,12 +354,12 @@ const toast = useToast();
               {props.loan.formatted.formattedClosingPrice && (
                 <Tr>
                   <Td>
-                    <Text fontSize={12} fontWeight="extrabold" color="white">
+                    <Text variant='property'>
                       Closing Price
                     </Text>
                   </Td>
                   <Td>
-                    <Text fontSize={12} color="white">
+                    <Text>
                       {props.loan.formatted.formattedClosingPrice}
                     </Text>
                   </Td>
@@ -313,22 +371,7 @@ const toast = useToast();
         <Flex>
           {props.loan.raw.status === "ready" && (
             <VStack>
-              <Button
-                _hover={{
-                  color: "white",
-                  bg: "secondary1",
-                }}
-                margin={15}
-                color="accent"
-                width={100}
-                shadow="2xl"
-                variant="outline"
-                fontSize="sm"
-                fontWeight="bold"
-                onClick={lockBTC}
-              >
-                LOCK BTC
-              </Button>
+              <Button variant='outline' onClick={lockBTC}>LOCK BTC</Button>
             </VStack>
           )}
           {props.loan.raw.status ===
@@ -339,32 +382,14 @@ const toast = useToast();
               }}
               isLoading
               loadingText="PENDING"
-              margin={15}
               color="gray"
-              width={100}
-              shadow="2xl"
               variant="outline"
-              fontSize="sm"
-              fontWeight="bold"
             ></Button>
           )}
           {props.loan.raw.status === "funded" && (
             <VStack>
-              <Button
-                _hover={{
-                  color: "white",
-                  bg: "secondary1",
-                }}
-                margin={15}
-                color="accent"
-                width={100}
-                shadow="2xl"
-                variant="outline"
-                fontSize="sm"
-                fontWeight="bold"
-                onClick={() => repayLoanContract()}
-              >
-                REPAY LOAN 
+              <Button variant="outline" onClick={() => repayLoanContract()}>
+                REPAY LOAN
               </Button>
               {countCollateralToDebtRatio(
                 props.bitCoinValue,
@@ -372,17 +397,7 @@ const toast = useToast();
                 props.loan.raw.vaultLoan
               ) < 140 && (
                 <Button
-                  _hover={{
-                    color: "white",
-                    bg: "secondary1",
-                  }}
-                  margin={15}
-                  color="accent"
-                  width={100}
-                  shadow="2xl"
                   variant="outline"
-                  fontSize="sm"
-                  fontWeight="bold"
                   onClick={() => liquidateLoanContract()}
                 >
                   LIQUIDATE

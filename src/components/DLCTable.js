@@ -33,7 +33,6 @@ export default function DLCTable(props) {
   const [loans, setLoans] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [isManualLoading, setManualLoading] = useState(undefined);
-  const toast = useToast();
 
   useEffect(() => {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
@@ -116,7 +115,7 @@ export default function DLCTable(props) {
         "solidity"
       );
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
     return loans;
   };
