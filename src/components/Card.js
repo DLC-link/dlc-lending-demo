@@ -28,6 +28,7 @@ export default function Card(props) {
 
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
+      "nminefocgojkadkocbddiddjmoooonhe",
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
       "kmidoigmjbbecngmenanflcogbjojlhf",
       "niinmdkjgghdkkmlilpngkccihjmefin",
