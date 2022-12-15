@@ -233,7 +233,7 @@ export default function Card(props) {
     try {
       fetch(
         "/.netlify/functions/get-offer/?uuid=" +
-          props.loan.raw.dlcUUID +
+          props.loan.formatted.formattedUUID +
           "&collateral=" +
           props.loan.raw.vaultCollateral,
         {
@@ -286,7 +286,7 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {easyTruncateAddress(props.loan.raw.dlcUUID)}
+                    {easyTruncateAddress(props.loan.formatted.formattedUUID)}
                   </Text>
                 </Td>
               </Tr>

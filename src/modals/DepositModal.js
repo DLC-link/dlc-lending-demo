@@ -104,7 +104,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   };
 
   const sendLoanContractToStacks = (loanContract) => {
-    const network = new StacksMocknet({ url: "http://localhost:3999" });
+    const network = new StacksMocknet({ url: "http://stx-btc1.dlc.link:3999" });
     openContractCall({
       network: network,
       anchorMode: 1,

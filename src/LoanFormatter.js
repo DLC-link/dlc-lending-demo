@@ -47,6 +47,7 @@ const loanFormatter = {
     const loan = {
       raw: rawData,
       formatted: {
+        formattedUUID: `0x${rawData.dlcUUID}`,
         formattedLiquidationFee:
           fixedTwoDecimalShift(rawData.liquidationFee) + " %",
         formattedLiquidationRatio:

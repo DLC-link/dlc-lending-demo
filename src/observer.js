@@ -34,6 +34,7 @@ async function fetchTXInfo(txId) {
 }
 
 function handleTx(txInfo) {
+
   // TODO: ideally, statuses would be read from the contract itself so its always in sync
   const txMap = {
     'setup-loan': "setup",
@@ -70,6 +71,13 @@ function startStacksObserver() {
     console.log(`Listening to ${dlcManagerFullName}...`);
   });
 
+  setInterval(() => {
+    if (stacksSocket.socket.disconnected) {
+      console.log(`[Stacks] Attempting to connect stacksSocket to ${ioclient_uri}...`)
+      stacksSocket.socket.connect();
+    }
+  }, 2000);
+
   stacksSocket.subscribeAddressTransactions(dlcManagerFullName);
   stacksSocket.subscribeAddressTransactions(contractFullName);
 
@@ -77,6 +85,7 @@ function startStacksObserver() {
   stacksSocket.socket.on(
     "address-transaction",
     async (address, txWithTransfers) => {
+      console.log(`TX happened on ${address}`);
       const _tx = txWithTransfers.tx;
       if (!_tx.tx_status === "success") {
         console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
