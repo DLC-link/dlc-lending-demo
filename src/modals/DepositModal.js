@@ -197,13 +197,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
           />
           <ModalBody>
             <FormControl isInvalid={isCollateralError}>
-              <FormLabel
-                marginTop={25}
-                marginLeft={50}
-                marginRight={50}
-                bgGradient="linear(to-r, primary1, primary2)"
-                bgClip="text"
-              >
+              <FormLabel>
                 Collateral Amount
               </FormLabel>
               {!isCollateralError ? (
@@ -248,13 +242,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
               </Text>
             </FormControl>
             <FormControl isInvalid={isLoanError}>
-              <FormLabel
-                marginTop={25}
-                marginLeft={50}
-                marginRight={50}
-                bgGradient="linear(to-r, primary1, primary2)"
-                bgClip="text"
-              >
+              <FormLabel>
                 Loan Amount
               </FormLabel>
               {!isLoanError ? (

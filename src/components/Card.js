@@ -281,72 +281,72 @@ export default function Card(props) {
             <Tbody>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     UUID
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {easyTruncateAddress(props.loan.formatted.formattedUUID)}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Owner
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {easyTruncateAddress(props.loan.raw.owner)}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Vault Collateral
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedVaultCollateral}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Vault Loan
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedVaultLoan}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Liquidation Fee
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedLiquidationFee}
                   </Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text fontSize={12} fontWeight="extrabold" color="white">
+                  <Text variant='property'>
                     Liquidation Ratio
                   </Text>
                 </Td>
                 <Td>
-                  <Text fontSize={12} color="white">
+                  <Text>
                     {props.loan.formatted.formattedLiquidationRatio}
                   </Text>
                 </Td>
@@ -354,12 +354,12 @@ export default function Card(props) {
               {props.loan.formatted.formattedClosingPrice && (
                 <Tr>
                   <Td>
-                    <Text fontSize={12} fontWeight="extrabold" color="white">
+                    <Text variant='property'>
                       Closing Price
                     </Text>
                   </Td>
                   <Td>
-                    <Text fontSize={12} color="white">
+                    <Text>
                       {props.loan.formatted.formattedClosingPrice}
                     </Text>
                   </Td>
@@ -371,22 +371,7 @@ export default function Card(props) {
         <Flex>
           {props.loan.raw.status === "ready" && (
             <VStack>
-              <Button
-                _hover={{
-                  color: "white",
-                  bg: "secondary1",
-                }}
-                margin={15}
-                color="accent"
-                width={100}
-                shadow="2xl"
-                variant="outline"
-                fontSize="sm"
-                fontWeight="bold"
-                onClick={lockBTC}
-              >
-                LOCK BTC
-              </Button>
+              <Button variant='outline' onClick={lockBTC}>LOCK BTC</Button>
             </VStack>
           )}
           {props.loan.raw.status ===
@@ -397,31 +382,13 @@ export default function Card(props) {
               }}
               isLoading
               loadingText="PENDING"
-              margin={15}
               color="gray"
-              width={100}
-              shadow="2xl"
               variant="outline"
-              fontSize="sm"
-              fontWeight="bold"
             ></Button>
           )}
           {props.loan.raw.status === "funded" && (
             <VStack>
-              <Button
-                _hover={{
-                  color: "white",
-                  bg: "secondary1",
-                }}
-                margin={15}
-                color="accent"
-                width={100}
-                shadow="2xl"
-                variant="outline"
-                fontSize="sm"
-                fontWeight="bold"
-                onClick={() => repayLoanContract()}
-              >
+              <Button variant="outline" onClick={() => repayLoanContract()}>
                 REPAY LOAN
               </Button>
               {countCollateralToDebtRatio(
@@ -430,17 +397,7 @@ export default function Card(props) {
                 props.loan.raw.vaultLoan
               ) < 140 && (
                 <Button
-                  _hover={{
-                    color: "white",
-                    bg: "secondary1",
-                  }}
-                  margin={15}
-                  color="accent"
-                  width={100}
-                  shadow="2xl"
                   variant="outline"
-                  fontSize="sm"
-                  fontWeight="bold"
                   onClick={() => liquidateLoanContract()}
                 >
                   LIQUIDATE

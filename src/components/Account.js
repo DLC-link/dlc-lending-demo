@@ -8,8 +8,8 @@ export default function Account({ address, isConnected, walletType }) {
     case true:
       return (
         <HStack
-        height={[25, 50]}
-        width={[150, 350]}
+          height={[25, 50]}
+          width={[150, 350]}
           borderRadius="lg"
           shadow="dark-lg"
           alignItems="center"
@@ -21,9 +21,7 @@ export default function Account({ address, isConnected, walletType }) {
             <Image src="/h_logo.png" alt="Hiro Wallet Logo" boxSize={[2, 4]} />
           )}
           <CheckCircleIcon boxSize={[2, 4]} color="secondary1" />
-          <Text color="white" fontSize={[5, 15]}>
-            Account:{easyTruncateAddress(address)}
-          </Text>
+          <Text fontSize={[5, 15]}>Account:{easyTruncateAddress(address)}</Text>
         </HStack>
       );
     case false:
@@ -37,9 +35,7 @@ export default function Account({ address, isConnected, walletType }) {
           justifyContent="center"
         >
           <WarningIcon boxSize={[1, 3]} color="primary2" />
-          <Text color="white" fontSize={[5, 15]}>
-            Account: Not connected
-          </Text>
+          <Text fontSize={[5, 15]}>Account: Not connected</Text>
         </HStack>
       );
   }

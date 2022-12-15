@@ -49,32 +49,16 @@ export default function Header({ address, isConnected, walletType }) {
         </Button>
         <Spacer></Spacer>
         {!isConnected ? (
-          <Button
-            _hover={{
-              background: "secondary1",
-            }}
-            shadow="dark-lg"
-            height={[25, 50]}
-            width={[125, 250]}
-            bgGradient="linear(to-r, primary1, primary2)"
-            onClick={openSelectWalletModal}
-          >
-            <Text color="white" fontSize={[10, 15]}>
-              Connect Wallet
-            </Text>
+          <Button variant="connect" onClick={openSelectWalletModal}>
+            <Text variant="connect">Connect Wallet</Text>
           </Button>
         ) : (
           <Button
-            _hover={{
-              background: "accent",
-            }}
-            shadow="dark-lg"
-            height={[25, 50]}
-            width={[125, 250]}
+            variant="connect"
             bgGradient="linear(to-r, primary1, primary2)"
             onClick={disconnect}
           >
-            <Text color="white" fontSize={[10, 15]}>
+            <Text variant="connect">
               Disconnect
             </Text>
           </Button>
