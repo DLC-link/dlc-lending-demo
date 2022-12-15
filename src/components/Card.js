@@ -192,8 +192,8 @@ export default function Card(props) {
       anchorMode: 1,
       contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
       contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-      functionName: "liquidate-loan",
-      functionArgs: [uintCV(parseInt(loanContractID)), uintCV(240000000000)],
+      functionName: "attempt-liquidate",
+      functionArgs: [uintCV(parseInt(loanContractID))],
       onFinish: (data) => {
         console.log("onFinish:", data);
         eventBus.dispatch("loan-event", {
@@ -286,7 +286,7 @@ export default function Card(props) {
                 </Td>
                 <Td>
                   <Text fontSize={12} color="white">
-                    {props.loan.raw.dlcUUID}
+                    {easyTruncateAddress(props.loan.raw.dlcUUID)}
                   </Text>
                 </Td>
               </Tr>

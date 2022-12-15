@@ -8,12 +8,12 @@ import eventBus from "./EventBus";
 const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
 const ioclient_uri = `wss://dev-oracle.dlc.link`;
 
-const contractAddress = "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6";
-const contractName = "sample-contract-loan-v0";
+const contractAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
+const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
 const contractFullName = contractAddress + "." + contractName;
 
-const dlcManagerAddress = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
-const dlcManagerName = "dlc-manager-loan-v0";
+const dlcManagerAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
+const dlcManagerName = process.env.REACT_APP_STACKS_MANAGER_NAME;
 const dlcManagerFullName = dlcManagerAddress + "." + dlcManagerName;
 
 let userAddress;
@@ -34,16 +34,15 @@ async function fetchTXInfo(txId) {
 }
 
 function handleTx(txInfo) {
+  // TODO: ideally, statuses would be read from the contract itself so its always in sync
   const txMap = {
     'setup-loan': "setup",
-    'create-dlc-internal': "ready",
-    'repay-loan': "repaying", 
-    'liquidate-loan': "liquidate-loan",
-    'close-dlc-internal': "repaid",
-    'close-dlc-liquidate-internal': "liquidated",
+    'post-create-dlc': "ready",
+    'repay-loan': "repaying",
+    'attempt-liquidate': "liquidate-loan",
+    'post-close-dlc': "closed",
     'set-status-funded': "funded"
-
-  }
+  };
   let status = txMap[txInfo.contract_call.function_name];
   const txId = txInfo.tx_id;
 
