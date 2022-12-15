@@ -50,24 +50,66 @@ export default function App() {
 
   const handleEvent = (data) => {
     const toastMap = {
-      'created': "Loan created!",
-      'cancelled': "Transaction cancelled!",
-      'setup': "Loan established!",
-      'ready': "Loan is ready!",
-      'repay-requested': "Requested repayment!",
-      'repaying': "Processing repayment!",
-      'repaid': "Loan repaid!",
-      'liquidation-requested': "Requested liquidation!",
-      'liquidateing': "Processing liquidation!",
-      'liquidated': "Loan liquidated!",
-      'funded': "Loan funded!",
-      'closed': "Loan closed!",
-      'approve-requested': "Approve requested!",
-      'approved': "Approved!"
+      created: {
+        message: "Loan created!",
+        id: 1,
+      },
+      cancelled: {
+        message: "Transaction cancelled!",
+        id: 2,
+      },
+      setup: {
+        message: "Loan established!",
+        id: 3,
+      },
+      ready: {
+        message: "Loan is ready!",
+        id: 4,
+      },
+      "repay-requested": {
+        message: "Requested repayment!",
+        id: 5,
+      },
+      repaying: {
+        message: "Processing repayment!",
+        id: 5,
+      },
+      repaid: {
+        message: "Loan repaid!",
+        id: 6,
+      },
+      "liquidation-requested": {
+        message: "Requested liquidation!",
+        id: 7,
+      },
+      liquidateing: {
+        message: "Processing liquidation!",
+        id: 8,
+      },
+      liquidated: {
+        message: "Loan liquidated!",
+        id: 9,
+      },
+      funded: {
+        message: "Loan funded!",
+        id: 10,
+      },
+      closed: {
+        message: "Loan closed!",
+        id: 11,
+      },
+      "approve-requested": {
+        message: "Approve requested!",
+        id: 12,
+      },
+      approved: {
+        message: "Approved!",
+        id: 13,
+      },
     };
 
-    let success = data.status === 'cancelled' ? false : true
-    let message = toastMap[data.status];
+    let success = !(data.status === "cancelled");
+    let message = toastMap[data.status].message;
     let explorerAddress;
 
     switch (walletType) {
@@ -79,18 +121,18 @@ export default function App() {
         break;
     }
 
-    if (!toast.isActive(1))
-    return toast({
-      id: 1,
-      position: "right-top",
-      render: () => (
-        <CustomToast
-          explorerAddress={explorerAddress}
-          message={message}
-          success={success}
-        ></CustomToast>
-      ),
-    });
+    if (!toast.isActive(toastMap[data.status].id))
+      return toast({
+        id: toastMap[data.status].id,
+        position: "right-top",
+        render: () => (
+          <CustomToast
+            explorerAddress={explorerAddress}
+            message={message}
+            success={success}
+          ></CustomToast>
+        ),
+      });
   };
 
   return (
