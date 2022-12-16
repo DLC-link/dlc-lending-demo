@@ -38,7 +38,7 @@ export default function Card(props) {
         extensionIDs[i],
         {
           action: "get-offer",
-          data: { offer: msg, wallet: encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN)},
+          data: { offer: msg, counterparty_wallet_url: encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN)},
         },
         {},
         function (response) {
