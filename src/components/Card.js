@@ -32,13 +32,15 @@ export default function Card(props) {
       "kmidoigmjbbecngmenanflcogbjojlhf",
       "niinmdkjgghdkkmlilpngkccihjmefin",
     ];
+    const counterparty_wallet_url = encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN)
+    console.log(counterparty_wallet_url + ' ' + msg)
 
     for (let i = 0; i < extensionIDs.length; i++) {
       chrome.runtime.sendMessage(
         extensionIDs[i],
         {
           action: "get-offer",
-          data: { offer: msg, counterparty_wallet_url: encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN)},
+          data: { offer: msg, counterparty_wallet_url: counterparty_wallet_url},
         },
         {},
         function (response) {
