@@ -25,26 +25,23 @@ import { abi as usdcForDLCsABI } from "../usdcForDLCsABI";
 
 export default function Card(props) {
 
-  const sendOfferForSigning = (msg) => {
+  const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
       "nminefocgojkadkocbddiddjmoooonhe",
       "gjjgfnpmfpealbpggmhfafcddjiopbpa",
       "kmidoigmjbbecngmenanflcogbjojlhf",
       "niinmdkjgghdkkmlilpngkccihjmefin",
     ];
-    const counterparty_wallet_url = encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN)
-    console.log(counterparty_wallet_url)
-    console.log(msg)
 
     for (let i = 0; i < extensionIDs.length; i++) {
       chrome.runtime.sendMessage(
         extensionIDs[i],
         {
           action: "get-offer",
-          data: { offer: msg, counterparty_wallet_url: counterparty_wallet_url},
+          data: { offer: msg, counterparty_wallet_url: encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN)},
         },
         {},
-        function () {
+        function (response) {
           if (chrome.runtime.lastError) {
             console.log("Failure: " + chrome.runtime.lastError.message);
           } else {
