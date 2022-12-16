@@ -24,7 +24,6 @@ import eventBus from "../EventBus";
 import { abi as usdcForDLCsABI } from "../usdcForDLCsABI";
 
 export default function Card(props) {
-  const toast = useToast();
 
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
@@ -37,7 +36,10 @@ export default function Card(props) {
     for (let i = 0; i < extensionIDs.length; i++) {
       chrome.runtime.sendMessage(
         extensionIDs[i],
-        { action: "get-offer", data: msg },
+        {
+          action: "get-offer",
+          data: { offer: msg, wallet: encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN)},
+        },
         {},
         function (response) {
           if (chrome.runtime.lastError) {
@@ -281,9 +283,7 @@ export default function Card(props) {
             <Tbody>
               <Tr>
                 <Td>
-                  <Text variant='property'>
-                    UUID
-                  </Text>
+                  <Text variant="property">UUID</Text>
                 </Td>
                 <Td>
                   <Text>
@@ -293,75 +293,51 @@ export default function Card(props) {
               </Tr>
               <Tr>
                 <Td>
-                  <Text variant='property'>
-                    Owner
-                  </Text>
+                  <Text variant="property">Owner</Text>
                 </Td>
                 <Td>
-                  <Text>
-                    {easyTruncateAddress(props.loan.raw.owner)}
-                  </Text>
+                  <Text>{easyTruncateAddress(props.loan.raw.owner)}</Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text variant='property'>
-                    Vault Collateral
-                  </Text>
+                  <Text variant="property">Vault Collateral</Text>
                 </Td>
                 <Td>
-                  <Text>
-                    {props.loan.formatted.formattedVaultCollateral}
-                  </Text>
+                  <Text>{props.loan.formatted.formattedVaultCollateral}</Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text variant='property'>
-                    Vault Loan
-                  </Text>
+                  <Text variant="property">Vault Loan</Text>
                 </Td>
                 <Td>
-                  <Text>
-                    {props.loan.formatted.formattedVaultLoan}
-                  </Text>
+                  <Text>{props.loan.formatted.formattedVaultLoan}</Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text variant='property'>
-                    Liquidation Fee
-                  </Text>
+                  <Text variant="property">Liquidation Fee</Text>
                 </Td>
                 <Td>
-                  <Text>
-                    {props.loan.formatted.formattedLiquidationFee}
-                  </Text>
+                  <Text>{props.loan.formatted.formattedLiquidationFee}</Text>
                 </Td>
               </Tr>
               <Tr>
                 <Td>
-                  <Text variant='property'>
-                    Liquidation Ratio
-                  </Text>
+                  <Text variant="property">Liquidation Ratio</Text>
                 </Td>
                 <Td>
-                  <Text>
-                    {props.loan.formatted.formattedLiquidationRatio}
-                  </Text>
+                  <Text>{props.loan.formatted.formattedLiquidationRatio}</Text>
                 </Td>
               </Tr>
               {props.loan.formatted.formattedClosingPrice && (
                 <Tr>
                   <Td>
-                    <Text variant='property'>
-                      Closing Price
-                    </Text>
+                    <Text variant="property">Closing Price</Text>
                   </Td>
                   <Td>
-                    <Text>
-                      {props.loan.formatted.formattedClosingPrice}
-                    </Text>
+                    <Text>{props.loan.formatted.formattedClosingPrice}</Text>
                   </Td>
                 </Tr>
               )}
@@ -371,7 +347,9 @@ export default function Card(props) {
         <Flex>
           {props.loan.raw.status === "ready" && (
             <VStack>
-              <Button variant='outline' onClick={lockBTC}>LOCK BTC</Button>
+              <Button variant="outline" onClick={lockBTC}>
+                LOCK BTC
+              </Button>
             </VStack>
           )}
           {props.loan.raw.status ===
