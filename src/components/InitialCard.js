@@ -1,5 +1,5 @@
 import { Flex, Text, VStack, Button, TableContainer, Tbody, Table, Tr, Td } from '@chakra-ui/react';
-import { easyTruncateAddress, customShiftValue, fixedTwoDecimalShift  } from '../utils';
+import { easyTruncateAddress, customShiftValue, fixedTwoDecimalShift } from '../utils';
 import Status from './Status';
 
 export default function InitialCard(props) {
@@ -23,7 +23,7 @@ export default function InitialCard(props) {
       marginBottom={25}>
       <VStack margin={15}>
         <Flex>
-          <Status status={props.loan.raw.status}></Status>
+          <Status status={'not-ready'}></Status>
         </Flex>
         <TableContainer width={250}>
           <Table
@@ -79,6 +79,16 @@ export default function InitialCard(props) {
             </Tbody>
           </Table>
         </TableContainer>
+        <Flex>
+          <Button
+            _hover={{
+              shadow: 'none',
+            }}
+            isLoading
+            loadingText='PENDING'
+            color='gray'
+            variant='outline'></Button>
+        </Flex>
       </VStack>
     </Flex>
   );

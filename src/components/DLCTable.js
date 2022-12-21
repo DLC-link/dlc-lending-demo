@@ -32,7 +32,9 @@ export default function DLCTable(props) {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on('fetch-loans-bg', (data) => {
-      // findMatchingTXID(data.txId);
+      if(data.status === 'setup') {
+        initialLoans.shift();
+      }
       refreshLoansTable(true);
     });
     eventBus.on('create-loan', (data) => {
@@ -40,17 +42,9 @@ export default function DLCTable(props) {
     });
   }, []);
 
-  // useEffect(() => {
-  //   refreshLoansTable(false);
-  // }, [initialLoans]);
-
-  // const findMatchingTXID = (txID) => {
-  //   initialLoans.forEach((initialLoan) => {
-  //     if (initialLoan.txID === txID) {
-  //       initialLoans.splice(initialLoans.indexOf(initialLoan), initialLoans.indexOf(initialLoan));
-  //     }
-  //   });
-  // };
+  useEffect(() => {
+    refreshLoansTable(false);
+  }, [initialLoans]);
 
   const fetchBitcoinValue = async () => {
     let bitCoinValue = undefined;
@@ -181,13 +175,13 @@ export default function DLCTable(props) {
                   walletType={walletType}
                   bitCoinValue={bitCoinValue}></Card>
               ))}
-              {/* {initialLoans?.map((loan) => (
+              {initialLoans?.map((loan) => (
                 <InitialCard
                   loan={loan}
                   creator={address}
                   walletType={walletType}
                   bitCoinValue={bitCoinValue}></InitialCard>
-              ))} */}
+              ))}
             </SimpleGrid>
           </ScaleFade>
         </VStack>
