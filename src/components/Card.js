@@ -19,7 +19,6 @@ import { customShiftValue, fixedTwoDecimalShift } from "../utils";
 import { ethers } from "ethers";
 import { abi as loanManagerABI } from "../loanManagerABI";
 import Status from "./Status";
-import { useToast } from "@chakra-ui/react";
 import eventBus from "../EventBus";
 import { abi as usdcForDLCsABI } from "../usdcForDLCsABI";
 

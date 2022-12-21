@@ -121,6 +121,8 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       onFinish: (data) => {
         closeModal();
         eventBus.dispatch("loan-event", { status: "created", txId: data.txId });
+        loanContract.txID = data.txId;
+        eventBus.dispatch('create-loan', { loan: loanContract })
       },
       onCancel: () => {
         eventBus.dispatch("loan-event", { status: "cancelled" });
