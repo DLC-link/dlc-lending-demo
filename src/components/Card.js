@@ -1,5 +1,6 @@
 /*global chrome*/
 
+import { useEffect } from 'react';
 import { Flex, Text, VStack, Button, TableContainer, Tbody, Table, Tr, Td } from '@chakra-ui/react';
 import { easyTruncateAddress } from '../utils';
 import { StacksMocknet } from '@stacks/network';
@@ -9,14 +10,26 @@ import { customShiftValue, fixedTwoDecimalShift } from '../utils';
 import { ethers } from 'ethers';
 import { abi as loanManagerABI } from '../loanManagerABI';
 import Status from './Status';
-import { useToast } from '@chakra-ui/react';
 import eventBus from '../EventBus';
 import { abi as usdcForDLCsABI } from '../usdcForDLCsABI';
 import { useState } from 'react';
-import BorrowRepayModal from '../modals/BorrowRepayModal';
+import BorrowModal from '../modals/BorrowModal';
+import RepayModal from '../modals/RepayModal';
+import { liquidateStacksLoanContract } from '../stacksFunctions';
 
 export default function Card(props) {
-  const [isBorrowRepayModalOpen, setBorrowRepayModalOpen] = useState(false);
+  useEffect(() => {
+    eventBus.on('loan-event', (event) => {
+      if (event.status === 'borrow-requested' || 'repay-requested') {
+        onBorrowModalClose();
+        onRepayModalClose();
+      }
+    });
+  });
+
+  const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
+  const [isRepayModalOpen, setRepayModalOpen] = useState(false);
+
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
       'nminefocgojkadkocbddiddjmoooonhe',
@@ -44,8 +57,12 @@ export default function Card(props) {
     }
   };
 
-  const onBorrowRepayModalClose = () => {
-    setBorrowRepayModalOpen(false);
+  const onBorrowModalClose = () => {
+    setBorrowModalOpen(false);
+  };
+
+  const onRepayModalClose = () => {
+    setRepayModalOpen(false);
   };
 
   const getStacksLoanIDByUUID = async () => {
@@ -61,43 +78,6 @@ export default function Card(props) {
         loanContractID = msg;
       });
     return loanContractID;
-  };
-
-  const repayLoanContract = async () => {
-    switch (props.walletType) {
-      case 'hiro':
-        repayStacksLoanContract();
-        break;
-      case 'metamask':
-        repayEthereumLoanContract();
-        break;
-      default:
-        console.log('Unsupported wallet type!');
-        break;
-    }
-  };
-
-  const repayStacksLoanContract = async () => {
-    const network = new StacksMocknet({ url: 'http://localhost:3999' });
-    const loanContractID = await getStacksLoanIDByUUID(props.loan.raw.dlcUUID);
-    openContractCall({
-      network: network,
-      anchorMode: 1,
-      contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-      contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-      functionName: 'repay-loan',
-      functionArgs: [uintCV(parseInt(loanContractID))],
-      onFinish: (data) => {
-        console.log('onFinish:', data);
-        eventBus.dispatch('loan-event', {
-          status: 'repay-requested',
-          txId: data.txId,
-        });
-      },
-      onCancel: () => {
-        console.log('onCancel:', 'Transaction was canceled');
-      },
-    });
   };
 
   const repayEthereumLoanContract = async () => {
@@ -155,7 +135,7 @@ export default function Card(props) {
   const liquidateLoanContract = async () => {
     switch (props.walletType) {
       case 'hiro':
-        liquidateStacksLoanContract();
+        liquidateStacksLoanContract(props.creator, props.loan.raw.dlcUUID);
         break;
       case 'metamask':
         liquidateEthereumLoanContract();
@@ -164,29 +144,6 @@ export default function Card(props) {
         console.log('Unsupported wallet type!');
         break;
     }
-  };
-
-  const liquidateStacksLoanContract = async () => {
-    const network = new StacksMocknet({ url: 'http://localhost:3999' });
-    const loanContractID = await getStacksLoanIDByUUID(props.loan.raw.dlcUUID);
-    openContractCall({
-      network: network,
-      anchorMode: 1,
-      contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-      contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-      functionName: 'attempt-liquidate',
-      functionArgs: [uintCV(parseInt(loanContractID))],
-      onFinish: (data) => {
-        console.log('onFinish:', data);
-        eventBus.dispatch('loan-event', {
-          status: 'liquidation-requested',
-          txId: data.txId,
-        });
-      },
-      onCancel: () => {
-        console.log('onCancel:', 'Transaction was canceled');
-      },
-    });
   };
 
   const liquidateEthereumLoanContract = async () => {
@@ -344,14 +301,14 @@ export default function Card(props) {
             {props.loan.raw.status === 'funded' && (
               <VStack>
                 <Button
-                    variant='outline'
-                    onClick={() => setBorrowRepayModalOpen(true)}>
-                    BORROW
-                  </Button>
+                  variant='outline'
+                  onClick={() => setBorrowModalOpen(true)}>
+                  BORROW
+                </Button>
                 {props.loan.raw.vaultLoan > 0 && (
                   <Button
                     variant='outline'
-                    onClick={() => repayLoanContract()}>
+                    onClick={() => setRepayModalOpen(true)}>
                     REPAY LOAN
                   </Button>
                 )}
@@ -371,14 +328,22 @@ export default function Card(props) {
           </Flex>
         </VStack>
       </Flex>
-      <BorrowRepayModal
-        isOpen={isBorrowRepayModalOpen}
-        closeModal={onBorrowRepayModalClose}
+      <BorrowModal
+        isOpen={isBorrowModalOpen}
+        closeModal={onBorrowModalClose}
         walletType={props.walletType}
         vaultLoanAmount={props.loan.raw.vaultLoan}
         BTCDeposit={props.loan.raw.vaultCollateral}
         uuid={props.loan.raw.dlcUUID}
-        creator={props.creator}></BorrowRepayModal>
+        creator={props.creator}></BorrowModal>
+      <RepayModal
+        isOpen={isRepayModalOpen}
+        closeModal={onRepayModalClose}
+        walletType={props.walletType}
+        vaultLoanAmount={props.loan.raw.vaultLoan}
+        BTCDeposit={props.loan.raw.vaultCollateral}
+        uuid={props.loan.raw.dlcUUID}
+        creator={props.creator}></RepayModal>
     </>
   );
 }
