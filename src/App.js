@@ -45,20 +45,22 @@ export default function App() {
   const handleEvent = (data) => {
     const toastMap = {
       created: 'Loan created!',
-      cancelled: 'Transaction cancelled!',
       setup: 'Loan established!',
       ready: 'Loan is ready!',
-      'borrow-requested': 'Requested borrow!',
-      'repay-requested': 'Requested repayment!',
-      repaying: 'Processing repayment!',
-      repaid: 'Loan repaid!',
+      funded: 'Loan funded!',
       'liquidation-requested': 'Requested liquidation!',
       liquidateing: 'Processing liquidation!',
       liquidated: 'Loan liquidated!',
-      funded: 'Loan funded!',
+      'borrow-requested': 'Requested borrow!',
+      borrowed: 'USDC borrowed!',
+      'repay-requested': 'Requested repayment!',
+      repaid: 'USDC repaid!',
+      'closing-requested': 'Requested closing!',
+      closing: 'Processing closing!',
       closed: 'Loan closed!',
       'approve-requested': 'Approve requested!',
       approved: 'Approved!',
+      cancelled: 'Transaction cancelled!',
     };
 
     let success = !(data.status === 'cancelled');

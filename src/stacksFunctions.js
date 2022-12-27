@@ -14,8 +14,6 @@ import eventBus from './EventBus';
 const network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_LOCALHOST_ADDRESS });
 
 const populateTxOptions = (
-  creatorAddress,
-  contractName,
   functionName,
   functionArgs,
   postConditions,
@@ -23,8 +21,8 @@ const populateTxOptions = (
   onFinishStatus
 ) => {
   return {
-    contractAddress: creatorAddress,
-    contractName: contractName,
+    contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+    contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
     functionName: functionName,
     functionArgs: functionArgs,
     postConditions: postConditions,
@@ -43,14 +41,11 @@ const populateTxOptions = (
 };
 
 export async function getStacksLoanIDByUUID(creator, UUID) {
-  const creatorAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
-  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
-  const senderAddress = creator;
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   try {
     const response = await callReadOnlyFunction(
-      populateTxOptions(creatorAddress, contractName, functionName, functionArgs, [], senderAddress)
+      populateTxOptions(functionName, functionArgs, [], creator)
     );
     return cvToValue(response.value);
   } catch (error) {
@@ -60,8 +55,6 @@ export async function getStacksLoanIDByUUID(creator, UUID) {
 
 export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
-  const creatorAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
-  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(fixedTwoDecimalUnshift(additionalLoan))];
   const senderAddress = undefined;
@@ -72,8 +65,8 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      creatorAddress,
-      contractName,
+        process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+       process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
       FungibleConditionCode.GreaterEqual,
       1,
       createAssetInfo(assetAddress, assetContractName, assetName)
@@ -83,8 +76,6 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
   try {
     openContractCall(
       populateTxOptions(
-        creatorAddress,
-        contractName,
         functionName,
         functionArgs,
         contractFungiblePostConditionForBorrow,
@@ -99,8 +90,6 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
 
 export async function repayStacksLoanContract(creator, UUID, additionalRepayment) {
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
-  const creatorAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
-  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(fixedTwoDecimalUnshift(additionalRepayment))];
   const senderAddress = undefined;
@@ -117,13 +106,10 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
       createAssetInfo(assetAddress, assetContractName, assetName)
     ),
   ];
-  console.log(standardFungiblePostConditionForRepay);
 
   try {
     openContractCall(
       populateTxOptions(
-        creatorAddress,
-        contractName,
         functionName,
         functionArgs,
         standardFungiblePostConditionForRepay,
@@ -138,8 +124,6 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
 
 export async function liquidateStacksLoanContract(creator, UUID) {
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
-  const creatorAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
-  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
   const functionName = 'attempt-liquidate';
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const contractFungiblePostCondition = [];
@@ -149,8 +133,6 @@ export async function liquidateStacksLoanContract(creator, UUID) {
   try {
     openContractCall(
       populateTxOptions(
-        creatorAddress,
-        contractName,
         functionName,
         functionArgs,
         contractFungiblePostCondition,
@@ -162,3 +144,26 @@ export async function liquidateStacksLoanContract(creator, UUID) {
     console.error(error);
   }
 }
+
+export async function closeStacksLoanContract(creator, UUID) {
+    const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
+    const functionName = 'close-loan';
+    const functionArgs = [uintCV(parseInt(loanContractID))];
+    const contractFungiblePostCondition = [];
+    const senderAddress = undefined;
+    const onFinishStatus = 'closing-requested';
+  
+    try {
+      openContractCall(
+        populateTxOptions(
+          functionName,
+          functionArgs,
+          contractFungiblePostCondition,
+          senderAddress,
+          onFinishStatus
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }

@@ -39,11 +39,14 @@ function handleTx(txInfo) {
   const txMap = {
     'setup-loan': "setup",
     'post-create-dlc': "ready",
-    'repay-loan': "repaying",
+    'repay-loan': "closing",
     'attempt-liquidate': "liquidate-loan",
-    'post-close-dlc': "closed",
-    'set-status-funded': "funded"
+    'close-loan': "closed",
+    'set-status-funded': "funded",
+    'borrow': 'borrowed',
+    'repay': 'repaid'
   };
+  console.log('txinfo:')
   let status = txMap[txInfo.contract_call.function_name];
   const txId = txInfo.tx_id;
 

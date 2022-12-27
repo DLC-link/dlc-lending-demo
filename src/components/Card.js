@@ -15,7 +15,7 @@ import { abi as usdcForDLCsABI } from '../usdcForDLCsABI';
 import { useState } from 'react';
 import BorrowModal from '../modals/BorrowModal';
 import RepayModal from '../modals/RepayModal';
-import { liquidateStacksLoanContract } from '../stacksFunctions';
+import { liquidateStacksLoanContract, closeStacksLoanContract } from '../stacksFunctions';
 
 export default function Card(props) {
   useEffect(() => {
@@ -63,21 +63,6 @@ export default function Card(props) {
 
   const onRepayModalClose = () => {
     setRepayModalOpen(false);
-  };
-
-  const getStacksLoanIDByUUID = async () => {
-    let loanContractID = undefined;
-    await fetch(
-      '/.netlify/functions/get-stacks-loan-id-by-uuid?uuid=' + props.loan.raw.dlcUUID + '&creator=' + props.creator,
-      {
-        headers: { accept: 'Accept: application/json' },
-      }
-    )
-      .then((x) => x.json())
-      .then(({ msg }) => {
-        loanContractID = msg;
-      });
-    return loanContractID;
   };
 
   const repayEthereumLoanContract = async () => {
@@ -139,6 +124,19 @@ export default function Card(props) {
         break;
       case 'metamask':
         liquidateEthereumLoanContract();
+        break;
+      default:
+        console.log('Unsupported wallet type!');
+        break;
+    }
+  };
+
+  const closeLoanContract = async () => {
+    switch (props.walletType) {
+      case 'hiro':
+        closeStacksLoanContract(props.creator, props.loan.raw.dlcUUID);
+        break;
+      case 'metamask':
         break;
       default:
         console.log('Unsupported wallet type!');
@@ -305,11 +303,17 @@ export default function Card(props) {
                   onClick={() => setBorrowModalOpen(true)}>
                   BORROW
                 </Button>
-                {props.loan.raw.vaultLoan > 0 && (
+                {props.loan.raw.vaultLoan > 0 ? (
                   <Button
                     variant='outline'
                     onClick={() => setRepayModalOpen(true)}>
                     REPAY LOAN
+                  </Button>
+                ) : (
+                  <Button
+                    variant='outline'
+                    onClick={() => closeLoanContract()}>
+                    CLOSE LOAN
                   </Button>
                 )}
                 {countCollateralToDebtRatio(

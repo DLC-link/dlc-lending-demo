@@ -75,7 +75,7 @@ export default function Status(props) {
           <HStack spacing={2}>
             <PaidIcon sx={{ color: "green" }} />
             <Text color="white" fontSize={12}>
-              Repaid
+              Closed
             </Text>
           </HStack>
         );

@@ -51,7 +51,6 @@ export default function BorrowModal({
   useEffect(() => {
     countUSDAmount();
     countCollateralToDebtRatio();
-    console.log(vaultLoanAmount);
     setLoanError(additionalLoan < 1 || additionalLoan === undefined);
     setCollateralToDebtRatioError(collateralToDebtRatio < 140);
   }, [additionalLoan, collateralToDebtRatio, isCollateralToDebtRatioError]);
@@ -74,7 +73,7 @@ export default function BorrowModal({
 
   const countCollateralToDebtRatio = () => {
     const collateralInUSD = collateralAmount * bitCoinInUSDAsNumber;
-    const collateralToDebtRatio = collateralInUSD / (vaultLoanAmount + additionalLoan);
+    const collateralToDebtRatio = collateralInUSD / (Math.round(fixedTwoDecimalShift(vaultLoanAmount))  + additionalLoan);
     setCollateralToDebtRatio(Math.round(collateralToDebtRatio * 100));
   };
 
