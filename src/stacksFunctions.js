@@ -99,7 +99,7 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
 
 export async function repayStacksLoanContract(creator, UUID, additionalRepayment) {
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
-  const creatorAddress = creator;
+  const creatorAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
   const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(fixedTwoDecimalUnshift(additionalRepayment))];
@@ -109,14 +109,18 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
   const assetContractName = process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME;
   const assetName = process.env.REACT_APP_STACKS_ASSET_NAME;
 
-  const standardFungiblePostConditionForRepay = [makeStandardFungiblePostCondition(
-    creatorAddress,
-    FungibleConditionCode.GreaterEqual,
-    1,
-    createAssetInfo(assetAddress, assetContractName, assetName)
-  )];
+  const standardFungiblePostConditionForRepay = [
+    makeStandardFungiblePostCondition(
+      creator,
+      FungibleConditionCode.GreaterEqual,
+      1,
+      createAssetInfo(assetAddress, assetContractName, assetName)
+    ),
+  ];
+  console.log(standardFungiblePostConditionForRepay);
+
   try {
-    makeContractCall(
+    openContractCall(
       populateTxOptions(
         creatorAddress,
         contractName,
