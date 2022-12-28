@@ -3,15 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import eventBus from '../EventBus';
 import { RepeatClockIcon } from '@chakra-ui/icons';
-import {
-  VStack,
-  Text,
-  HStack,
-  Collapse,
-  IconButton,
-  SimpleGrid,
-  ScaleFade
-} from '@chakra-ui/react';
+import { VStack, Text, HStack, Collapse, IconButton, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';
 import { ethers } from 'ethers';
 import { abi as loanManagerABI } from '../loanManagerABI';
@@ -32,7 +24,7 @@ export default function DLCTable(props) {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on('fetch-loans-bg', (data) => {
-      if(data.status === 'setup') {
+      if (data.status === 'setup') {
         initialLoans.shift();
       }
       refreshLoansTable(true);
