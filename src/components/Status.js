@@ -91,7 +91,7 @@ export default function Status(props) {
             <Text
               color='white'
               fontSize={12}>
-              Repaid
+              Closed
             </Text>
           </HStack>
         );

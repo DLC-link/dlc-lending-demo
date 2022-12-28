@@ -5,9 +5,8 @@ import eventBus from '../EventBus';
 import { RepeatClockIcon } from '@chakra-ui/icons';
 import { VStack, Text, HStack, Collapse, IconButton, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';
-import { ethers } from 'ethers';
-import { abi as loanManagerABI } from '../loanManagerABI';
-import loanFormatter from '../LoanFormatter';
+import { getStacksLoans } from '../blockchainFunctions/stacksFunctions';
+import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
 import InitialCard from './InitialCard';
 
 export default function DLCTable(props) {
@@ -23,7 +22,7 @@ export default function DLCTable(props) {
   useEffect(() => {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
-    eventBus.on('fetch-loans-bg', (data) => {
+    eventBus.on('loan-event', (data) => {
       if (data.status === 'setup') {
         initialLoans.shift();
       }
@@ -67,45 +66,14 @@ export default function DLCTable(props) {
     let loans = undefined;
     switch (walletType) {
       case 'hiro':
-        loans = fetchStacksLoans();
+        loans = getStacksLoans(address);
         break;
       case 'metamask':
-        loans = fetchEthereumLoans();
+        loans = getEthereumLoans(address);
         break;
       default:
-        console.log('Unsupported wallet type!');
+        console.error('Unsupported wallet type!');
         break;
-    }
-    return loans;
-  };
-
-  const fetchStacksLoans = async () => {
-    let loans = [];
-    await fetch('/.netlify/functions/get-stacks-loans?creator=' + address, {
-      headers: { accept: 'Accept: application/json' },
-    })
-      .then((x) => x.json())
-      .then(({ msg }) => {
-        loans = msg;
-      });
-    return loans;
-  };
-
-  const fetchEthereumLoans = async () => {
-    let loans = [];
-    try {
-      const { ethereum } = window;
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-
-      const loanManagerETH = new ethers.Contract(
-        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-        loanManagerABI,
-        signer
-      );
-      loans = loanFormatter.formatAllDLC(await loanManagerETH.getAllLoansForAddress(address), 'solidity');
-    } catch (error) {
-      console.error(error);
     }
     return loans;
   };
