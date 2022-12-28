@@ -18,8 +18,8 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift } from '../utils';
-import { repayStacksLoanContract } from '../stacksFunctions';
+import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift, countCollateralToDebtRatio, formatBitcoinInUSDAmount } from '../utils';
+import { repayStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
 
 export default function RepayModal({ isOpen, closeModal, walletType, vaultLoanAmount, BTCDeposit, uuid, creator }) {
   const [additionalRepay, setAdditionalRepay] = useState();
@@ -39,8 +39,10 @@ export default function RepayModal({ isOpen, closeModal, walletType, vaultLoanAm
   }, []);
 
   useEffect(() => {
-    countUSDAmount();
-    countCollateralToDebtRatio();
+    setUSDAmount(formatBitcoinInUSDAmount(collateralAmount, bitCoinInUSDAsNumber))
+    setCollateralToDebtRatio(
+      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, - additionalRepay)
+    );
     setLoanError(additionalRepay < 1 || additionalRepay === undefined);
     setCollateralToDebtRatioError(collateralToDebtRatio < 140);
   }, [additionalRepay, collateralToDebtRatio, isCollateralToDebtRatioError]);
@@ -59,16 +61,6 @@ export default function RepayModal({ isOpen, closeModal, walletType, vaultLoanAm
         setBitCoinInUSDAsNumber(bitcoinValue);
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
       });
-  };
-
-  const countCollateralToDebtRatio = () => {
-    const collateralInUSD = collateralAmount * bitCoinInUSDAsNumber;
-    const collateralToDebtRatio = collateralInUSD / (vaultLoanAmount - additionalRepay);
-    setCollateralToDebtRatio(Math.round(collateralToDebtRatio * 100));
-  };
-
-  const countUSDAmount = () => {
-    setUSDAmount(new Intl.NumberFormat().format(bitCoinInUSDAsNumber * collateralAmount));
   };
 
   const repayLoanContract = async () => {

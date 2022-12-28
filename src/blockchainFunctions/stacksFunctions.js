@@ -1,25 +1,23 @@
 import { StacksMocknet } from '@stacks/network';
-import { uintCV, bufferCV, cvToValue, callReadOnlyFunction } from '@stacks/transactions';
-import { openContractCall } from '@stacks/connect';
 import {
+  uintCV,
+  bufferCV,
+  cvToValue,
+  callReadOnlyFunction,
   createAssetInfo,
   FungibleConditionCode,
-  makeContractCall,
   makeContractFungiblePostCondition,
   makeStandardFungiblePostCondition,
 } from '@stacks/transactions';
-import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift, hexToBytes } from '../src/utils';
-import eventBus from './EventBus';
+import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
+import { openContractCall } from '@stacks/connect';
+import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift, hexToBytes } from '../utils';
+import eventBus from '../EventBus';
+import loanFormatter from '../LoanFormatter';
 
 const network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_LOCALHOST_ADDRESS });
 
-const populateTxOptions = (
-  functionName,
-  functionArgs,
-  postConditions,
-  senderAddress,
-  onFinishStatus
-) => {
+const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus) => {
   return {
     contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
     contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
@@ -40,13 +38,44 @@ const populateTxOptions = (
   };
 };
 
+export async function sendLoanContractToStacks(loanContract) {
+  const functionName = 'setup-loan';
+  const functionArgs = [
+    uintCV(loanContract.BTCDeposit),
+    uintCV(loanContract.liquidationRatio),
+    uintCV(loanContract.liquidationFee),
+    uintCV(loanContract.emergencyRefundTime),
+  ];
+  const senderAddress = undefined;
+  const onFinishStatus = 'created';
+  try {
+    openContractCall(populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getStacksLoans(creator) {
+  const functionName = 'get-creator-loans';
+  const functionArgs = [principalCV(creator)];
+  const senderAddress = creator;
+  let loans = [];
+
+  try {
+    const response = await callReadOnlyFunction(populateTxOptions(functionName, functionArgs, [], senderAddress));
+    loans = loanFormatter.formatAllDLC(response.list, 'clarity');
+  } catch (error) {
+    console.error(error);
+  }
+  return loans;
+}
+
 export async function getStacksLoanIDByUUID(creator, UUID) {
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
+  const senderAddress = creator;
   try {
-    const response = await callReadOnlyFunction(
-      populateTxOptions(functionName, functionArgs, [], creator)
-    );
+    const response = await callReadOnlyFunction(populateTxOptions(functionName, functionArgs, [], senderAddress));
     return cvToValue(response.value);
   } catch (error) {
     console.error(error);
@@ -65,8 +94,8 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-        process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-       process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+      process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+      process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
       FungibleConditionCode.GreaterEqual,
       1,
       createAssetInfo(assetAddress, assetContractName, assetName)
@@ -132,13 +161,7 @@ export async function liquidateStacksLoanContract(creator, UUID) {
 
   try {
     openContractCall(
-      populateTxOptions(
-        functionName,
-        functionArgs,
-        contractFungiblePostCondition,
-        senderAddress,
-        onFinishStatus
-      )
+      populateTxOptions(functionName, functionArgs, contractFungiblePostCondition, senderAddress, onFinishStatus)
     );
   } catch (error) {
     console.error(error);
@@ -146,24 +169,18 @@ export async function liquidateStacksLoanContract(creator, UUID) {
 }
 
 export async function closeStacksLoanContract(creator, UUID) {
-    const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
-    const functionName = 'close-loan';
-    const functionArgs = [uintCV(parseInt(loanContractID))];
-    const contractFungiblePostCondition = [];
-    const senderAddress = undefined;
-    const onFinishStatus = 'closing-requested';
-  
-    try {
-      openContractCall(
-        populateTxOptions(
-          functionName,
-          functionArgs,
-          contractFungiblePostCondition,
-          senderAddress,
-          onFinishStatus
-        )
-      );
-    } catch (error) {
-      console.error(error);
-    }
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
+  const functionName = 'close-loan';
+  const functionArgs = [uintCV(parseInt(loanContractID))];
+  const contractFungiblePostCondition = [];
+  const senderAddress = undefined;
+  const onFinishStatus = 'closing-requested';
+
+  try {
+    openContractCall(
+      populateTxOptions(functionName, functionArgs, contractFungiblePostCondition, senderAddress, onFinishStatus)
+    );
+  } catch (error) {
+    console.error(error);
   }
+}

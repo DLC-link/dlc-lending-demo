@@ -26,3 +26,14 @@ export function toJson(value) {
 export function hexToBytes(hex) {
   return hexToBytesMS(hex.substring(0, 2) === '0x' ? hex.substring(2) : hex);
 }
+
+export function countCollateralToDebtRatio (collateralAmount, bitcoinValue, vaultLoan, additionalLoan) {
+  const collateralInUSD = Math.round(collateralAmount * bitcoinValue);
+  const collateralToDebtRatio =
+    Number(collateralInUSD) / (Number(fixedTwoDecimalShift(vaultLoan)) + Number(additionalLoan));
+  return Math.round(collateralToDebtRatio * 100);
+};
+
+export function formatBitcoinInUSDAmount(collateralAmount, bitcoinValue) {
+  return (new Intl.NumberFormat().format(bitcoinValue * collateralAmount));
+};

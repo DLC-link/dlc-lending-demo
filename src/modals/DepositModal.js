@@ -21,21 +21,16 @@ import {
   Tr,
   Td,
   Tbody,
-  TableContainer,
-  useToast,
+  TableContainer
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { customShiftValue, fixedTwoDecimalUnshift } from '../utils';
-import { StacksMocknet } from '@stacks/network';
-import { uintCV } from '@stacks/transactions';
-import { openContractCall } from '@stacks/connect';
-import { ethers } from 'ethers';
-import { abi as loanManagerABI } from '../loanManagerABI';
-import eventBus from '../EventBus';
+import { customShiftValue, fixedTwoDecimalUnshift, countCollateralToDebtRatio, formatBitcoinInUSDAmount } from '../utils';
+import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
+import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
 
 export default function DepositModal({ isOpen, closeModal, walletType }) {
-  const [collateral, setCollateral] = useState(undefined);
-  const [loan, setLoan] = useState(undefined);
+  const [collateralAmount, setCollateralAmount] = useState(undefined);
+  const [vaultLoanAmount, setVaultLoanAmount] = useState(undefined);
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
   //setLiquidation, setLiquidationFee will be used in the future
   const [liquidationRatio, setLiquidationRatio] = useState(140);
@@ -48,7 +43,6 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   const [isLoanError, setLoanError] = useState(true);
   const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] = useState(false);
   const errorArray = [isCollateralError, isLoanError, isCollateralToDebtRatioError];
-  const toast = useToast();
 
   useEffect(() => {
     async function fetchData() {
@@ -58,26 +52,27 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   }, []);
 
   useEffect(() => {
-    countUSDAmount();
-    countCollateralToDebtRatio();
-
-    setCollateralError(collateral < 0.0001 || collateral === undefined);
-    setLoanError(loan < 1 || loan === undefined);
+    setUSDAmount(formatBitcoinInUSDAmount(collateralAmount, bitCoinInUSDAsNumber))
+    setCollateralToDebtRatio(
+      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, 0)
+    );
+    setCollateralError(collateralAmount < 0.0001 || collateralAmount === undefined);
+    setLoanError(vaultLoanAmount < 1 || vaultLoanAmount === undefined);
     setCollateralToDebtRatioError(collateralToDebtRatio < 140);
     setError(errorArray.includes(true));
-  }, [collateral, loan, collateralToDebtRatio, isCollateralToDebtRatioError]);
+  }, [collateralAmount, vaultLoanAmount, collateralToDebtRatio, isCollateralToDebtRatioError]);
 
-  const handleCollateralChange = (collateral) => setCollateral(collateral.target.value);
+  const handleCollateralChange = (collateralAmount) => setCollateralAmount(collateralAmount.target.value);
 
-  const handleLoanChange = (loan) => setLoan(loan.target.value);
+  const handleLoanChange = (vaultLoanAmount) => setVaultLoanAmount(vaultLoanAmount.target.value);
 
   const createAndSendLoanContract = () => {
     sendLoanContract(createLoanContract());
   };
 
   const createLoanContract = () => ({
-    vaultLoanAmount: fixedTwoDecimalUnshift(loan),
-    BTCDeposit: customShiftValue(collateral, 8, false),
+    vaultLoanAmount: fixedTwoDecimalUnshift(vaultLoanAmount),
+    BTCDeposit: customShiftValue(collateralAmount, 8, false),
     liquidationRatio: fixedTwoDecimalUnshift(liquidationRatio),
     liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
     emergencyRefundTime: 5,
@@ -97,53 +92,6 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     }
   };
 
-  const sendLoanContractToStacks = (loanContract) => {
-    const network = new StacksMocknet({ url: 'http://localhost:3999' });
-    openContractCall({
-      network: network,
-      anchorMode: 1,
-      contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-      contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-      functionName: 'setup-loan',
-      functionArgs: [
-        uintCV(loanContract.BTCDeposit),
-        uintCV(loanContract.liquidationRatio),
-        uintCV(loanContract.liquidationFee),
-        uintCV(loanContract.emergencyRefundTime),
-      ],
-      onFinish: (data) => {
-        closeModal();
-        eventBus.dispatch('loan-event', { status: 'created', txId: data.txId });
-      },
-      onCancel: () => {
-        eventBus.dispatch('loan-event', { status: 'cancelled' });
-      },
-    });
-  };
-
-  const sendLoanContractToEthereum = async (loanContract) => {
-    const { ethereum } = window;
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
-
-    const loanManagerETH = new ethers.Contract(process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS, loanManagerABI, signer);
-    loanManagerETH
-      .setupLoan(
-        loanContract.vaultLoanAmount,
-        loanContract.BTCDeposit,
-        loanContract.liquidationRatio,
-        loanContract.liquidationFee,
-        loanContract.emergencyRefundTime
-      )
-      .then((response) =>
-        eventBus.dispatch('loan-event', {
-          status: 'created',
-          txId: response.hash,
-        })
-      )
-      .then(() => closeModal());
-  };
-
   const fetchBitcoinPrice = async () => {
     await fetch('/.netlify/functions/get-bitcoin-price', {
       headers: { accept: 'Accept: application/json' },
@@ -154,16 +102,6 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
         setBitCoinInUSDAsNumber(bitcoinValue);
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
       });
-  };
-
-  const countCollateralToDebtRatio = () => {
-    const collateralInUSD = collateral * bitCoinInUSDAsNumber;
-    const collateralToDebtRatio = collateralInUSD / loan;
-    setCollateralToDebtRatio(Math.round(collateralToDebtRatio * 100));
-  };
-
-  const countUSDAmount = () => {
-    setUSDAmount(new Intl.NumberFormat().format(bitCoinInUSDAsNumber * collateral));
   };
 
   return (
@@ -216,7 +154,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
                     padding={15}
                     bgGradient='linear(to-r, primary1, primary2)'
                     bgClip='text'
-                    value={collateral}
+                    value={collateralAmount}
                     width={200}
                     onChange={handleCollateralChange}
                   />
@@ -263,7 +201,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
                       padding={15}
                       bgGradient='linear(to-r, primary1, primary2)'
                       bgClip='text'
-                      value={loan}
+                      value={vaultLoanAmount}
                       width={200}
                       onChange={handleLoanChange}
                     />

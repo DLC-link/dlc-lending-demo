@@ -21,10 +21,10 @@ export default function App() {
 
   useEffect(() => {
     eventBus.on('is-account-connected', (data) => setConnected(data.isConnected));
-    eventBus.on('fetch-loans-bg', (data) => {
-      handleEvent(data);
-    });
     eventBus.on('loan-event', (data) => {
+      if (data.status === 'created') {
+        onDepositModalClose();
+      }
       handleEvent(data);
     });
     eventBus.on('set-address', (data) => setAddress(data.address));

@@ -1,6 +1,4 @@
 import {
-  VStack,
-  HStack,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -20,18 +18,10 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift } from '../utils';
-import { borrowStacksLoanContract } from '../stacksFunctions';
+import { customShiftValue, fixedTwoDecimalShift, countCollateralToDebtRatio, formatBitcoinInUSDAmount } from '../utils';
+import { borrowStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
 
-export default function BorrowModal({
-  isOpen,
-  closeModal,
-  walletType,
-  vaultLoanAmount,
-  BTCDeposit,
-  uuid,
-  creator,
-}) {
+export default function BorrowModal({ isOpen, closeModal, walletType, vaultLoanAmount, BTCDeposit, uuid, creator }) {
   const [additionalLoan, setAdditionalLoan] = useState();
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
@@ -49,8 +39,10 @@ export default function BorrowModal({
   }, []);
 
   useEffect(() => {
-    countUSDAmount();
-    countCollateralToDebtRatio();
+    setUSDAmount(formatBitcoinInUSDAmount(collateralAmount, bitCoinInUSDAsNumber))
+    setCollateralToDebtRatio(
+      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, additionalLoan)
+    );
     setLoanError(additionalLoan < 1 || additionalLoan === undefined);
     setCollateralToDebtRatioError(collateralToDebtRatio < 140);
   }, [additionalLoan, collateralToDebtRatio, isCollateralToDebtRatioError]);
@@ -69,16 +61,6 @@ export default function BorrowModal({
         setBitCoinInUSDAsNumber(bitcoinValue);
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
       });
-  };
-
-  const countCollateralToDebtRatio = () => {
-    const collateralInUSD = collateralAmount * bitCoinInUSDAsNumber;
-    const collateralToDebtRatio = collateralInUSD / (Math.round(fixedTwoDecimalShift(vaultLoanAmount))  + additionalLoan);
-    setCollateralToDebtRatio(Math.round(collateralToDebtRatio * 100));
-  };
-
-  const countUSDAmount = () => {
-    setUSDAmount(new Intl.NumberFormat().format(bitCoinInUSDAsNumber * collateralAmount));
   };
 
   const borrowLoanContract = async () => {

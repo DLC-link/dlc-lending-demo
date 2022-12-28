@@ -3,21 +3,19 @@
 import { useEffect } from 'react';
 import { Flex, Text, VStack, Button, TableContainer, Tbody, Table, Tr, Td } from '@chakra-ui/react';
 import { easyTruncateAddress } from '../utils';
-import { StacksMocknet } from '@stacks/network';
-import { uintCV } from '@stacks/transactions';
-import { openContractCall } from '@stacks/connect';
 import { customShiftValue, fixedTwoDecimalShift } from '../utils';
-import { ethers } from 'ethers';
-import { abi as loanManagerABI } from '../loanManagerABI';
 import Status from './Status';
 import eventBus from '../EventBus';
-import { abi as usdcForDLCsABI } from '../usdcForDLCsABI';
 import { useState } from 'react';
 import BorrowModal from '../modals/BorrowModal';
 import RepayModal from '../modals/RepayModal';
-import { liquidateStacksLoanContract, closeStacksLoanContract } from '../stacksFunctions';
+import { liquidateStacksLoanContract, closeStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
+import { liquidateEthereumLoanContract } from '../blockchainFunctions/ethereumFunctions';
 
 export default function Card(props) {
+  const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
+  const [isRepayModalOpen, setRepayModalOpen] = useState(false);
+
   useEffect(() => {
     eventBus.on('loan-event', (event) => {
       if (event.status === 'borrow-requested' || 'repay-requested') {
@@ -27,8 +25,13 @@ export default function Card(props) {
     });
   });
 
-  const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
-  const [isRepayModalOpen, setRepayModalOpen] = useState(false);
+  const onBorrowModalClose = () => {
+    setBorrowModalOpen(false);
+  };
+
+  const onRepayModalClose = () => {
+    setRepayModalOpen(false);
+  };
 
   const sendOfferForSigning = async (msg) => {
     const extensionIDs = [
@@ -46,7 +49,7 @@ export default function Card(props) {
           data: { offer: msg, counterparty_wallet_url: encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN) },
         },
         {},
-        function (response) {
+        function () {
           if (chrome.runtime.lastError) {
             console.log('Failure: ' + chrome.runtime.lastError.message);
           } else {
@@ -57,73 +60,13 @@ export default function Card(props) {
     }
   };
 
-  const onBorrowModalClose = () => {
-    setBorrowModalOpen(false);
-  };
-
-  const onRepayModalClose = () => {
-    setRepayModalOpen(false);
-  };
-
-  const repayEthereumLoanContract = async () => {
-    if (await isAllowedInMetamask()) {
-      try {
-        const { ethereum } = window;
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner();
-
-        const loanManagerETH = new ethers.Contract(
-          process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-          loanManagerABI,
-          signer
-        );
-        loanManagerETH.repayLoan(props.loan.raw.id).then((response) =>
-          eventBus.dispatch('loan-event', {
-            status: 'repay-requested',
-            txId: response.hash,
-          })
-        );
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  };
-
-  const isAllowedInMetamask = async () => {
-    const { ethereum } = window;
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
-
-    const desiredAmount = 1000000n * 10n ** 18n;
-
-    const usdcContract = new ethers.Contract(process.env.REACT_APP_USDC_CONTRACT_ADDRESS, usdcForDLCsABI, signer);
-
-    const allowedAmount = await usdcContract.allowance(props.creator, process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS);
-
-    if (fixedTwoDecimalShift(props.loan.raw.vaultLoan) > parseInt(allowedAmount)) {
-      try {
-        await usdcContract.approve(process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS, desiredAmount).then((response) =>
-          eventBus.dispatch('loan-event', {
-            status: 'approve-requested',
-            txId: response.hash,
-          })
-        );
-        return false;
-      } catch (error) {
-        console.error(error);
-      }
-    } else {
-      return true;
-    }
-  };
-
   const liquidateLoanContract = async () => {
     switch (props.walletType) {
       case 'hiro':
         liquidateStacksLoanContract(props.creator, props.loan.raw.dlcUUID);
         break;
       case 'metamask':
-        liquidateEthereumLoanContract();
+        liquidateEthereumLoanContract(props.loan.raw.id);
         break;
       default:
         console.log('Unsupported wallet type!');
@@ -141,28 +84,6 @@ export default function Card(props) {
       default:
         console.log('Unsupported wallet type!');
         break;
-    }
-  };
-
-  const liquidateEthereumLoanContract = async () => {
-    try {
-      const { ethereum } = window;
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-
-      const loanManagerETH = new ethers.Contract(
-        process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS,
-        loanManagerABI,
-        signer
-      );
-      loanManagerETH.liquidateLoan(props.loan.raw.id).then((response) =>
-        eventBus.dispatch('loan-event', {
-          status: 'liquidation-requested',
-          txId: response.hash,
-        })
-      );
-    } catch (error) {
-      console.error(error);
     }
   };
 
