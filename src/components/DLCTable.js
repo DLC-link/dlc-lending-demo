@@ -7,6 +7,8 @@ import { VStack, Text, HStack, Collapse, IconButton, SimpleGrid, ScaleFade } fro
 import Card from './Card';
 import { getStacksLoans } from '../blockchainFunctions/stacksFunctions';
 import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
+import InitialCard from './InitialCard';
+
 
 export default function DLCTable(props) {
   const isConnected = props.isConnected;
@@ -16,14 +18,25 @@ export default function DLCTable(props) {
   const [loans, setLoans] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [isManualLoading, setManualLoading] = useState(undefined);
+  const [initialLoans, setInitialLoans] = useState([]);
 
   useEffect(() => {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on('loan-event', (data) => {
+      if(data.status === 'setup') {
+        initialLoans.shift();
+      }
       refreshLoansTable(true);
     });
+    eventBus.on('create-loan', (data) => {
+      initialLoans.push(data.loan);
+    });
   }, []);
+
+  useEffect(() => {
+    refreshLoansTable(false);
+  }, [initialLoans]);
 
   const fetchBitcoinValue = async () => {
     let bitCoinValue = undefined;
@@ -122,6 +135,13 @@ export default function DLCTable(props) {
                   creator={address}
                   walletType={walletType}
                   bitCoinValue={bitCoinValue}></Card>
+              ))}
+              {initialLoans?.map((loan) => (
+                <InitialCard
+                  loan={loan}
+                  creator={address}
+                  walletType={walletType}
+                  bitCoinValue={bitCoinValue}></InitialCard>
               ))}
             </SimpleGrid>
           </ScaleFade>
