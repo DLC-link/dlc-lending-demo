@@ -38,14 +38,16 @@ function handleTx(txInfo) {
   const txMap = {
     'setup-loan': 'setup',
     'post-create-dlc': 'ready',
-    'repay-loan': 'closing',
+    'close-loan': 'closing',
     'attempt-liquidate': 'liquidate-loan',
-    'close-loan': 'closed',
+    'post-close-dlc': 'closed',
     'set-status-funded': 'funded',
     borrow: 'borrowed',
     repay: 'repaid',
+    'validate-price-data': 'liquidating'
   };
   console.log('txinfo:');
+  console.log(txInfo);
   let status = txMap[txInfo.contract_call.function_name];
   const txId = txInfo.tx_id;
 

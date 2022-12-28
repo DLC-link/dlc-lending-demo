@@ -18,7 +18,14 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { customShiftValue, fixedTwoDecimalShift, fixedTwoDecimalUnshift, countCollateralToDebtRatio, formatBitcoinInUSDAmount } from '../utils';
+import {
+  customShiftValue,
+  fixedTwoDecimalShift,
+  fixedTwoDecimalUnshift,
+  countCollateralToDebtRatio,
+  formatCollateralInUSD,
+  formatBitcoinInUSDAmount,
+} from '../utils';
 import { repayStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
 
 export default function RepayModal({ isOpen, closeModal, walletType, vaultLoanAmount, BTCDeposit, uuid, creator }) {
@@ -39,9 +46,9 @@ export default function RepayModal({ isOpen, closeModal, walletType, vaultLoanAm
   }, []);
 
   useEffect(() => {
-    setUSDAmount(formatBitcoinInUSDAmount(collateralAmount, bitCoinInUSDAsNumber))
+    setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
     setCollateralToDebtRatio(
-      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, - additionalRepay)
+      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, -additionalRepay)
     );
     setLoanError(additionalRepay < 1 || additionalRepay === undefined);
     setCollateralToDebtRatioError(collateralToDebtRatio < 140);
@@ -57,7 +64,7 @@ export default function RepayModal({ isOpen, closeModal, walletType, vaultLoanAm
     })
       .then((x) => x.json())
       .then(({ msg }) => {
-        const bitcoinValue = Number(msg.bpi.USD.rate.replace(/[^0-9.-]+/g, ''));
+        const bitcoinValue = formatBitcoinInUSDAmount(msg);
         setBitCoinInUSDAsNumber(bitcoinValue);
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
       });
@@ -71,7 +78,7 @@ export default function RepayModal({ isOpen, closeModal, walletType, vaultLoanAm
       case 'metamask':
         break;
       default:
-        console.log('Unsupported wallet type!');
+        console.error('Unsupported wallet type!');
         break;
     }
   };

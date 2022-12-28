@@ -34,6 +34,11 @@ export function countCollateralToDebtRatio (collateralAmount, bitcoinValue, vaul
   return Math.round(collateralToDebtRatio * 100);
 };
 
-export function formatBitcoinInUSDAmount(collateralAmount, bitcoinValue) {
+export function formatCollateralInUSD(collateralAmount, bitcoinValue) {
   return (new Intl.NumberFormat().format(bitcoinValue * collateralAmount));
 };
+
+export function formatBitcoinInUSDAmount(bitcoinValue) {
+  return Number(bitcoinValue.bpi.USD.rate.replace(/[^0-9.-]+/g, ''));
+}
+

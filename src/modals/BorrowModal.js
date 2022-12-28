@@ -18,7 +18,7 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { customShiftValue, fixedTwoDecimalShift, countCollateralToDebtRatio, formatBitcoinInUSDAmount } from '../utils';
+import { customShiftValue, fixedTwoDecimalShift, countCollateralToDebtRatio, formatCollateralInUSD, formatBitcoinInUSDAmount } from '../utils';
 import { borrowStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
 
 export default function BorrowModal({ isOpen, closeModal, walletType, vaultLoanAmount, BTCDeposit, uuid, creator }) {
@@ -39,7 +39,7 @@ export default function BorrowModal({ isOpen, closeModal, walletType, vaultLoanA
   }, []);
 
   useEffect(() => {
-    setUSDAmount(formatBitcoinInUSDAmount(collateralAmount, bitCoinInUSDAsNumber))
+    setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber))
     setCollateralToDebtRatio(
       countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, additionalLoan)
     );
@@ -57,7 +57,7 @@ export default function BorrowModal({ isOpen, closeModal, walletType, vaultLoanA
     })
       .then((x) => x.json())
       .then(({ msg }) => {
-        const bitcoinValue = Number(msg.bpi.USD.rate.replace(/[^0-9.-]+/g, ''));
+        const bitcoinValue = formatBitcoinInUSDAmount(msg);
         setBitCoinInUSDAsNumber(bitcoinValue);
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
       });
@@ -71,7 +71,7 @@ export default function BorrowModal({ isOpen, closeModal, walletType, vaultLoanA
       case 'metamask':
         break;
       default:
-        console.log('Unsupported wallet type!');
+        console.error('Unsupported wallet type!');
         break;
     }
   };

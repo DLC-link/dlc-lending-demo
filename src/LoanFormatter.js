@@ -74,7 +74,7 @@ const loanFormatter = {
         }
         break;
       default:
-        console.log('Unsupported language!');
+        console.error('Unsupported language!');
         break;
     }
     return loans;

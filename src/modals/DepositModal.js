@@ -21,10 +21,17 @@ import {
   Tr,
   Td,
   Tbody,
-  TableContainer
+  TableContainer,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { customShiftValue, fixedTwoDecimalUnshift, countCollateralToDebtRatio, formatBitcoinInUSDAmount } from '../utils';
+import {
+  customShiftValue,
+  fixedTwoDecimalUnshift,
+  countCollateralToDebtRatio,
+  formatCollateralInUSD,
+  formatBitcoinInUSDAmount
+} from '../utils';
+import eventBus from '../EventBus';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
 
@@ -52,10 +59,8 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   }, []);
 
   useEffect(() => {
-    setUSDAmount(formatBitcoinInUSDAmount(collateralAmount, bitCoinInUSDAsNumber))
-    setCollateralToDebtRatio(
-      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, 0)
-    );
+    setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
+    setCollateralToDebtRatio(countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, 0));
     setCollateralError(collateralAmount < 0.0001 || collateralAmount === undefined);
     setLoanError(vaultLoanAmount < 1 || vaultLoanAmount === undefined);
     setCollateralToDebtRatioError(collateralToDebtRatio < 140);
@@ -81,7 +86,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   const sendLoanContract = (loanContract) => {
     switch (walletType) {
       case 'hiro':
-        sendLoanContractToStacks(loanContract);
+        sendLoanContractToStacks(loanContract).then(eventBus.dispatch('create-loan', { loan: loanContract }));
         break;
       case 'metamask':
         sendLoanContractToEthereum(loanContract);
@@ -98,7 +103,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
     })
       .then((x) => x.json())
       .then(({ msg }) => {
-        const bitcoinValue = Number(msg.bpi.USD.rate.replace(/[^0-9.-]+/g, ''));
+        const bitcoinValue = formatBitcoinInUSDAmount(msg);
         setBitCoinInUSDAsNumber(bitcoinValue);
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
       });

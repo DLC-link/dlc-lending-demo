@@ -69,7 +69,7 @@ export default function Card(props) {
         liquidateEthereumLoanContract(props.loan.raw.id);
         break;
       default:
-        console.log('Unsupported wallet type!');
+        console.error('Unsupported wallet type!');
         break;
     }
   };
@@ -82,7 +82,7 @@ export default function Card(props) {
       case 'metamask':
         break;
       default:
-        console.log('Unsupported wallet type!');
+        console.error('Unsupported wallet type!');
         break;
     }
   };

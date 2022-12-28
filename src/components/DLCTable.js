@@ -7,8 +7,8 @@ import { VStack, Text, HStack, Collapse, IconButton, SimpleGrid, ScaleFade } fro
 import Card from './Card';
 import { getStacksLoans } from '../blockchainFunctions/stacksFunctions';
 import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
+import { formatBitcoinInUSDAmount } from '../utils';
 import InitialCard from './InitialCard';
-
 
 export default function DLCTable(props) {
   const isConnected = props.isConnected;
@@ -24,7 +24,7 @@ export default function DLCTable(props) {
     fetchBitcoinValue().then((bitCoinValue) => setBitCoinValue(bitCoinValue));
     refreshLoansTable(false);
     eventBus.on('loan-event', (data) => {
-      if(data.status === 'setup') {
+      if (data.status === 'setup') {
         initialLoans.shift();
       }
       refreshLoansTable(true);
@@ -44,7 +44,7 @@ export default function DLCTable(props) {
       headers: { accept: 'Accept: application/json' },
     })
       .then((x) => x.json())
-      .then(({ msg }) => (bitCoinValue = Number(msg.bpi.USD.rate.replace(/[^0-9.-]+/g, ''))));
+      .then(({ msg }) => (bitCoinValue = formatBitcoinInUSDAmount(msg)));
     return bitCoinValue;
   };
 
@@ -73,7 +73,7 @@ export default function DLCTable(props) {
         loans = getEthereumLoans(address);
         break;
       default:
-        console.log('Unsupported wallet type!');
+        console.error('Unsupported wallet type!');
         break;
     }
     return loans;
