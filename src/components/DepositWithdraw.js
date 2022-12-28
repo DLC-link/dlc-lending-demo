@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import eventBus from "../EventBus";
+import React, { useEffect, useState } from 'react';
+import eventBus from '../EventBus';
 import {
   VStack,
   Button,
@@ -16,8 +16,8 @@ import {
   TableContainer,
   Collapse,
   IconButton,
-} from "@chakra-ui/react";
-import { customShiftValue, fixedTwoDecimalShift } from "../utils";
+} from '@chakra-ui/react';
+import { customShiftValue, fixedTwoDecimalShift } from '../utils';
 
 export default function DepositWithdraw(props) {
   const isConnected = props.isConnected;
@@ -26,16 +26,12 @@ export default function DepositWithdraw(props) {
   const [loanAmount, setLoanAmount] = useState(0);
 
   useEffect(() => {
-    eventBus.on("change-deposit-amount", (data) =>
-      setDepositAmount(customShiftValue(data.depositAmount, 8, true))
-    );
-    eventBus.on("change-loan-amount", (data) =>
-      setLoanAmount(fixedTwoDecimalShift(data.loanAmount))
-    );
+    eventBus.on('change-deposit-amount', (data) => setDepositAmount(customShiftValue(data.depositAmount, 8, true)));
+    eventBus.on('change-loan-amount', (data) => setLoanAmount(fixedTwoDecimalShift(data.loanAmount)));
   }, []);
 
   const openDepositModal = () => {
-    eventBus.dispatch("is-deposit-modal-open", { isDepositOpen: true });
+    eventBus.dispatch('is-deposit-modal-open', { isDepositOpen: true });
   };
 
   return (
@@ -43,33 +39,40 @@ export default function DepositWithdraw(props) {
       <Collapse in={isConnected}>
         <Flex
           margin={25}
-          alignContent="center"
-          justifyContent="center"
-          padding={25}
-        >
+          alignContent='center'
+          justifyContent='center'
+          padding={25}>
           <VStack>
-            <Text fontSize={[25, 50]} fontWeight="extrabold" color="white">
+            <Text
+              fontSize={[25, 50]}
+              fontWeight='extrabold'
+              color='white'>
               Balance
             </Text>
             <Flex
-              bgGradient="linear(to-d, secondary1, secondary2)"
-              borderRadius="lg"
-              alignContent="center"
-              justifyContent="center"
-              width={[250, "full"]}
-              padding="10px 10px"
-              boxShadow="dark-lg"
-            >
+              bgGradient='linear(to-d, secondary1, secondary2)'
+              borderRadius='lg'
+              alignContent='center'
+              justifyContent='center'
+              width={[250, 'full']}
+              padding='10px 10px'
+              boxShadow='dark-lg'>
               <VStack>
                 <TableContainer>
-                  <Table variant="simple" color="white">
+                  <Table
+                    variant='simple'
+                    color='white'>
                     <TableCaption fontSize={12}>Deposit Bitcoin</TableCaption>
                     <Thead>
                       <Tr>
-                        <Th fontSize={[8, 12]} color="white">
+                        <Th
+                          fontSize={[8, 12]}
+                          color='white'>
                           Asset
                         </Th>
-                        <Th fontSize={[8, 12]} color="white">
+                        <Th
+                          fontSize={[8, 12]}
+                          color='white'>
                           Deposit Balance
                         </Th>
                       </Tr>
@@ -78,26 +81,24 @@ export default function DepositWithdraw(props) {
                       <Tr>
                         <Td>
                           <Image
-                            src="/btc_logo.png"
-                            alt="Bitcoin Logo"
+                            src='/btc_logo.png'
+                            alt='Bitcoin Logo'
                             width={25}
                             height={25}
-                            borderRadius="3px"
-                          ></Image>
+                            borderRadius='3px'></Image>
                         </Td>
                         {isLoading ? (
                           <Td>
                             <IconButton
                               _hover={{
-                                background: "secondary1",
+                                background: 'secondary1',
                               }}
                               isLoading
-                              variant="outline"
-                              color="white"
-                              borderRadius="full"
+                              variant='outline'
+                              color='white'
+                              borderRadius='full'
                               width={[25, 35]}
-                              height={[25, 35]}
-                            ></IconButton>
+                              height={[25, 35]}></IconButton>
                           </Td>
                         ) : (
                           <Td>{depositAmount}</Td>
@@ -106,10 +107,14 @@ export default function DepositWithdraw(props) {
                     </Tbody>
                     <Thead>
                       <Tr>
-                        <Th fontSize={[8, 12]} color="white">
+                        <Th
+                          fontSize={[8, 12]}
+                          color='white'>
                           Asset
                         </Th>
-                        <Th fontSize={[8, 12]} color="white">
+                        <Th
+                          fontSize={[8, 12]}
+                          color='white'>
                           Loan Balance
                         </Th>
                       </Tr>
@@ -118,26 +123,24 @@ export default function DepositWithdraw(props) {
                       <Tr>
                         <Td>
                           <Image
-                            src="/usdc_logo.png"
-                            alt="USDC Logo"
+                            src='/usdc_logo.png'
+                            alt='USDC Logo'
                             width={25}
                             height={25}
-                            borderRadius="3px"
-                          ></Image>
+                            borderRadius='3px'></Image>
                         </Td>
                         {isLoading ? (
                           <Td>
                             <IconButton
                               _hover={{
-                                background: "secondary1",
+                                background: 'secondary1',
                               }}
                               isLoading
-                              variant="outline"
-                              color="white"
-                              borderRadius="full"
+                              variant='outline'
+                              color='white'
+                              borderRadius='full'
                               width={[25, 35]}
-                              height={[25, 35]}
-                            ></IconButton>
+                              height={[25, 35]}></IconButton>
                           </Td>
                         ) : (
                           <Td>{loanAmount}</Td>
@@ -148,17 +151,16 @@ export default function DepositWithdraw(props) {
                 </TableContainer>
                 <Button
                   _hover={{
-                    color: "white",
-                    bg: "secondary1",
+                    color: 'white',
+                    bg: 'secondary1',
                   }}
-                  color="accent"
+                  color='accent'
                   width={100}
-                  shadow="lg"
-                  variant="outline"
-                  fontSize="sm"
-                  fontWeight="bold"
-                  onClick={openDepositModal}
-                >
+                  shadow='lg'
+                  variant='outline'
+                  fontSize='sm'
+                  fontWeight='bold'
+                  onClick={openDepositModal}>
                   CREATE LOAN
                 </Button>
               </VStack>

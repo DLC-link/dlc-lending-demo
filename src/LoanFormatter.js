@@ -1,7 +1,7 @@
-import { customShiftValue, fixedTwoDecimalShift } from "./utils";
-import { addressToString } from "@stacks/transactions";
-import { bytesToHex, bytesToUtf8 } from "micro-stacks/common";
-import { toJson } from "./utils";
+import { customShiftValue, fixedTwoDecimalShift } from './utils';
+import { addressToString } from '@stacks/transactions';
+import { bytesToHex, bytesToUtf8 } from 'micro-stacks/common';
+import { toJson } from './utils';
 
 const loanFormatter = {
   formatClarityResponse(dlc) {
@@ -10,11 +10,11 @@ const loanFormatter = {
     const rawData = {
       status: dlcData.status.data,
       owner: addressToString(dlcData.owner.address),
-      liquidationFee: toJson(dlcData["liquidation-fee"].value),
-      liquidationRatio: toJson(dlcData["liquidation-ratio"].value),
-      vaultCollateral: toJson(dlcData["vault-collateral"].value),
-      vaultLoan: toJson(dlcData["vault-loan"].value),
-      ...(dlcData.dlc_uuid.hasOwnProperty("value") && {
+      liquidationFee: toJson(dlcData['liquidation-fee'].value),
+      liquidationRatio: toJson(dlcData['liquidation-ratio'].value),
+      vaultCollateral: toJson(dlcData['vault-collateral'].value),
+      vaultLoan: toJson(dlcData['vault-loan'].value),
+      ...(dlcData.dlc_uuid.hasOwnProperty('value') && {
         dlcUUID: bytesToHex(dlcData.dlc_uuid.value.buffer),
       }),
     };
@@ -33,7 +33,7 @@ const loanFormatter = {
       ...(parseInt(dlc.closingPrice._hex) !== 0 && {
         closingPrice: parseInt(dlc.closingPrice._hex),
       }),
-      ...(dlc.dlc_uuid !== "" && {
+      ...(dlc.dlc_uuid !== '' && {
         dlcUUID: dlc.dlc_uuid,
       }),
     };
@@ -45,22 +45,13 @@ const loanFormatter = {
       raw: rawData,
       formatted: {
         formattedUUID: `0x${rawData.dlcUUID}`,
-        formattedLiquidationFee:
-          fixedTwoDecimalShift(rawData.liquidationFee) + " %",
-        formattedLiquidationRatio:
-          fixedTwoDecimalShift(rawData.liquidationRatio) + " %",
-        formattedVaultCollateral:
-          customShiftValue(rawData.vaultCollateral, 8, true) + " BTC",
-        formattedVaultLoan: "$ " + fixedTwoDecimalShift(rawData.vaultLoan),
-        ...(rawData.hasOwnProperty("closingPrice") && {
+        formattedLiquidationFee: fixedTwoDecimalShift(rawData.liquidationFee) + ' %',
+        formattedLiquidationRatio: fixedTwoDecimalShift(rawData.liquidationRatio) + ' %',
+        formattedVaultCollateral: customShiftValue(rawData.vaultCollateral, 8, true) + ' BTC',
+        formattedVaultLoan: '$ ' + fixedTwoDecimalShift(rawData.vaultLoan),
+        ...(rawData.hasOwnProperty('closingPrice') && {
           formattedClosingPrice:
-            "$ " +
-            Math.round(
-              (customShiftValue(rawData.closingPrice, 8, true) +
-                Number.EPSILON) *
-                100
-            ) /
-              100,
+            '$ ' + Math.round((customShiftValue(rawData.closingPrice, 8, true) + Number.EPSILON) * 100) / 100,
         }),
       },
     };
@@ -70,20 +61,20 @@ const loanFormatter = {
   formatAllDLC(dlcArray, responseType) {
     const loans = [];
     switch (responseType) {
-      case "solidity":
+      case 'solidity':
         for (const dlc of dlcArray) {
           const loan = this.formatSolidityResponse(dlc);
           loans.push(loan);
         }
         break;
-      case "clarity":
+      case 'clarity':
         for (const dlc of dlcArray) {
           const loan = this.formatClarityResponse(dlc);
           loans.push(loan);
         }
         break;
       default:
-        console.log("Unsupported language!");
+        console.log('Unsupported language!');
         break;
     }
     return loans;
