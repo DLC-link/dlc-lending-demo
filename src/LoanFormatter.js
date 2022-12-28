@@ -14,9 +14,6 @@ const loanFormatter = {
       liquidationRatio: toJson(dlcData['liquidation-ratio'].value),
       vaultCollateral: toJson(dlcData['vault-collateral'].value),
       vaultLoan: toJson(dlcData['vault-loan'].value),
-      ...(dlcData['closing-price'].hasOwnProperty('value') && {
-        closingPrice: Number(dlcData['closing-price'].value.value),
-      }),
       ...(dlcData.dlc_uuid.hasOwnProperty('value') && {
         dlcUUID: bytesToHex(dlcData.dlc_uuid.value.buffer),
       }),
