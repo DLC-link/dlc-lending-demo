@@ -1,4 +1,5 @@
 import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
+import { cvToValue, deserializeCV } from '@stacks/transactions';
 import { io as ioClient } from 'socket.io-client';
 import { ethers } from 'ethers';
 import { abi as loanManagerABI } from './loanManagerABI';
@@ -7,6 +8,9 @@ import eventBus from './EventBus';
 
 const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
 const ioclient_uri = `wss://dev-oracle.dlc.link`;
+
+// const api_base = `http://localhost:3999/extended/v1`;
+// const ioclient_uri = `ws://localhost:3999`;
 
 const contractAddress = process.env.REACT_APP_STACKS_CONTRACT_ADDRESS;
 const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
@@ -23,7 +27,7 @@ eventBus.on('change-address', (data) => {
 });
 
 async function fetchTXInfo(txId) {
-  console.log(`[Stacks] Fetching tx_info...`);
+  console.log(`[Stacks] Fetching tx_info... ${txId}`);
   try {
     const response = await fetch(api_base + '/tx/' + txId);
     return response.json();
@@ -34,22 +38,21 @@ async function fetchTXInfo(txId) {
 }
 
 function handleTx(txInfo) {
-  // TODO: ideally, statuses would be read from the contract itself so its always in sync
+  const printEvent = txInfo.events.find(event => event.contract_log.contract_id === contractFullName);
+  const unwrappedPrintEvent = cvToValue(deserializeCV(printEvent.contract_log.value.hex));
+  const newStatus = unwrappedPrintEvent['status']?.value;
+
   const txMap = {
-    'setup-loan': 'setup',
-    'post-create-dlc': 'ready',
-    'repay-loan': 'repaying',
-    'attempt-liquidate': 'liquidate-loan',
-    'post-close-dlc': 'closed',
-    'set-status-funded': 'funded',
+    'not-ready': "setup",
+    'ready': "ready",
+    'pre-repaid': "repaying",
+    'pre-liquidated': "liquidate-loan",
+    'repaid': "repaid",
+    'liquidated': "liquidated",
+    'funded': "funded"
   };
-  let status = txMap[txInfo.contract_call.function_name];
-  const txId = txInfo.tx_id;
 
-  if (txInfo.tx_type !== 'contract_call') return;
-
-  // NOTE: We are sending a full refetch in any case for now
-  eventBus.dispatch('fetch-loans-bg', { status: status, txId: txId });
+  eventBus.dispatch("fetch-loans-bg", { status: txMap[newStatus], txId: txInfo.tx_id });
 }
 
 function startStacksObserver() {
@@ -64,10 +67,8 @@ function startStacksObserver() {
     stacksSocket.socket.connect();
   });
 
-  stacksSocket.socket.on('connect', async () => {
-    console.log('[Stacks] (Re)connected stacksSocket');
-    console.log(`Listening to ${contractFullName}...`);
-    console.log(`Listening to ${dlcManagerFullName}...`);
+  stacksSocket.socket.on("connect", async () => {
+    console.log("[Stacks] (Re)connected stacksSocket");
   });
 
   setInterval(() => {
@@ -81,18 +82,18 @@ function startStacksObserver() {
   stacksSocket.subscribeAddressTransactions(contractFullName);
 
   // Handling incoming txs
-  stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
-    console.log(`TX happened on ${address}`);
-    const _tx = txWithTransfers.tx;
-    if (!_tx.tx_status === 'success') {
-      console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
-      // TODO: show error toast....
-    }
-
-    const txInfo = await fetchTXInfo(_tx.tx_id);
-
-    handleTx(txInfo);
-  });
+  stacksSocket.socket.on(
+    "address-transaction",
+    async (address, txWithTransfers) => {
+      console.log(`TX happened on ${address}`);
+      const _tx = txWithTransfers.tx;
+      if (!_tx.tx_status === "success") {
+        console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
+        // TODO: show error toast....
+      }
+      const txInfo = await fetchTXInfo(_tx.tx_id);
+      handleTx(txInfo);
+    });
 }
 
 function startEthObserver() {
