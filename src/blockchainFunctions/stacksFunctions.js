@@ -15,7 +15,9 @@ import { fixedTwoDecimalUnshift, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
 import loanFormatter from '../LoanFormatter';
 
-const network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_LOCALHOST_ADDRESS });
+const network = new StacksMocknet({
+  url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+});
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus) => {
   return {
@@ -63,7 +65,9 @@ export async function getStacksLoans(creator) {
 
   try {
     const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress);
-    txOptions.network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + ':3999' });
+    txOptions.network = new StacksMocknet({
+      url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+    });
     const response = await callReadOnlyFunction(txOptions);
     loans = loanFormatter.formatAllDLC(response.list, 'clarity');
   } catch (error) {
@@ -110,14 +114,12 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
     contractFungiblePostConditionForBorrow,
     senderAddress,
     onFinishStatus
-  )
+  );
 
-  console.log(txOptions)
+  console.log(txOptions);
 
   try {
-    openContractCall(
-      txOptions
-    );
+    openContractCall(txOptions);
   } catch (error) {
     console.error(error);
   }

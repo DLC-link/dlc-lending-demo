@@ -21,10 +21,10 @@ export default function App() {
 
   useEffect(() => {
     eventBus.on('is-account-connected', (data) => setConnected(data.isConnected));
-    eventBus.on('fetch-loans-bg', (data) => {
-      handleEvent(data);
-    });
     eventBus.on('loan-event', (data) => {
+      if (data.status === 'created') {
+        onDepositModalClose();
+      }
       handleEvent(data);
     });
     eventBus.on('set-address', (data) => setAddress(data.address));
@@ -45,19 +45,23 @@ export default function App() {
   const handleEvent = (data) => {
     const toastMap = {
       created: 'Loan created!',
-      cancelled: 'Transaction cancelled!',
       setup: 'Loan established!',
       ready: 'Loan is ready!',
+      funded: 'Loan funded!',
       'repay-requested': 'Requested repayment!',
       repaying: 'Processing repayment!',
-      repaid: 'Loan repaid!',
+      repaid: 'USDC repaid!',
       'liquidation-requested': 'Requested liquidation!',
-      liquidateing: 'Processing liquidation!',
+      'liquidate-loan': 'Processing liquidation!',
       liquidated: 'Loan liquidated!',
-      funded: 'Loan funded!',
+      'borrow-requested': 'Requested borrow!',
+      borrowed: 'USDC borrowed!',
+      'closing-requested': 'Requested closing!',
+      closing: 'Processing closing!',
       closed: 'Loan closed!',
       'approve-requested': 'Approve requested!',
       approved: 'Approved!',
+      cancelled: 'Transaction cancelled!',
     };
 
     let success = !(data.status === 'cancelled');
