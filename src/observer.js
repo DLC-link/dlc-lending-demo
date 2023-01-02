@@ -38,21 +38,21 @@ async function fetchTXInfo(txId) {
 }
 
 function handleTx(txInfo) {
-  const printEvent = txInfo.events.find(event => event.contract_log.contract_id === contractFullName);
-  const unwrappedPrintEvent = cvToValue(deserializeCV(printEvent.contract_log.value.hex));
-  const newStatus = unwrappedPrintEvent['status']?.value;
+  if (txInfo.tx_type !== 'contract_call') return;
 
   const txMap = {
-    'not-ready': "setup",
-    'ready': "ready",
-    'pre-repaid': "repaying",
-    'pre-liquidated': "liquidate-loan",
-    'repaid': "repaid",
-    'liquidated': "liquidated",
-    'funded': "funded"
+    'setup-loan': 'setup',
+    'post-create-dlc': 'ready',
+    'set-status-funded': 'funded',
+    'attempt-liquidate': 'liquidate-loan',
+    'validate-price-data': 'liquidating',
+    'close-loan': 'closing',
+    'post-close-dlc': 'closed',
+    'borrow': 'borrowed',
+    'repay': 'repaid',
   };
 
-  eventBus.dispatch("fetch-loans-bg", { status: txMap[newStatus], txId: txInfo.tx_id });
+  eventBus.dispatch("fetch-loans-bg", { status: txMap[txInfo.contract_call.function_name], txId: txInfo.tx_id });
 }
 
 function startStacksObserver() {
@@ -87,7 +87,7 @@ function startStacksObserver() {
     async (address, txWithTransfers) => {
       console.log(`TX happened on ${address}`);
       const _tx = txWithTransfers.tx;
-      if (!_tx.tx_status === "success") {
+      if (_tx.tx_status !== "success") {
         console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
         // TODO: show error toast....
       }
