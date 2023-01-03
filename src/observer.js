@@ -44,15 +44,14 @@ function handleTx(txInfo) {
     'setup-loan': 'setup',
     'post-create-dlc': 'ready',
     'set-status-funded': 'funded',
-    'attempt-liquidate': 'liquidate-loan',
+    'attempt-liquidate': 'attempting-liquidation',
     'validate-price-data': 'liquidating',
     'close-loan': 'closing',
     'post-close-dlc': 'closed',
     'borrow': 'borrowed',
     'repay': 'repaid',
   };
-
-  eventBus.dispatch("fetch-loans-bg", { status: txMap[txInfo.contract_call.function_name], txId: txInfo.tx_id });
+  eventBus.dispatch("loan-event", { status: txMap[txInfo.contract_call.function_name], txId: txInfo.tx_id, chain: 'stacks' });
 }
 
 function startStacksObserver() {
@@ -88,8 +87,7 @@ function startStacksObserver() {
       console.log(`TX happened on ${address}`);
       const _tx = txWithTransfers.tx;
       if (_tx.tx_status !== "success") {
-        console.log(`[Stacks] Failed tx...: ${_tx.tx_id}`);
-        // TODO: show error toast....
+        eventBus.dispatch({ status: 'failed', txId: _tx.tx_id, chain: 'stacks'});
       }
       const txInfo = await fetchTXInfo(_tx.tx_id);
       handleTx(txInfo);

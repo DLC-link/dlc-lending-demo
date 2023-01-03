@@ -32,7 +32,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
     fee: 100000,
     anchorMode: 1,
     onFinish: (data) => {
-      eventBus.dispatch('loan-event', { status: onFinishStatus, txId: data.txId });
+      eventBus.dispatch('loan-event', { status: onFinishStatus, txId: data.txId, chain: 'stacks' });
     },
     onCancel: () => {
       eventBus.dispatch('loan-event', { status: 'cancelled' });

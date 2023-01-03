@@ -1,17 +1,38 @@
 import { Link, Flex, HStack, Text, Box } from '@chakra-ui/react';
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
-import { useEffect, useState } from 'react';
 
-export default function CustomToast(props) {
-  const [explorerAddress, setExplorerAddress] = useState(props.explorerAddress);
-  const [message, setMessage] = useState(props.message);
-  const [success, setSuccess] = useState(props.success);
+export default function CustomToast({ data }) {
+  const eventMap = {
+    created: 'Loan created!',
+    setup: 'Loan established!',
+    ready: 'Loan is ready!',
+    funded: 'Loan funded!',
+    'repay-requested': 'Requested repayment!',
+    repaying: 'Processing repayment!',
+    repaid: 'USDC repaid!',
+    'liquidation-requested': 'Requested liquidation!',
+    'attempting-liquidation': 'Attempting liquidation!',
+    liquidating: 'Processing liquidation!',
+    liquidated: 'Loan liquidated!',
+    'borrow-requested': 'Requested borrow!',
+    borrowed: 'USDC borrowed!',
+    'closing-requested': 'Requested closing!',
+    closing: 'Processing closing!',
+    closed: 'Loan closed!',
+    'approve-requested': 'Approve requested!',
+    approved: 'Approved!',
+    cancelled: 'Transaction cancelled!',
+    failed: 'Transaction failed!',
+  };
 
-  useEffect(() => {
-    setExplorerAddress(props.explorerAddress);
-    setMessage(props.message);
-    setSuccess(props.success);
-  }, [props]);
+  const explorerAddressMap = {
+    stacks: `https://explorer.stacks.co/txid/${data.txId}`,
+    ethereum: `https://goerli.etherscan.io/tx/${data.txId}`
+  }
+  
+  const success = !(data.status === ('cancelled' || 'failed'));
+  const message = eventMap[data.status];
+  const explorerAddress = explorerAddressMap[data.chain];
 
   return (
     <Link
