@@ -100,7 +100,11 @@ export default function Card(props) {
           totalOutcomes: 100,
         }),
       });
+      console.log('Response:')
+      console.log(response)
       const responseJSON = await response.json();
+      console.log('ResponseJSON:')
+      console.log(responseJSON)
       if (!response.ok) {
         console.error(responseJSON.errors[0].message);
       }
