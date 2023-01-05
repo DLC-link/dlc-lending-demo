@@ -100,11 +100,11 @@ export default function Card(props) {
           totalOutcomes: 100,
         }),
       });
+      const responseJSON = await response.json();
       if (!response.ok) {
-        const responseJSON = await response.json();
         console.error(responseJSON.errors[0].message);
       }
-      sendOfferForSigning(response);
+      sendOfferForSigning(responseJSON);
     } catch (error) {
       console.error(error);
     }
