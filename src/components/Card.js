@@ -34,6 +34,7 @@ export default function Card(props) {
   };
 
   const sendOfferForSigning = async (msg) => {
+    console.log(msg);
     const extensionIDs = [
       'nminefocgojkadkocbddiddjmoooonhe',
       'gjjgfnpmfpealbpggmhfafcddjiopbpa',
@@ -100,15 +101,11 @@ export default function Card(props) {
           totalOutcomes: 100,
         }),
       });
-      console.log('Response:')
-      console.log(response)
-      const responseJSON = await response.json();
-      console.log('ResponseJSON:')
-      console.log(responseJSON)
+      const responseStream= await response.json();
       if (!response.ok) {
-        console.error(responseJSON.errors[0].message);
+        console.error(responseStream.errors[0].message);
       }
-      sendOfferForSigning(responseJSON);
+      sendOfferForSigning(responseStream);
     } catch (error) {
       console.error(error);
     }
