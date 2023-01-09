@@ -34,6 +34,7 @@ export default function Card(props) {
   };
 
   const sendOfferForSigning = async (msg) => {
+    console.log(msg);
     const extensionIDs = [
       'nminefocgojkadkocbddiddjmoooonhe',
       'gjjgfnpmfpealbpggmhfafcddjiopbpa',
@@ -87,21 +88,24 @@ export default function Card(props) {
     }
   };
 
-  const lockBTC = () => {
+  const lockBTC = async () => {
+    const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
     try {
-      fetch(
-        '/.netlify/functions/get-offer/?uuid=' +
-          props.loan.formatted.formattedUUID +
-          '&collateral=' +
-          props.loan.raw.vaultCollateral,
-        {
-          headers: { accept: 'Accept: application/json' },
-        }
-      )
-        .then((x) => x.json())
-        .then(({ msg }) => {
-          sendOfferForSigning(msg);
-        });
+      const response = await fetch(URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uuid: props.loan.formatted.formattedUUID,
+          acceptCollateral: parseInt(props.loan.raw.vaultCollateral),
+          offerCollateral: 1000,
+          totalOutcomes: 100,
+        }),
+      });
+      const responseStream= await response.json();
+      if (!response.ok) {
+        console.error(responseStream.errors[0].message);
+      }
+      sendOfferForSigning(responseStream);
     } catch (error) {
       console.error(error);
     }

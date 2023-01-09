@@ -12,27 +12,35 @@ import CustomToast from './components/CustomToast';
 
 export default function App() {
   const [isConnected, setConnected] = useState(false);
-  const [address, setAddress] = useState('');
-  const [walletType, setWalletType] = useState('');
+  const [address, setAddress] = useState(undefined);
+  const [walletType, setWalletType] = useState(undefined);
   const [isLoading, setLoading] = useState(true);
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [isDepositModalOpen, setDepositModalOpen] = useState(false);
   const toast = useToast();
 
+  const handleEvent = (data) => {
+    if (data.status === 'created') {
+      onDepositModalClose();
+    }
+    if (!toast.isActive(data.status)) {
+      return toast({
+        id: data.status,
+        position: 'right-top',
+        render: () => <CustomToast data={data} walletType={walletType}></CustomToast>,
+      });
+    }
+  };
+
   useEffect(() => {
     eventBus.on('is-account-connected', (data) => setConnected(data.isConnected));
-    eventBus.on('loan-event', (data) => {
-      if (data.status === 'created') {
-        onDepositModalClose();
-      }
-      handleEvent(data);
-    });
-    eventBus.on('set-address', (data) => setAddress(data.address));
     eventBus.on('wallet-type', (data) => setWalletType(data.walletType));
+    eventBus.on('loan-event', (data) => handleEvent(data));
+    eventBus.on('set-address', (data) => setAddress(data.address));
     eventBus.on('set-loading-state', (data) => setLoading(data.isLoading));
     eventBus.on('is-select-wallet-modal-open', (data) => setSelectWalletModalOpen(data.isSelectWalletOpen));
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
-  }, [walletType]);
+  }, []);
 
   const onSelectWalletModalClose = () => {
     setSelectWalletModalOpen(false);
@@ -40,54 +48,6 @@ export default function App() {
 
   const onDepositModalClose = () => {
     setDepositModalOpen(false);
-  };
-
-  const handleEvent = (data) => {
-    const toastMap = {
-      created: 'Loan created!',
-      setup: 'Loan established!',
-      ready: 'Loan is ready!',
-      funded: 'Loan funded!',
-      'repay-requested': 'Requested repayment!',
-      repaying: 'Processing repayment!',
-      repaid: 'USDC repaid!',
-      'liquidation-requested': 'Requested liquidation!',
-      'liquidate-loan': 'Processing liquidation!',
-      liquidated: 'Loan liquidated!',
-      'borrow-requested': 'Requested borrow!',
-      borrowed: 'USDC borrowed!',
-      'closing-requested': 'Requested closing!',
-      closing: 'Processing closing!',
-      closed: 'Loan closed!',
-      'approve-requested': 'Approve requested!',
-      approved: 'Approved!',
-      cancelled: 'Transaction cancelled!',
-    };
-
-    let success = !(data.status === 'cancelled');
-    let message = toastMap[data.status];
-    let explorerAddress;
-
-    switch (walletType) {
-      case 'hiro':
-        explorerAddress = `https:/https://explorer.stacks.co/txid/${data.txId}`;
-        break;
-      case 'metamask':
-        explorerAddress = `https://goerli.etherscan.io/tx/${data.txId}`;
-        break;
-    }
-
-    if (!toast.isActive(data.status))
-      return toast({
-        id: data.status,
-        position: 'right-top',
-        render: () => (
-          <CustomToast
-            explorerAddress={explorerAddress}
-            message={message}
-            success={success}></CustomToast>
-        ),
-      });
   };
 
   return (

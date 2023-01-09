@@ -32,6 +32,14 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
     } catch (error) {}
   }
 
+  const sendHiroAccountEvents = () => {
+    eventBus.dispatch('set-address', {
+      address: userSession.loadUserData().profile.stxAddress.testnet,
+    });
+    eventBus.dispatch('is-account-connected', { isConnected: true });
+    eventBus.dispatch('wallet-type', { walletType: 'hiro' });
+  };
+
   async function requestHiroAccount() {
     let isUserSessionStored = true;
     try {
@@ -41,11 +49,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
     }
 
     if (isUserSessionStored) {
-      eventBus.dispatch('set-address', {
-        address: userSession.loadUserData().profile.stxAddress.testnet,
-      });
-      eventBus.dispatch('is-account-connected', { isConnected: true });
-      eventBus.dispatch('wallet-type', { walletType: 'hiro' });
+      sendHiroAccountEvents();
     } else {
       showConnect({
         appDetails: {
@@ -53,11 +57,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
           icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
         },
         onFinish: () => {
-          eventBus.dispatch('set-address', {
-            address: userSession.loadUserData().profile.stxAddress.testnet,
-          });
-          eventBus.dispatch('is-account-connected', { isConnected: true });
-          eventBus.dispatch('wallet-type', { walletType: 'hiro' });
+          sendHiroAccountEvents();
         },
         userSession,
       });

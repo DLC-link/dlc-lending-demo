@@ -32,7 +32,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
     fee: 100000,
     anchorMode: 1,
     onFinish: (data) => {
-      eventBus.dispatch('loan-event', { status: onFinishStatus, txId: data.txId });
+      eventBus.dispatch('loan-event', { status: onFinishStatus, txId: data.txId, chain: 'stacks' });
     },
     onCancel: () => {
       eventBus.dispatch('loan-event', { status: 'cancelled' });
@@ -66,7 +66,7 @@ export async function getStacksLoans(creator) {
   try {
     const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress);
     txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+      url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS,
     });
     const response = await callReadOnlyFunction(txOptions);
     loans = loanFormatter.formatAllDLC(response.list, 'clarity');
