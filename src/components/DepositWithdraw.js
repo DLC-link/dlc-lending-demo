@@ -27,7 +27,7 @@ export default function DepositWithdraw(props) {
 
   useEffect(() => {
     eventBus.on('change-deposit-amount', (data) => setDepositAmount(customShiftValue(data.depositAmount, 8, true)));
-    eventBus.on('change-loan-amount', (data) => setLoanAmount(fixedTwoDecimalShift(data.loanAmount)));
+    eventBus.on('change-loan-amount', (data) => setLoanAmount(customShiftValue(data.loanAmount, 6, true)));
   }, []);
 
   const openDepositModal = () => {

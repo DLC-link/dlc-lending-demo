@@ -101,7 +101,7 @@ export default function Card(props) {
           totalOutcomes: 100,
         }),
       });
-      const responseStream= await response.json();
+      const responseStream = await response.json();
       if (!response.ok) {
         console.error(responseStream.errors[0].message);
       }
@@ -113,7 +113,7 @@ export default function Card(props) {
 
   const countCollateralToDebtRatio = (bitCoinValue, vaultCollateral, loan) => {
     const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true);
-    const formattedVaultLoan = fixedTwoDecimalShift(loan);
+    const formattedVaultLoan = customShiftValue(loan, 6, true);
     const collateralToDebtRatio = ((bitCoinValue * formattedVaultCollateral) / formattedVaultLoan) * 100;
     const roundedCollateralToDebtRatio = Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100;
     return roundedCollateralToDebtRatio;

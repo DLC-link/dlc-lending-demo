@@ -11,7 +11,7 @@ import {
 } from '@stacks/transactions';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { openContractCall } from '@stacks/connect';
-import { fixedTwoDecimalUnshift, hexToBytes } from '../utils';
+import { customShiftValue, fixedTwoDecimalUnshift, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
 import loanFormatter from '../LoanFormatter';
 
@@ -89,9 +89,10 @@ export async function getStacksLoanIDByUUID(creator, UUID) {
 }
 
 export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
+  const amount = customShiftValue(additionalLoan, 6, false)
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
   const functionName = 'borrow';
-  const functionArgs = [uintCV(loanContractID || 0), uintCV(fixedTwoDecimalUnshift(additionalLoan))];
+  const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'borrow-requested';
   const assetAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
@@ -103,7 +104,7 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
       process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
       process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
       FungibleConditionCode.GreaterEqual,
-      1,
+      amount,
       createAssetInfo(assetAddress, assetContractName, assetName)
     ),
   ];
@@ -126,9 +127,10 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
 }
 
 export async function repayStacksLoanContract(creator, UUID, additionalRepayment) {
+  const amount = customShiftValue(additionalRepayment, 6, false)
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
   const functionName = 'repay';
-  const functionArgs = [uintCV(loanContractID || 1), uintCV(fixedTwoDecimalUnshift(additionalRepayment))];
+  const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'repay-requested';
   const assetAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
@@ -138,8 +140,8 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
       creator,
-      FungibleConditionCode.GreaterEqual,
-      1,
+      FungibleConditionCode.LessEqual,
+      amount,
       createAssetInfo(assetAddress, assetContractName, assetName)
     ),
   ];

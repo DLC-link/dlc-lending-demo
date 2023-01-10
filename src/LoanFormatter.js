@@ -48,7 +48,7 @@ const loanFormatter = {
         formattedLiquidationFee: fixedTwoDecimalShift(rawData.liquidationFee) + ' %',
         formattedLiquidationRatio: fixedTwoDecimalShift(rawData.liquidationRatio) + ' %',
         formattedVaultCollateral: customShiftValue(rawData.vaultCollateral, 8, true) + ' BTC',
-        formattedVaultLoan: '$ ' + fixedTwoDecimalShift(rawData.vaultLoan),
+        formattedVaultLoan: '$ ' + customShiftValue(rawData.vaultLoan, 6, true),
         ...(rawData.hasOwnProperty('closingPrice') && {
           formattedClosingPrice:
             '$ ' + Math.round((customShiftValue(rawData.closingPrice, 8, true) + Number.EPSILON) * 100) / 100,
