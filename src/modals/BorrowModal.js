@@ -209,7 +209,7 @@ import {
               <Text
                 fontSize='sm'
                 color='gray'>
-                {'$ ' + fixedTwoDecimalShift(vaultLoanAmount)}
+                {'$ ' + customShiftValue(vaultLoanAmount, 6, true)}
               </Text>
             </Flex>
             <Flex justifyContent='center'>
