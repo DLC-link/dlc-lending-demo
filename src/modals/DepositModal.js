@@ -123,7 +123,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
           <ModalHeader
             bgGradient='linear(to-r, primary1, primary2)'
             bgClip='text'>
-            Request Loan
+            Request Vault
           </ModalHeader>
           <ModalCloseButton
             _focus={{
@@ -290,7 +290,7 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
                 fontWeight='bold'
                 type='submit'
                 onClick={createAndSendLoanContract}>
-                Request Loan
+                Request Vault
               </Button>
             </Flex>
           </ModalBody>

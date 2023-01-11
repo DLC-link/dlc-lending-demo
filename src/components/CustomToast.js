@@ -3,8 +3,8 @@ import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 
 export default function CustomToast({ data }) {
   const eventMap = {
-    created: 'Loan created!',
-    setup: 'Loan established!',
+    created: 'Vault created!',
+    setup: 'Vault established!',
     ready: 'Loan is ready!',
     funded: 'Loan funded!',
     'repay-requested': 'Requested repayment!',
