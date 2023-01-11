@@ -76,8 +76,8 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   };
 
   const createLoanContract = () => ({
-    vaultLoanAmount: fixedTwoDecimalUnshift(vaultLoanAmount),
-    BTCDeposit: customShiftValue(collateralAmount, 8, false),
+    vaultLoanAmount: parseInt(fixedTwoDecimalUnshift(vaultLoanAmount)),
+    BTCDeposit: parseInt(customShiftValue(collateralAmount, 8, false)),
     liquidationRatio: fixedTwoDecimalUnshift(liquidationRatio),
     liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
     emergencyRefundTime: 5,
