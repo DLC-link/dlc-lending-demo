@@ -33,8 +33,8 @@ export default function Card(props) {
     setRepayModalOpen(false);
   };
 
-  const sendOfferForSigning = async (msg) => {
-    console.log(msg);
+  const sendOfferForSigning = async (offer) => {
+    console.log('Offer: ', offer);
     const extensionIDs = [
       'nminefocgojkadkocbddiddjmoooonhe',
       'gjjgfnpmfpealbpggmhfafcddjiopbpa',
@@ -48,7 +48,7 @@ export default function Card(props) {
         extensionIDs[i],
         {
           action: 'get-offer',
-          data: { offer: msg, counterparty_wallet_url: encodeURIComponent(process.env.REACT_APP_WALLET_DOMAIN) },
+          data: { offer: offer },
         },
         {},
         function () {
