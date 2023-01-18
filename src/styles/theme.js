@@ -43,6 +43,26 @@ export const theme = extendTheme({
         },
       },
     },
+    MenuButton: {
+      baseStyle: {
+        margin: '15px',
+        width: '100px',
+        shadow: '2xl',
+        fontSize: 'sm',
+        fontWeight: 'bold',
+      },
+      variants: {
+        outline: {
+          fontSize: 'sm',
+          color: 'accent',
+          bg: 'transparent',
+          _hover: {
+            color: 'white',
+            bg: 'accent',
+          },
+        },
+      },
+    },
     Button: {
       baseStyle: {
         margin: '15px',

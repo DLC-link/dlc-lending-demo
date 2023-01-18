@@ -9,13 +9,47 @@ import {
   ModalCloseButton,
   Button,
   Text,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Menu,
 } from '@chakra-ui/react';
 import { Image } from '@chakra-ui/react';
 import eventBus from '../EventBus';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
+import Client from '@walletconnect/sign-client';
+import { useState, useEffect } from 'react';
+import QRCodeModal from '@walletconnect/qrcode-modal';
 
 export default function SelectWalletModal({ isOpen, closeModal }) {
+  const stacksChains = ['stacks:1', 'stacks:2147483648'];
+  const [stacksChain, setStacksChain] = useState(undefined);
+  const [session, setSession] = useState(undefined);
+  const [walletConnectClient, setWalletConnectClient] = useState(undefined);
+
+  useEffect(() => {
+    const initiateClient = async () => {
+      const client = await Client.init({
+        logger: 'debug',
+        relayUrl: 'wss://relay.walletconnect.com',
+        projectId: '15e1912940165aa0fc41fb062d117593', // register at WalletConnect and create one for yourself - https://cloud.walletconnect.com/
+        // you need to have a valid ID or the app will not start
+        metadata: {
+          name: 'DLC.Link',
+          description: 'Awesome application',
+          url: 'https://your_app_url.com/',
+          icons: ['https://avatars.githubusercontent.com/u/37784886'],
+        },
+      });
+      setWalletConnectClient(client);
+    };
+
+    if (walletConnectClient === undefined) {
+      initiateClient();
+    }
+  }, [walletConnectClient]);
+
   async function requestMetaMaskAccount() {
     try {
       const { ethereum } = window;
@@ -63,6 +97,44 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
       });
     }
   }
+
+  const handleConnect = async (chain) => {
+    setStacksChain(undefined);
+
+    const { uri, approval } = await walletConnectClient.connect({
+      pairingTopic: undefined,
+      requiredNamespaces: {
+        stacks: {
+          methods: ['stacks_callReadOnlyFunction', 'stacks_openContractCall'],
+          chains: [chain],
+          events: [],
+        },
+      },
+    });
+
+    if (uri) {
+      QRCodeModal.open(uri, () => {
+        console.log('QR Code Modal closed');
+      });
+    }
+
+    const session = await approval();
+
+    setSession(session);
+    setStacksChain(chain);
+
+    QRCodeModal.close();
+    eventBus.dispatch('is-account-connected', { isConnected: true });
+    eventBus.dispatch('wallet-type', { walletType: 'xverse' });
+    eventBus.dispatch('stacks-chain', { stacksChain: chain });
+    eventBus.dispatch('xverse-session', { xverseSession: session });
+    eventBus.dispatch('set-address', {
+      address: session.namespaces.stacks.accounts[0].split(':')[2],
+    });
+    eventBus.dispatch('walletconnect-client', {
+      walletConnectClient: walletConnectClient,
+    });
+  };
 
   return (
     <Modal
@@ -124,6 +196,36 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                 <Text variant='selector'>Hiro Wallet</Text>
               </HStack>
             </Button>
+            <Menu>
+              <MenuButton
+                width='100%'
+                variant='outline'
+                margin={135}>
+                <HStack
+                  w='100%'
+                  justifyContent='center'>
+                  <Image
+                  src='/xverse_logo.png'
+                  alt='Xverse Wallet Logo'
+                  width={85}
+                  height={25}
+                />
+                  <Text variant='selector'>Xverse Wallet</Text>
+                </HStack>
+              </MenuButton>
+              <MenuList>
+                {stacksChains.map((c, idx) => {
+                  return (
+                    <MenuItem
+                      key={`chain-${idx}`}
+                      disabled={!walletConnectClient}
+                      onClick={async () => await handleConnect(c)}>
+                      {c}
+                    </MenuItem>
+                  );
+                })}
+              </MenuList>
+            </Menu>
           </VStack>
         </ModalBody>
       </ModalContent>

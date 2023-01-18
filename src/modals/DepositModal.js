@@ -29,13 +29,14 @@ import {
   fixedTwoDecimalUnshift,
   countCollateralToDebtRatio,
   formatCollateralInUSD,
-  formatBitcoinInUSDAmount
+  formatBitcoinInUSDAmount,
 } from '../utils';
 import eventBus from '../EventBus';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
+import { sendLoanContractToStacksByXverse } from '../blockchainFunctions/xverseFunctions';
 
-export default function DepositModal({ isOpen, closeModal, walletType }) {
+export default function DepositModal({ isOpen, closeModal, walletType, xverseSession, stacksChain }) {
   const [collateralAmount, setCollateralAmount] = useState(undefined);
   const [vaultLoanAmount, setVaultLoanAmount] = useState(undefined);
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -91,6 +92,8 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
       case 'metamask':
         sendLoanContractToEthereum(loanContract);
         break;
+      case 'xverse':
+        sendLoanContractToStacksByXverse(loanContract, xverseSession, stacksChain).then(eventBus.dispatch('create-loan', { loan: loanContract }));
       default:
         console.log('Unsupported wallet type!');
         break;

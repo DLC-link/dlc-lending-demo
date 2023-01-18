@@ -6,6 +6,7 @@ import { RepeatClockIcon } from '@chakra-ui/icons';
 import { VStack, Text, HStack, Collapse, IconButton, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';
 import { getStacksLoans } from '../blockchainFunctions/stacksFunctions';
+import { getStacksLoansByXverse } from '../blockchainFunctions/xverseFunctions';
 import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
 import InitialCard from './InitialCard';
 
@@ -71,6 +72,9 @@ export default function DLCTable(props) {
       case 'metamask':
         loans = getEthereumLoans(address);
         break;
+        case 'xverse':
+          loans = getStacksLoansByXverse(address, props.walletConnectClient, props.chain, props.session);
+          break;
       default:
         console.error('Unsupported wallet type!');
         break;

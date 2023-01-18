@@ -17,6 +17,9 @@ export default function App() {
   const [isLoading, setLoading] = useState(true);
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [isDepositModalOpen, setDepositModalOpen] = useState(false);
+  const [stacksChain, setStacksChain] = useState(undefined);
+  const [xverseSession, setXverseSession] = useState(undefined);
+  const [walletConnectClient, setWalletConnectClient] = useState(undefined);
   const toast = useToast();
 
   const handleEvent = (data) => {
@@ -27,7 +30,11 @@ export default function App() {
       return toast({
         id: data.status,
         position: 'right-top',
-        render: () => <CustomToast data={data} walletType={walletType}></CustomToast>,
+        render: () => (
+          <CustomToast
+            data={data}
+            walletType={walletType}></CustomToast>
+        ),
       });
     }
   };
@@ -40,6 +47,9 @@ export default function App() {
     eventBus.on('set-loading-state', (data) => setLoading(data.isLoading));
     eventBus.on('is-select-wallet-modal-open', (data) => setSelectWalletModalOpen(data.isSelectWalletOpen));
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
+    eventBus.on('stacks-chain', (data => setStacksChain(data.stacksChain)));
+    eventBus.on('xverse-session', (data) => setXverseSession(data.xverseSession));
+    eventBus.on('walletconnect-client', (data) => setWalletConnectClient(data.walletConnectClient));
   }, []);
 
   const onSelectWalletModalClose = () => {
@@ -64,6 +74,8 @@ export default function App() {
           address={address}
           isOpen={isDepositModalOpen}
           closeModal={onDepositModalClose}
+          xverseSession={xverseSession}
+          stacksChain={stacksChain}
         />
         <SelectWalletModal
           isOpen={isSelectWalletModalOpen}
@@ -79,7 +91,10 @@ export default function App() {
               isConnected={isConnected}
               walletType={walletType}
               address={address}
-              isLoading={isLoading}></DLCTable>
+              isLoading={isLoading}
+              walletConnectClient={walletConnectClient}
+              chain={stacksChain}
+              session={xverseSession}></DLCTable>
           </>
         )}
       </Box>
