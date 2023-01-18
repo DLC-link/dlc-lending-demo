@@ -6,8 +6,8 @@ import { abi as loanManagerABI } from './loanManagerABI';
 import { abi as usdcForDLCsABI } from './usdcForDLCsABI';
 import eventBus from './EventBus';
 
-const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
-const ioclient_uri = `wss://dev-oracle.dlc.link`;
+const api_base = process.env.REACT_APP_API_BASE || `https://dev-oracle.dlc.link/btc1/extended/v1`;
+const ioclient_uri = process.env.REACT_APP_IO_CLIENT_URI || `wss://dev-oracle.dlc.link`;
 
 // const api_base = `http://localhost:3999/extended/v1`;
 // const ioclient_uri = `ws://localhost:3999`;

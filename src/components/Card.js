@@ -41,6 +41,11 @@ export default function Card(props) {
       'kmidoigmjbbecngmenanflcogbjojlhf',
       'niinmdkjgghdkkmlilpngkccihjmefin',
     ];
+    const customExtensionIdsVar = process.env.REACT_APP_CUSTOM_EXTENSION_IDS;
+    if (customExtensionIdsVar) {
+      const customExtensions = customExtensionIdsVar.split(',');
+      extensionIDs.concat(customExtensions);
+    }
 
     for (let i = 0; i < extensionIDs.length; i++) {
       chrome.runtime.sendMessage(
