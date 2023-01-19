@@ -9,6 +9,11 @@ import DLCTable from './components/DLCTable';
 import { Box, useToast } from '@chakra-ui/react';
 import { useState } from 'react';
 import CustomToast from './components/CustomToast';
+import Client from '@walletconnect/sign-client';
+
+/* global BigInt */
+
+BigInt.prototype.toJSON = function() { return this.toString() }
 
 export default function App() {
   const [isConnected, setConnected] = useState(false);
@@ -40,6 +45,27 @@ export default function App() {
   };
 
   useEffect(() => {
+    const initiateWalletConnectClient = async () => {
+      const walletConnectClient = await Client.init({
+        logger: 'debug',
+        relayUrl: 'wss://relay.walletconnect.com',
+        projectId: '15e1912940165aa0fc41fb062d117593',
+        metadata: {
+          name: 'DLC.Link',
+          description: 'Use Native Bitcoin Without Bridging',
+          url: 'https://www.dlc.link/',
+          icons: ['https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg'],
+        },
+      });
+      setWalletConnectClient(walletConnectClient);
+    };
+
+    if (walletConnectClient === undefined) {
+      initiateWalletConnectClient();
+    }
+  }, [walletConnectClient]);
+
+  useEffect(() => {
     eventBus.on('is-account-connected', (data) => setConnected(data.isConnected));
     eventBus.on('wallet-type', (data) => setWalletType(data.walletType));
     eventBus.on('loan-event', (data) => handleEvent(data));
@@ -47,9 +73,11 @@ export default function App() {
     eventBus.on('set-loading-state', (data) => setLoading(data.isLoading));
     eventBus.on('is-select-wallet-modal-open', (data) => setSelectWalletModalOpen(data.isSelectWalletOpen));
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
-    eventBus.on('stacks-chain', (data => setStacksChain(data.stacksChain)));
-    eventBus.on('xverse-session', (data) => setXverseSession(data.xverseSession));
-    eventBus.on('walletconnect-client', (data) => setWalletConnectClient(data.walletConnectClient));
+    eventBus.on('stacks-chain', (data) => setStacksChain(data.stacksChain));
+    eventBus.on('xverse-session', (data) => {
+      setXverseSession(data.xverseSession);
+      setAddress(data.xverseSession.namespaces.stacks.accounts[0].split(':')[2]);
+    });
   }, []);
 
   const onSelectWalletModalClose = () => {
@@ -76,8 +104,10 @@ export default function App() {
           closeModal={onDepositModalClose}
           xverseSession={xverseSession}
           stacksChain={stacksChain}
+          walletConnectClient={walletConnectClient}
         />
         <SelectWalletModal
+          walletConnectClient={walletConnectClient}
           isOpen={isSelectWalletModalOpen}
           closeModal={onSelectWalletModalClose}
         />
@@ -93,8 +123,8 @@ export default function App() {
               address={address}
               isLoading={isLoading}
               walletConnectClient={walletConnectClient}
-              chain={stacksChain}
-              session={xverseSession}></DLCTable>
+              stacksChain={stacksChain}
+              xverseSession={xverseSession}></DLCTable>
           </>
         )}
       </Box>

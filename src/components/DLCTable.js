@@ -73,7 +73,7 @@ export default function DLCTable(props) {
         loans = getEthereumLoans(address);
         break;
         case 'xverse':
-          loans = getStacksLoansByXverse(address, props.walletConnectClient, props.chain, props.session);
+          loans = getStacksLoansByXverse(address, props.walletConnectClient, props.stacksChain, props.xverseSession);
           break;
       default:
         console.error('Unsupported wallet type!');

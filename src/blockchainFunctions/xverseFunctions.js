@@ -1,28 +1,68 @@
 import {
-    uintCV,
-    bufferCV,
-    cvToValue,
-    callReadOnlyFunction,
-    createAssetInfo,
-    FungibleConditionCode,
-    makeContractFungiblePostCondition,
-    makeStandardFungiblePostCondition,
-  } from '@stacks/transactions';
-  import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
-  import { PostConditionMode } from '@stacks/transactions';
+  uintCV,
+  bufferCV,
+  cvToValue,
+  callReadOnlyFunction,
+  createAssetInfo,
+  FungibleConditionCode,
+  makeContractFungiblePostCondition,
+  makeStandardFungiblePostCondition,
+} from '@stacks/transactions';
+import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
+import { PostConditionMode } from '@stacks/transactions';
 
-export async function sendLoanContractToStacksByXverse() {}
+export const stacksChains = [
+  { id: 'stacks:1', name: 'Mainnet' },
+  { id: 'stacks:2147483648', name: 'Testnet' },
+];
+
+export async function sendLoanContractToStacksByXverse(
+  loanContract,
+  address,
+  walletConnectClient,
+  xverseSession,
+  stacksChain
+) {
+  const functionName = 'setup-loan';
+  const functionArgs = [
+    uintCV(loanContract.BTCDeposit),
+    uintCV(loanContract.liquidationRatio),
+    uintCV(loanContract.liquidationFee),
+    uintCV(loanContract.emergencyRefundTime),
+  ];
+  const senderAddress = undefined;
+  try {
+    const result = await walletConnectClient.request({
+      chainId: stacksChain,
+      topic: xverseSession.topic,
+      request: {
+        method: 'stacks_openContractCall',
+        params: {
+          pubkey: address,
+          senderAddress: senderAddress,
+          postConditions: [],
+          contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+          contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+          functionName: functionName,
+          functionArgs: functionArgs,
+          postConditionMode: PostConditionMode.Deny,
+          version: '1',
+        },
+      },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 export async function getStacksLoansByXverse(creator, client, chain, session) {
-    console.log('Chain: ', chain)
-    console.log('Session ', session)
-    const functionName = 'get-creator-loans';
-    const functionArgs = [principalCV(creator)];
-    const senderAddress = creator;
-    let loans = [];
+  const functionName = 'get-creator-loans';
+  const functionArgs = [principalCV(creator)];
+  const senderAddress = creator;
+  let loans = [];
 
   try {
-    const result = await client.request({
+    const response = await client.request({
       chainId: chain,
       topic: session.topic,
       request: {
@@ -40,7 +80,8 @@ export async function getStacksLoansByXverse(creator, client, chain, session) {
         },
       },
     });
+    console.log('response: ', response);
   } catch (error) {
-    throw new Error(error);
+    console.error(error);
   }
 }
