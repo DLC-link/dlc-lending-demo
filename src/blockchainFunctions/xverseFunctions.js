@@ -30,9 +30,11 @@ export async function sendLoanContractToStacksByXverse(
     uintCV(loanContract.liquidationFee),
     uintCV(loanContract.emergencyRefundTime),
   ];
+
   const senderAddress = undefined;
+  
   try {
-    const result = await walletConnectClient.request({
+    await walletConnectClient.request({
       chainId: stacksChain,
       topic: xverseSession.topic,
       request: {
@@ -49,7 +51,8 @@ export async function sendLoanContractToStacksByXverse(
           version: '1',
         },
       },
-    });
+    }).then((result) => {console.log('resulto'); console.log(result)});
+    
   } catch (error) {
     console.error(error);
   }
