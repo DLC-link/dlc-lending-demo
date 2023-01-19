@@ -28,7 +28,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
       pairingTopic: undefined,
       requiredNamespaces: {
         stacks: {
-          methods: ['stacks_callReadOnlyFunction', 'stacks_openContractCall'],
+          methods: ['stacks_callReadOnlyFunction', 'stacks_contractCall'],
           chains: [stacksChain],
           events: [],
         },

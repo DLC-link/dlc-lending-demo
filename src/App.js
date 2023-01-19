@@ -53,7 +53,7 @@ export default function App() {
         metadata: {
           name: 'DLC.Link',
           description: 'Use Native Bitcoin Without Bridging',
-          url: 'https://www.dlc.link/',
+          url: 'https://feat-xverse-connect--roaring-kashata-e5d4ba.netlify.app/',
           icons: ['https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg'],
         },
       });

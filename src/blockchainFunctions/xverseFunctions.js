@@ -30,29 +30,30 @@ export async function sendLoanContractToStacksByXverse(
     uintCV(loanContract.liquidationFee),
     uintCV(loanContract.emergencyRefundTime),
   ];
-
   const senderAddress = undefined;
-  
+
   try {
-    await walletConnectClient.request({
-      chainId: stacksChain,
-      topic: xverseSession.topic,
-      request: {
-        method: 'stacks_openContractCall',
-        params: {
-          pubkey: address,
-          senderAddress: senderAddress,
-          postConditions: [],
-          contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-          contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-          functionName: functionName,
-          functionArgs: functionArgs,
-          postConditionMode: PostConditionMode.Deny,
-          version: '1',
+    await walletConnectClient
+      .request({
+        chainId: stacksChain,
+        topic: xverseSession.topic,
+        request: {
+          method: 'stacks_contractCall',
+          params: {
+            pubkey: address,
+            senderAddress: senderAddress,
+            postConditions: [],
+            contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+            contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+            functionName: functionName,
+            functionArgs: functionArgs,
+          },
         },
-      },
-    }).then((result) => {console.log('resulto'); console.log(result)});
-    
+      })
+      .then((result) => {
+        console.log('resulto');
+        console.log(result);
+      });
   } catch (error) {
     console.error(error);
   }
