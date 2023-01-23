@@ -3,11 +3,14 @@ import eventBus from '../EventBus';
 import { Button, Text, HStack, Flex, Image, Spacer } from '@chakra-ui/react';
 import { userSession } from '../hiroWalletUserSession';
 import Account from './Account';
+import { walletConnectDisconnect } from '../blockchainFunctions/walletConnectFunctions';
 
-export default function Header({ address, isConnected, walletType }) {
+export default function Header({ address, isConnected, walletType, walletConnectClient, walletConnectSession }) {
   const disconnect = () => {
     if (walletType === 'hiro') {
       userSession.signUserOut('/');
+    } else if (walletType === 'walletconnect') {
+      walletConnectDisconnect(walletConnectClient, walletConnectSession)
     }
     eventBus.dispatch('set-address', { address: '' });
     eventBus.dispatch('is-account-connected', { isConnected: false });

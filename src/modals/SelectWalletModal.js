@@ -18,37 +18,17 @@ import { Image } from '@chakra-ui/react';
 import eventBus from '../EventBus';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
-import QRCodeModal from '@walletconnect/qrcode-modal';
-import { stacksChains } from '../blockchainFunctions/xverseFunctions';
+import { blockchains } from '../blockchainFunctions/walletConnectFunctions';
+import { requestWalletConnectSession } from '../blockchainFunctions/walletConnectFunctions';
 
 export default function SelectWalletModal({ isOpen, closeModal, walletConnectClient }) {
+  async function requestWalletConnectSessionAndDispatch(blockchain) {
+    const walletConnectSession = await requestWalletConnectSession(walletConnectClient, blockchain);
 
-  async function requestXverseAccount(stacksChain) {
-    const { uri, approval } = await walletConnectClient.connect({
-      pairingTopic: undefined,
-      requiredNamespaces: {
-        stacks: {
-          methods: ['stacks_callReadOnlyFunction', 'stacks_contractCall'],
-          chains: [stacksChain],
-          events: [],
-        },
-      },
-    });
-
-    if (uri) {
-      QRCodeModal.open(uri, () => {
-        console.log('QR Code Modal closed');
-      });
-    }
-
-    const xverseSession = await approval();
-
-    QRCodeModal.close();
-
+    eventBus.dispatch('wallet-type', { walletType: 'walletconnect' });
+    eventBus.dispatch('blockchain', { blockchain: blockchain });
+    eventBus.dispatch('walletconnect-session', { walletConnectSession: walletConnectSession });
     eventBus.dispatch('is-account-connected', { isConnected: true });
-    eventBus.dispatch('wallet-type', { walletType: 'xverse' });
-    eventBus.dispatch('stacks-chain', { stacksChain: stacksChain });
-    eventBus.dispatch('xverse-session', { xverseSession: xverseSession });
   }
 
   async function requestMetaMaskAccount() {
@@ -174,16 +154,16 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
                 </HStack>
               </MenuButton>
               <MenuList>
-                {stacksChains.map((stacksChain, idx) => {
+                {blockchains.map((blockchain, idx) => {
                   return (
                     <MenuItem
                       key={`chain-${idx}`}
                       disabled={!walletConnectClient}
                       onClick={async () => {
-                        await requestXverseAccount(stacksChain.id);
+                        await requestWalletConnectSessionAndDispatch(blockchain.id);
                         closeModal();
                       }}>
-                      <Text variant='selector'>{stacksChain.name}</Text>
+                      <Text variant='selector'>{blockchain.name}</Text>
                     </MenuItem>
                   );
                 })}

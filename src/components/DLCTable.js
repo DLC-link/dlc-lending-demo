@@ -6,17 +6,21 @@ import { RepeatClockIcon } from '@chakra-ui/icons';
 import { VStack, Text, HStack, Collapse, IconButton, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';
 import { getStacksLoans } from '../blockchainFunctions/stacksFunctions';
-import { getStacksLoansByXverse } from '../blockchainFunctions/xverseFunctions';
+import { getStacksLoansByWalletConnect } from '../blockchainFunctions/walletConnectFunctions';
 import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
 import InitialCard from './InitialCard';
 
-export default function DLCTable(props) {
-  const isConnected = props.isConnected;
-  const address = props.address;
-  const walletType = props.walletType;
+export default function DLCTable({
+  isConnected,
+  walletType,
+  creator,
+  walletConnectClient,
+  blockchain,
+  walletConnectSession,
+}) {
   const [bitCoinValue, setBitCoinValue] = useState(0);
   const [loans, setLoans] = useState([]);
-  const [isLoading, setLoading] = useState(true);
+  const [isLoading, setLoading] = useState(undefined);
   const [isManualLoading, setManualLoading] = useState(undefined);
   const [initialLoans, setInitialLoans] = useState([]);
 
@@ -67,14 +71,19 @@ export default function DLCTable(props) {
     let loans = undefined;
     switch (walletType) {
       case 'hiro':
-        loans = getStacksLoans(address);
+        loans = getStacksLoans(creator);
         break;
       case 'metamask':
-        loans = getEthereumLoans(address);
+        loans = getEthereumLoans(creator);
         break;
-        case 'xverse':
-          loans = getStacksLoansByXverse(address, props.walletConnectClient, props.stacksChain, props.xverseSession);
-          break;
+      case 'walletconnect':
+        loans = getStacksLoansByWalletConnect(
+          creator,
+          walletConnectClient,
+          walletConnectSession,
+          blockchain
+        );
+        break;
       default:
         console.error('Unsupported wallet type!');
         break;
@@ -131,18 +140,18 @@ export default function DLCTable(props) {
             <SimpleGrid
               columns={[1, 4]}
               spacing={[0, 15]}>
-              {loans?.map((loan) => (
+              {loans?.map((loan, idx) => (
                 <Card
-                  key={loan.raw.dlcUUID}
+                  key={idx}
                   loan={loan}
-                  creator={address}
+                  creator={creator}
                   walletType={walletType}
                   bitCoinValue={bitCoinValue}></Card>
               ))}
               {initialLoans?.map((loan) => (
                 <InitialCard
                   loan={loan}
-                  creator={address}
+                  creator={creator}
                   walletType={walletType}
                   bitCoinValue={bitCoinValue}></InitialCard>
               ))}

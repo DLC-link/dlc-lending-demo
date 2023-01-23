@@ -10,10 +10,13 @@ import { Box, useToast } from '@chakra-ui/react';
 import { useState } from 'react';
 import CustomToast from './components/CustomToast';
 import Client from '@walletconnect/sign-client';
+import { initiateWalletConnectClient } from './blockchainFunctions/walletConnectFunctions';
 
 /* global BigInt */
 
-BigInt.prototype.toJSON = function() { return this.toString() }
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
 
 export default function App() {
   const [isConnected, setConnected] = useState(false);
@@ -22,8 +25,8 @@ export default function App() {
   const [isLoading, setLoading] = useState(true);
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [isDepositModalOpen, setDepositModalOpen] = useState(false);
-  const [stacksChain, setStacksChain] = useState(undefined);
-  const [xverseSession, setXverseSession] = useState(undefined);
+  const [blockchain, setBlockchain] = useState(undefined);
+  const [walletConnectSession, setWalletConnectSession] = useState(undefined);
   const [walletConnectClient, setWalletConnectClient] = useState(undefined);
   const toast = useToast();
 
@@ -45,23 +48,12 @@ export default function App() {
   };
 
   useEffect(() => {
-    const initiateWalletConnectClient = async () => {
-      const walletConnectClient = await Client.init({
-        logger: 'debug',
-        relayUrl: 'wss://relay.walletconnect.com',
-        projectId: '15e1912940165aa0fc41fb062d117593',
-        metadata: {
-          name: 'DLC.Link',
-          description: 'Use Native Bitcoin Without Bridging',
-          url: 'https://feat-xverse-connect--roaring-kashata-e5d4ba.netlify.app/',
-          icons: ['https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg'],
-        },
-      });
+    const getWalletConnectClient = async () => {
+      const walletConnectClient = await initiateWalletConnectClient();
       setWalletConnectClient(walletConnectClient);
     };
-
     if (walletConnectClient === undefined) {
-      initiateWalletConnectClient();
+      getWalletConnectClient();
     }
   }, [walletConnectClient]);
 
@@ -73,10 +65,10 @@ export default function App() {
     eventBus.on('set-loading-state', (data) => setLoading(data.isLoading));
     eventBus.on('is-select-wallet-modal-open', (data) => setSelectWalletModalOpen(data.isSelectWalletOpen));
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
-    eventBus.on('stacks-chain', (data) => setStacksChain(data.stacksChain));
-    eventBus.on('xverse-session', (data) => {
-      setXverseSession(data.xverseSession);
-      setAddress(data.xverseSession.namespaces.stacks.accounts[0].split(':')[2]);
+    eventBus.on('blockchain', (data) => setBlockchain(data.blockchain));
+    eventBus.on('walletconnect-session', (data) => {
+      setWalletConnectSession(data.walletConnectSession);
+      setAddress(data.walletConnectSession.namespaces.stacks.accounts[0].split(':')[2]);
     });
   }, []);
 
@@ -96,14 +88,16 @@ export default function App() {
         <Header
           isConnected={isConnected}
           walletType={walletType}
-          address={address}></Header>
+          address={address}
+          walletConnectClient={walletConnectClient}
+          walletConnectSession={walletConnectSession}></Header>
         <DepositModal
           walletType={walletType}
           address={address}
           isOpen={isDepositModalOpen}
           closeModal={onDepositModalClose}
-          xverseSession={xverseSession}
-          stacksChain={stacksChain}
+          walletConnectSession={walletConnectSession}
+          blockchain={blockchain}
           walletConnectClient={walletConnectClient}
         />
         <SelectWalletModal
@@ -120,11 +114,10 @@ export default function App() {
             <DLCTable
               isConnected={isConnected}
               walletType={walletType}
-              address={address}
-              isLoading={isLoading}
+              creator={address}
               walletConnectClient={walletConnectClient}
-              stacksChain={stacksChain}
-              xverseSession={xverseSession}></DLCTable>
+              blockchain={blockchain}
+              walletConnectSession={walletConnectSession}></DLCTable>
           </>
         )}
       </Box>

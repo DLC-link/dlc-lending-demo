@@ -34,14 +34,14 @@ import {
 import eventBus from '../EventBus';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
-import { sendLoanContractToStacksByXverse } from '../blockchainFunctions/xverseFunctions';
+import { sendLoanContractToStacksByWalletConnect } from '../blockchainFunctions/walletConnectFunctions';
 
 export default function DepositModal({
   isOpen,
   closeModal,
   walletType,
-  xverseSession,
-  stacksChain,
+  walletConnectSession,
+  blockchain,
   walletConnectClient,
   address,
 }) {
@@ -100,11 +100,14 @@ export default function DepositModal({
       case 'metamask':
         sendLoanContractToEthereum(loanContract);
         break;
-      case 'xverse':
-        console.log(loanContract);
-        sendLoanContractToStacksByXverse(loanContract, address, walletConnectClient, xverseSession, stacksChain).then(
-          eventBus.dispatch('create-loan', { loan: loanContract })
-        );
+      case 'walletconnect':
+        sendLoanContractToStacksByWalletConnect(
+          loanContract,
+          address,
+          walletConnectClient,
+          walletConnectSession,
+          blockchain
+        ).then(eventBus.dispatch('create-loan', { loan: loanContract }));
         break;
       default:
         console.log('Unsupported wallet type!');
