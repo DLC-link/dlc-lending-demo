@@ -19,19 +19,34 @@ import eventBus from '../EventBus';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
 import { blockchains } from '../blockchainFunctions/walletConnectFunctions';
-import { requestWalletConnectSession } from '../blockchainFunctions/walletConnectFunctions';
+import { requestWalletConnectSessionAndAddress } from '../blockchainFunctions/walletConnectFunctions';
+import { hiroAccountInformation, metamaskAccountInformation, walletConnectAccountInformation } from '../dtos';
 
 export default function SelectWalletModal({ isOpen, closeModal, walletConnectClient }) {
-  async function requestWalletConnectSessionAndDispatch(blockchain) {
-    const walletConnectSession = await requestWalletConnectSession(walletConnectClient, blockchain);
-
-    eventBus.dispatch('wallet-type', { walletType: 'walletconnect' });
-    eventBus.dispatch('blockchain', { blockchain: blockchain });
-    eventBus.dispatch('walletconnect-session', { walletConnectSession: walletConnectSession });
-    eventBus.dispatch('is-account-connected', { isConnected: true });
+  function dispatchAccountInformation(walletType, address, blockchain, walletConnectSession) {
+    let accountInformation;
+    switch (walletType) {
+      case 'hiro':
+        accountInformation = new hiroAccountInformation();
+        break;
+      case 'metamask':
+        accountInformation = new metamaskAccountInformation(address);
+        break;
+      case 'walletconnect':
+        accountInformation = new walletConnectAccountInformation(address, blockchain, walletConnectSession);
+    }
+    eventBus.dispatch('account-information', accountInformation);
   }
 
-  async function requestMetaMaskAccount() {
+  async function requestAndDispatchWalletConnectAccountInformation(blockchain) {
+    const { walletConnectSession, walletConnectAddress } = await requestWalletConnectSessionAndAddress(
+      walletConnectClient,
+      blockchain
+    );
+    dispatchAccountInformation('walletconnect', walletConnectAddress, blockchain, walletConnectSession);
+  }
+
+  async function requestAndDispatchMetaMaskAccountInformation() {
     try {
       const { ethereum } = window;
       if (!ethereum) {
@@ -41,21 +56,12 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
       const accounts = await ethereum.request({
         method: 'eth_requestAccounts',
       });
-      eventBus.dispatch('set-address', { address: accounts[0] });
-      eventBus.dispatch('is-account-connected', { isConnected: true });
-      eventBus.dispatch('wallet-type', { walletType: 'metamask' });
+      const metaMaskAddress = accounts[0];
+      dispatchAccountInformation('metamask', metaMaskAddress);
     } catch (error) {}
   }
 
-  const sendHiroAccountEvents = () => {
-    eventBus.dispatch('set-address', {
-      address: userSession.loadUserData().profile.stxAddress.testnet,
-    });
-    eventBus.dispatch('is-account-connected', { isConnected: true });
-    eventBus.dispatch('wallet-type', { walletType: 'hiro' });
-  };
-
-  async function requestHiroAccount() {
+  async function requestAndDispatchHiroAccountInformation() {
     let isUserSessionStored = true;
     try {
       userSession.loadUserData();
@@ -64,7 +70,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
     }
 
     if (isUserSessionStored) {
-      sendHiroAccountEvents();
+      dispatchAccountInformation('hiro');
     } else {
       showConnect({
         appDetails: {
@@ -72,7 +78,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
           icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
         },
         onFinish: () => {
-          sendHiroAccountEvents();
+          dispatchAccountInformation('hiro');
         },
         userSession,
       });
@@ -105,7 +111,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
               variant='outline'
               width='100%'
               onClick={() => {
-                requestMetaMaskAccount();
+                requestAndDispatchMetaMaskAccountInformation();
                 closeModal();
               }}>
               <HStack
@@ -124,7 +130,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
               width='100%'
               variant='outline'
               onClick={() => {
-                requestHiroAccount();
+                requestAndDispatchHiroAccountInformation();
                 closeModal();
               }}>
               <HStack
@@ -160,7 +166,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
                       key={`chain-${idx}`}
                       disabled={!walletConnectClient}
                       onClick={async () => {
-                        await requestWalletConnectSessionAndDispatch(blockchain.id);
+                        await requestAndDispatchWalletConnectAccountInformation(blockchain.id);
                         closeModal();
                       }}>
                       <Text variant='selector'>{blockchain.name}</Text>

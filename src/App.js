@@ -58,18 +58,11 @@ export default function App() {
   }, [walletConnectClient]);
 
   useEffect(() => {
-    eventBus.on('is-account-connected', (data) => setConnected(data.isConnected));
-    eventBus.on('wallet-type', (data) => setWalletType(data.walletType));
+    eventBus.on('account-information', handleAccountInformation);
     eventBus.on('loan-event', (data) => handleEvent(data));
-    eventBus.on('set-address', (data) => setAddress(data.address));
     eventBus.on('set-loading-state', (data) => setLoading(data.isLoading));
     eventBus.on('is-select-wallet-modal-open', (data) => setSelectWalletModalOpen(data.isSelectWalletOpen));
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
-    eventBus.on('blockchain', (data) => setBlockchain(data.blockchain));
-    eventBus.on('walletconnect-session', (data) => {
-      setWalletConnectSession(data.walletConnectSession);
-      setAddress(data.walletConnectSession.namespaces.stacks.accounts[0].split(':')[2]);
-    });
   }, []);
 
   const onSelectWalletModalClose = () => {
@@ -78,6 +71,21 @@ export default function App() {
 
   const onDepositModalClose = () => {
     setDepositModalOpen(false);
+  };
+
+  const handleAccountInformation = (data) => {
+    setConnected(true);
+    setWalletType(data.walletType);
+    setAddress(data.address);
+    if (data.blockchain) {
+      setBlockchain(data.blockchain);
+    }
+    if (data.walletConnectSession) {
+      setWalletConnectSession(data.walletConnectSession);
+    }
+    if (data.walletType === undefined) {
+      setConnected(false);
+    }
   };
 
   return (

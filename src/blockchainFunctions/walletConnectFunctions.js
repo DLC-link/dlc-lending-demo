@@ -75,7 +75,7 @@ export async function initiateWalletConnectClient() {
   return walletConnectClient;
 }
 
-export async function requestWalletConnectSession(walletConnectClient, blockchainID) {
+export async function requestWalletConnectSessionAndAddress(walletConnectClient, blockchainID) {
   const { uri, approval } = await walletConnectClient.connect({
     pairingTopic: undefined,
     requiredNamespaces: {
@@ -97,7 +97,10 @@ export async function requestWalletConnectSession(walletConnectClient, blockchai
 
   QRCodeModal.close();
 
-  return walletConnectSession;
+  return {
+    walletConnectSession: walletConnectSession,
+    walletConnectAddress: walletConnectSession.namespaces.stacks.accounts[0].split(':')[2],
+  };
 }
 
 export async function walletConnectDisconnect(walletConnectClient, walletConnectSession) {
