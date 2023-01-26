@@ -22,7 +22,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
   const network = blockchains[blockchain].network;
   return {
     contractAddress: contractAddress,
-    contractName:contractName,
+    contractName: contractName,
     functionName: functionName,
     functionArgs: functionArgs,
     postConditions: postConditions,
@@ -63,10 +63,9 @@ export async function getStacksLoans(creator, blockchain) {
   const senderAddress = creator;
   let loans = [];
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
-  console.log(txOptions)
+  txOptions.network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS });
 
   try {
-    
     const response = await callReadOnlyFunction(txOptions);
     loans = loanFormatter.formatAllDLC(response.list, 'clarity');
   } catch (error) {
@@ -79,10 +78,11 @@ export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   const senderAddress = creator;
+
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  txOptions.network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS });
   try {
-    const response = await callReadOnlyFunction(
-      populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain)
-    );
+    const response = await callReadOnlyFunction(txOptions);
     return cvToValue(response.value);
   } catch (error) {
     console.error(error);

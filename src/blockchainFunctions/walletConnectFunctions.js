@@ -161,7 +161,9 @@ export async function getStacksLoansByWalletConnect(creator, blockchain) {
       anchorMode: 1,
     };
     const response = await callReadOnlyFunction(txOptions);
+    console.log(response)
     loans = loanFormatter.formatAllDLC(response.list, 'clarity');
+    console.log(loans)
   } catch (error) {
     console.error(error);
   }

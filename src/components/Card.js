@@ -94,6 +94,7 @@ export default function Card({ loan, creator, walletType, bitCoinValue }) {
 
   const lockBTC = async () => {
     const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
+    console.log(loan)
     try {
       const response = await fetch(URL, {
         method: 'POST',

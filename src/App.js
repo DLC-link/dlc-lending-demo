@@ -9,14 +9,6 @@ import DLCTable from './components/DLCTable';
 import { Box, useToast } from '@chakra-ui/react';
 import { useState } from 'react';
 import CustomToast from './components/CustomToast';
-import Client from '@walletconnect/sign-client';
-import { initiateWalletConnectClient } from './blockchainFunctions/walletConnectFunctions';
-
-/* global BigInt */
-
-BigInt.prototype.toJSON = function () {
-  return this.toString();
-};
 
 export default function App() {
   const [isConnected, setConnected] = useState(false);
@@ -25,9 +17,6 @@ export default function App() {
   const [isLoading, setLoading] = useState(true);
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [isDepositModalOpen, setDepositModalOpen] = useState(false);
-  const [blockchain, setBlockchain] = useState(undefined);
-  const [walletConnectSession, setWalletConnectSession] = useState(undefined);
-  const [walletConnectClient, setWalletConnectClient] = useState(undefined);
   const toast = useToast();
 
   const handleEvent = (data) => {
@@ -38,28 +27,16 @@ export default function App() {
       return toast({
         id: data.status,
         position: 'right-top',
-        render: () => (
-          <CustomToast
-            data={data}
-            walletType={walletType}></CustomToast>
-        ),
+        render: () => <CustomToast data={data} walletType={walletType}></CustomToast>,
       });
     }
   };
 
   useEffect(() => {
-    const getWalletConnectClient = async () => {
-      const walletConnectClient = await initiateWalletConnectClient();
-      setWalletConnectClient(walletConnectClient);
-    };
-    if (walletConnectClient === undefined) {
-      getWalletConnectClient();
-    }
-  }, [walletConnectClient]);
-
-  useEffect(() => {
-    eventBus.on('account-information', handleAccountInformation);
+    eventBus.on('is-account-connected', (data) => setConnected(data.isConnected));
+    eventBus.on('wallet-type', (data) => setWalletType(data.walletType));
     eventBus.on('loan-event', (data) => handleEvent(data));
+    eventBus.on('set-address', (data) => setAddress(data.address));
     eventBus.on('set-loading-state', (data) => setLoading(data.isLoading));
     eventBus.on('is-select-wallet-modal-open', (data) => setSelectWalletModalOpen(data.isSelectWalletOpen));
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
@@ -73,21 +50,6 @@ export default function App() {
     setDepositModalOpen(false);
   };
 
-  const handleAccountInformation = (data) => {
-    setConnected(true);
-    setWalletType(data.walletType);
-    setAddress(data.address);
-    if (data.blockchain) {
-      setBlockchain(data.blockchain);
-    }
-    if (data.walletConnectSession) {
-      setWalletConnectSession(data.walletConnectSession);
-    }
-    if (data.walletType === undefined) {
-      setConnected(false);
-    }
-  };
-
   return (
     <>
       <Box
@@ -96,20 +58,14 @@ export default function App() {
         <Header
           isConnected={isConnected}
           walletType={walletType}
-          address={address}
-          walletConnectClient={walletConnectClient}
-          walletConnectSession={walletConnectSession}></Header>
+          address={address}></Header>
         <DepositModal
           walletType={walletType}
           address={address}
           isOpen={isDepositModalOpen}
           closeModal={onDepositModalClose}
-          walletConnectSession={walletConnectSession}
-          blockchain={blockchain}
-          walletConnectClient={walletConnectClient}
         />
         <SelectWalletModal
-          walletConnectClient={walletConnectClient}
           isOpen={isSelectWalletModalOpen}
           closeModal={onSelectWalletModalClose}
         />
@@ -122,10 +78,8 @@ export default function App() {
             <DLCTable
               isConnected={isConnected}
               walletType={walletType}
-              creator={address}
-              walletConnectClient={walletConnectClient}
-              blockchain={blockchain}
-              walletConnectSession={walletConnectSession}></DLCTable>
+              address={address}
+              isLoading={isLoading}></DLCTable>
           </>
         )}
       </Box>

@@ -3,7 +3,7 @@ import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
 const mainnet = new StacksMainnet();
 const testnet = new StacksTestnet();
 const mocknet = new StacksMocknet({
-  url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS,
+  url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
 });
 
 export const blockchains = {
