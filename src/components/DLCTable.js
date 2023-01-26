@@ -69,20 +69,15 @@ export default function DLCTable({
 
   const fetchAllLoans = async () => {
     let loans = undefined;
+    console.log(walletType);
     switch (walletType) {
       case 'hiro':
-        loans = getStacksLoans(creator);
+      case 'walletconnect':
+        loans = await getStacksLoans(creator);
+        console.log(loans)
         break;
       case 'metamask':
         loans = getEthereumLoans(creator);
-        break;
-      case 'walletconnect':
-        loans = getStacksLoansByWalletConnect(
-          creator,
-          walletConnectClient,
-          walletConnectSession,
-          blockchain
-        );
         break;
       default:
         console.error('Unsupported wallet type!');

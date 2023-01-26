@@ -13,7 +13,7 @@ import { liquidateStacksLoanContract, closeStacksLoanContract } from '../blockch
 import { liquidateEthereumLoanContract } from '../blockchainFunctions/ethereumFunctions';
 import { liquidateStacksLoanContractByWalletConnect } from '../blockchainFunctions/walletConnectFunctions';
 
-export default function Card({ key, loan, creator, walletType, bitCoinValue }) {
+export default function Card({ loan, creator, walletType, bitCoinValue }) {
   const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
   const [isRepayModalOpen, setRepayModalOpen] = useState(false);
 

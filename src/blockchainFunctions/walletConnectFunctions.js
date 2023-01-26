@@ -10,7 +10,7 @@ import {
   standardPrincipalCV,
   noneCV,
 } from '@stacks/transactions';
-import { StacksMocknet } from '@stacks/network';
+import { StacksMocknet, StacksTestnet } from '@stacks/network';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { PostConditionMode } from '@stacks/transactions';
 import QRCodeModal from '@walletconnect/qrcode-modal';
@@ -18,9 +18,11 @@ import Client from '@walletconnect/sign-client';
 import { hexToBytes } from '../utils';
 import { customShiftValue } from '../utils';
 
-const network = new StacksMocknet({
-  url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-});
+// const network = new StacksMocknet({
+//   url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+// });
+
+const network = new StacksTestnet();
 
 export const blockchains = [
   { id: 'stacks:1', name: 'Mainnet' },
@@ -45,14 +47,13 @@ const populateTxRequest = (
       method: method,
       params: {
         pubkey: creator,
-        contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+        contractAddress: process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
         contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
         functionName: functionName,
         functionArgs: functionArgs,
         postConditions: postConditions,
         validateWithAbi: true,
         senderAddress: senderAddress,
-        network: network,
         fee: 100000,
         anchorMode: 1,
       },
@@ -124,29 +125,19 @@ export async function sendLoanContractToStacksByWalletConnect(
     uintCV(loanContract.liquidationFee),
     uintCV(loanContract.emergencyRefundTime),
   ];
-
-  console.table([
-    {
-      address: creator,
-      walletConnectClient: walletConnectClient,
-      walletConnectSession: walletConnectSession,
-      blockchain: blockchain,
-    },
-  ]);
-
+  const txRequest = populateTxRequest(
+    creator,
+    functionName,
+    functionArgs,
+    [],
+    undefined,
+    blockchain,
+    walletConnectSession,
+    'stacks_contractCall'
+  );
   try {
-    await walletConnectClient.request(
-      populateTxRequest(
-        creator,
-        functionName,
-        functionArgs,
-        [],
-        undefined,
-        blockchain,
-        walletConnectSession,
-        'stacks_contractCall'
-      )
-    );
+    const result = await walletConnectClient.request(txRequest);
+    console.log(result);
   } catch (error) {
     console.error(error);
   }
@@ -155,21 +146,23 @@ export async function sendLoanContractToStacksByWalletConnect(
 export async function getStacksLoansByWalletConnect(creator, walletConnectClient, walletConnectSession, blockchain) {
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(creator)];
+  const senderAddress = creator;
   let loans = [];
 
+  const txRequest = populateTxRequest(
+    creator,
+    functionName,
+    functionArgs,
+    [],
+    senderAddress,
+    blockchain,
+    walletConnectSession,
+    'stacks_contractCall'
+  );
+
   try {
-    const response = await walletConnectClient.request(
-      populateTxRequest(
-        creator,
-        functionName,
-        functionArgs,
-        [],
-        creator,
-        blockchain,
-        walletConnectSession,
-        'stacks_callReadOnlyFunction'
-      )
-    );
+    const response = await walletConnectClient.request();
+    console.log(response);
     loans = response;
   } catch (error) {
     console.error(error);
@@ -224,13 +217,13 @@ export async function borrowStacksLoanContractByWalletConnect(
   );
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
-  const assetAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
+  const assetAddress = process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS;
   const assetContractName = process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME;
   const assetName = process.env.REACT_APP_STACKS_ASSET_NAME;
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+      process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
       process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
       FungibleConditionCode.GreaterEqual,
       amount,
@@ -274,7 +267,7 @@ export async function repayStacksLoanContract(
   );
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
-  const assetAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
+  const assetAddress = process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS;
   const assetContractName = process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME;
   const assetName = process.env.REACT_APP_STACKS_ASSET_NAME;
 
