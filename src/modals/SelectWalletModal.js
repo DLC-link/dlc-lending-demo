@@ -18,16 +18,21 @@ import { Image } from '@chakra-ui/react';
 import eventBus from '../EventBus';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
-import { blockchains } from '../blockchainFunctions/walletConnectFunctions';
 import { requestWalletConnectSessionAndAddress } from '../blockchainFunctions/walletConnectFunctions';
 import { hiroAccountInformation, metamaskAccountInformation, walletConnectAccountInformation } from '../dtos';
 
 export default function SelectWalletModal({ isOpen, closeModal, walletConnectClient }) {
+  const blockchains = [
+    { id: 'stacks:1', name: 'Mainnet' },
+    { id: 'stacks:2147483648', name: 'Testnet' },
+    { id: 'stacks:42', name: 'Mocknet' },
+  ];
+
   function dispatchAccountInformation(walletType, address, blockchain, walletConnectSession) {
     let accountInformation;
     switch (walletType) {
       case 'hiro':
-        accountInformation = new hiroAccountInformation();
+        accountInformation = new hiroAccountInformation(blockchain);
         break;
       case 'metamask':
         accountInformation = new metamaskAccountInformation(address);
@@ -61,7 +66,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
     } catch (error) {}
   }
 
-  async function requestAndDispatchHiroAccountInformation() {
+  async function requestAndDispatchHiroAccountInformation(blockchain) {
     let isUserSessionStored = true;
     try {
       userSession.loadUserData();
@@ -70,7 +75,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
     }
 
     if (isUserSessionStored) {
-      dispatchAccountInformation('hiro');
+      dispatchAccountInformation('hiro', undefined, blockchain);
     } else {
       showConnect({
         appDetails: {
@@ -78,7 +83,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
           icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
         },
         onFinish: () => {
-          dispatchAccountInformation('hiro');
+          dispatchAccountInformation('hiro', undefined, blockchain);
         },
         userSession,
       });
@@ -126,37 +131,49 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
                 <Text variant='selector'>Metamask</Text>
               </HStack>
             </Button>
-            <Button
-              width='100%'
-              variant='outline'
-              onClick={() => {
-                requestAndDispatchHiroAccountInformation();
-                closeModal();
-              }}>
-              <HStack
-                w='100%'
-                justifyContent='center'>
-                <Image
-                  src='/h_logo.png'
-                  alt='Hiro Wallet Logo'
-                  width={27}
-                  height={25}
-                />
-                <Text variant='selector'>Hiro Wallet</Text>
-              </HStack>
-            </Button>
+            <Menu>
+              <MenuButton
+                width='100%'
+                variant='outline'>
+                <HStack
+                  w='100%'
+                  justifyContent='center'>
+                  <Image
+                    src='/h_logo.png'
+                    alt='Hiro Wallet Logo'
+                    width={27}
+                    height={25}
+                  />
+                  <Text variant='selector'>Hiro Wallet</Text>
+                </HStack>
+              </MenuButton>
+              <MenuList>
+                {blockchains.map((blockchain, idx) => {
+                  return (
+                    <MenuItem
+                      key={`chain-${idx}`}
+                      onClick={async () => {
+                        await requestAndDispatchHiroAccountInformation(blockchain.id);
+                        closeModal();
+                      }}>
+                      <Text variant='selector'>{blockchain.name}</Text>
+                    </MenuItem>
+                  );
+                })}
+              </MenuList>
+            </Menu>
             <Menu>
               <MenuButton>
                 <HStack
                   w='100%'
                   justifyContent='center'>
                   <Image
-                    src='/xverse_logo.png'
-                    alt='Xverse Wallet Logo'
-                    width={85}
+                    src='/wc_logo.png'
+                    alt='Wallet Connect Logo'
+                    width={25}
                     height={25}
                   />
-                  <Text variant='selector'>Xverse Wallet</Text>
+                  <Text variant='selector'>Wallet Connect</Text>
                 </HStack>
               </MenuButton>
               <MenuList>

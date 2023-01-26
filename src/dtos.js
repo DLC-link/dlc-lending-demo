@@ -1,9 +1,10 @@
 import { userSession } from './hiroWalletUserSession';
 
 export class hiroAccountInformation {
-  constructor() {
+  constructor(blockchain) {
     this.walletType = 'hiro';
     this.address = userSession.loadUserData().profile.stxAddress.testnet;
+    this.blockchain = blockchain;
   }
 }
 

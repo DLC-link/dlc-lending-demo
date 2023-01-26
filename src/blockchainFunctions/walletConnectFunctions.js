@@ -10,25 +10,15 @@ import {
   standardPrincipalCV,
   noneCV,
 } from '@stacks/transactions';
-import { StacksMocknet, StacksTestnet } from '@stacks/network';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { PostConditionMode } from '@stacks/transactions';
 import QRCodeModal from '@walletconnect/qrcode-modal';
 import Client from '@walletconnect/sign-client';
 import { hexToBytes } from '../utils';
 import { customShiftValue } from '../utils';
-
-// const network = new StacksMocknet({
-//   url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-// });
-
-const network = new StacksTestnet();
-
-export const blockchains = [
-  { id: 'stacks:1', name: 'Mainnet' },
-  { id: 'stacks:2147483648', name: 'Testnet' },
-  { id: 'stacks:42', name: 'Mocknet' },
-];
+import eventBus from '../EventBus';
+import loanFormatter from '../LoanFormatter';
+import { blockchains } from '../networks';
 
 const populateTxRequest = (
   creator,
@@ -40,6 +30,8 @@ const populateTxRequest = (
   walletConnectSession,
   method
 ) => {
+  const contractAddress = blockchains[blockchain].contractAddress;
+  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
   return {
     chainId: blockchain,
     topic: walletConnectSession.topic,
@@ -47,8 +39,8 @@ const populateTxRequest = (
       method: method,
       params: {
         pubkey: creator,
-        contractAddress: process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
-        contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+        contractAddress: contractAddress,
+        contractName: contractName,
         functionName: functionName,
         functionArgs: functionArgs,
         postConditions: postConditions,
@@ -60,6 +52,10 @@ const populateTxRequest = (
     },
   };
 };
+
+function dispatchEvent(onFinishStatus, txId) {
+  eventBus.dispatch('loan-event', { status: onFinishStatus, txId: txId, chain: 'stacks' });
+}
 
 export async function initiateWalletConnectClient() {
   const walletConnectClient = await Client.init({
@@ -125,6 +121,7 @@ export async function sendLoanContractToStacksByWalletConnect(
     uintCV(loanContract.liquidationFee),
     uintCV(loanContract.emergencyRefundTime),
   ];
+  const onFinishStatus = 'created';
   const txRequest = populateTxRequest(
     creator,
     functionName,
@@ -136,63 +133,60 @@ export async function sendLoanContractToStacksByWalletConnect(
     'stacks_contractCall'
   );
   try {
-    const result = await walletConnectClient.request(txRequest);
-    console.log(result);
+    walletConnectClient.request(txRequest).then((txId) => dispatchEvent(onFinishStatus, txId));
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function getStacksLoansByWalletConnect(creator, walletConnectClient, walletConnectSession, blockchain) {
+export async function getStacksLoansByWalletConnect(creator, blockchain) {
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(creator)];
   const senderAddress = creator;
+  const contractAddress = blockchains[blockchain].contractAddress;
+  const network = blockchains[blockchain].network;
   let loans = [];
 
-  const txRequest = populateTxRequest(
-    creator,
-    functionName,
-    functionArgs,
-    [],
-    senderAddress,
-    blockchain,
-    walletConnectSession,
-    'stacks_contractCall'
-  );
-
   try {
-    const response = await walletConnectClient.request();
-    console.log(response);
-    loans = response;
+    const txOptions = {
+      contractAddress: contractAddress,
+      contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+      functionName: functionName,
+      functionArgs: functionArgs,
+      postConditions: [],
+      validateWithAbi: true,
+      senderAddress: senderAddress,
+      network: network,
+      fee: 100000,
+      anchorMode: 1,
+    };
+    const response = await callReadOnlyFunction(txOptions);
+    loans = loanFormatter.formatAllDLC(response.list, 'clarity');
   } catch (error) {
     console.error(error);
   }
   return loans;
 }
 
-export async function getStacksLoanIDByUUIDByWalletConnect(
-  creator,
-  walletConnectClient,
-  walletConnectSession,
-  blockchain,
-  UUID
-) {
+export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
-
+  const senderAddress = creator;
+  const contractAddress = blockchains[blockchain].contractAddress;
+  const network = blockchains[blockchain].network;
   try {
-    const response = await walletConnectClient.request(
-      populateTxRequest(
-        creator,
-        functionName,
-        functionArgs,
-        [],
-        creator,
-        blockchain,
-        walletConnectSession,
-        'stacks_callReadOnlyFunction'
-      )
-    );
+    const response = await callReadOnlyFunction({
+      contractAddress: contractAddress,
+      contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+      functionName: functionName,
+      functionArgs: functionArgs,
+      postConditions: [],
+      validateWithAbi: true,
+      senderAddress: senderAddress,
+      network: network,
+      fee: 100000,
+      anchorMode: 1,
+    });
     return cvToValue(response.value);
   } catch (error) {
     console.error(error);
@@ -208,7 +202,7 @@ export async function borrowStacksLoanContractByWalletConnect(
   additionalLoan
 ) {
   const amount = customShiftValue(additionalLoan, 6, false);
-  const loanContractID = await getStacksLoanIDByUUIDByWalletConnect(
+  const loanContractID = await getStacksLoanIDByUUID(
     creator,
     walletConnectClient,
     walletConnectSession,
@@ -258,7 +252,7 @@ export async function repayStacksLoanContract(
   additionalRepayment
 ) {
   const amount = customShiftValue(additionalRepayment, 6, false);
-  const loanContractID = await getStacksLoanIDByUUIDByWalletConnect(
+  const loanContractID = await getStacksLoanIDByUUID(
     creator,
     walletConnectClient,
     walletConnectSession,
@@ -305,7 +299,7 @@ export async function liquidateStacksLoanContractByWalletConnect(
   blockchain,
   UUID
 ) {
-  const loanContractID = await getStacksLoanIDByUUIDByWalletConnect(
+  const loanContractID = await getStacksLoanIDByUUID(
     creator,
     walletConnectClient,
     walletConnectSession,
@@ -340,7 +334,7 @@ export async function closeStacksLoanContractByWalletConnect(
   blockchain,
   UUID
 ) {
-  const loanContractID = await getStacksLoanIDByUUIDByWalletConnect(
+  const loanContractID = await getStacksLoanIDByUUID(
     creator,
     walletConnectClient,
     walletConnectSession,

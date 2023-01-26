@@ -69,12 +69,12 @@ export default function DLCTable({
 
   const fetchAllLoans = async () => {
     let loans = undefined;
-    console.log(walletType);
     switch (walletType) {
       case 'hiro':
+        loans = await getStacksLoans(creator, blockchain);
+        break;
       case 'walletconnect':
-        loans = await getStacksLoans(creator);
-        console.log(loans)
+        loans = await getStacksLoansByWalletConnect(creator, blockchain);
         break;
       case 'metamask':
         loans = getEthereumLoans(creator);

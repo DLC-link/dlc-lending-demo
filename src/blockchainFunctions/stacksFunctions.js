@@ -1,4 +1,4 @@
-import { StacksMocknet } from '@stacks/network';
+import { StacksMainnet, StacksMocknet, StacksTestnet } from '@stacks/network';
 import {
   uintCV,
   bufferCV,
@@ -14,15 +14,15 @@ import { openContractCall } from '@stacks/connect';
 import { customShiftValue, fixedTwoDecimalUnshift, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
 import loanFormatter from '../LoanFormatter';
+import { blockchains } from '../networks';
 
-const network = new StacksMocknet({
-  url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-});
-
-const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus) => {
+const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
+  const contractAddress = blockchains[blockchain].contractAddress;
+  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
+  const network = blockchains[blockchain].network;
   return {
-    contractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-    contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+    contractAddress: contractAddress,
+    contractName:contractName,
     functionName: functionName,
     functionArgs: functionArgs,
     postConditions: postConditions,
@@ -40,7 +40,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
   };
 };
 
-export async function sendLoanContractToStacks(loanContract) {
+export async function sendLoanContractToStacks(loanContract, blockchain) {
   const functionName = 'setup-loan';
   const functionArgs = [
     uintCV(loanContract.BTCDeposit),
@@ -51,23 +51,22 @@ export async function sendLoanContractToStacks(loanContract) {
   const senderAddress = undefined;
   const onFinishStatus = 'created';
   try {
-    openContractCall(populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus));
+    openContractCall(populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain));
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function getStacksLoans(creator) {
+export async function getStacksLoans(creator, blockchain) {
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(creator)];
   const senderAddress = creator;
   let loans = [];
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  console.log(txOptions)
 
   try {
-    const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress);
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS,
-    });
+    
     const response = await callReadOnlyFunction(txOptions);
     loans = loanFormatter.formatAllDLC(response.list, 'clarity');
   } catch (error) {
@@ -76,20 +75,22 @@ export async function getStacksLoans(creator) {
   return loans;
 }
 
-export async function getStacksLoanIDByUUID(creator, UUID) {
+export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   const senderAddress = creator;
   try {
-    const response = await callReadOnlyFunction(populateTxOptions(functionName, functionArgs, [], senderAddress));
+    const response = await callReadOnlyFunction(
+      populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain)
+    );
     return cvToValue(response.value);
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
-  const amount = customShiftValue(additionalLoan, 6, false)
+export async function borrowStacksLoanContract(creator, UUID, additionalLoan, blockchain) {
+  const amount = customShiftValue(additionalLoan, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
@@ -114,7 +115,8 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
     functionArgs,
     contractFungiblePostConditionForBorrow,
     senderAddress,
-    onFinishStatus
+    onFinishStatus,
+    blockchain
   );
 
   console.log(txOptions);
@@ -126,8 +128,8 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan) {
   }
 }
 
-export async function repayStacksLoanContract(creator, UUID, additionalRepayment) {
-  const amount = customShiftValue(additionalRepayment, 6, false)
+export async function repayStacksLoanContract(creator, UUID, additionalRepayment, blockchain) {
+  const amount = customShiftValue(additionalRepayment, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
@@ -153,7 +155,8 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
         functionArgs,
         standardFungiblePostConditionForRepay,
         senderAddress,
-        onFinishStatus
+        onFinishStatus,
+        blockchain
       )
     );
   } catch (error) {
@@ -161,7 +164,7 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
   }
 }
 
-export async function liquidateStacksLoanContract(creator, UUID) {
+export async function liquidateStacksLoanContract(creator, UUID, blockchain) {
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
   const functionName = 'attempt-liquidate';
   const functionArgs = [uintCV(parseInt(loanContractID))];
@@ -171,14 +174,21 @@ export async function liquidateStacksLoanContract(creator, UUID) {
 
   try {
     openContractCall(
-      populateTxOptions(functionName, functionArgs, contractFungiblePostCondition, senderAddress, onFinishStatus)
+      populateTxOptions(
+        functionName,
+        functionArgs,
+        contractFungiblePostCondition,
+        senderAddress,
+        onFinishStatus,
+        blockchain
+      )
     );
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function closeStacksLoanContract(creator, UUID) {
+export async function closeStacksLoanContract(creator, UUID, blockchain) {
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
@@ -188,7 +198,14 @@ export async function closeStacksLoanContract(creator, UUID) {
 
   try {
     openContractCall(
-      populateTxOptions(functionName, functionArgs, contractFungiblePostCondition, senderAddress, onFinishStatus)
+      populateTxOptions(
+        functionName,
+        functionArgs,
+        contractFungiblePostCondition,
+        senderAddress,
+        onFinishStatus,
+        blockchain
+      )
     );
   } catch (error) {
     console.error(error);
