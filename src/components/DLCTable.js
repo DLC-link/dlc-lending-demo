@@ -10,17 +10,10 @@ import { getStacksLoansByWalletConnect } from '../blockchainFunctions/walletConn
 import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
 import InitialCard from './InitialCard';
 
-export default function DLCTable({
-  isConnected,
-  walletType,
-  creator,
-  walletConnectClient,
-  blockchain,
-  walletConnectSession,
-}) {
+export default function DLCTable(props) {
   const [bitCoinValue, setBitCoinValue] = useState(0);
   const [loans, setLoans] = useState([]);
-  const [isLoading, setLoading] = useState(undefined);
+  const [isLoading, setLoading] = useState(true);
   const [isManualLoading, setManualLoading] = useState(undefined);
   const [initialLoans, setInitialLoans] = useState([]);
 
@@ -69,15 +62,15 @@ export default function DLCTable({
 
   const fetchAllLoans = async () => {
     let loans = undefined;
-    switch (walletType) {
+    switch (props.walletType) {
       case 'hiro':
-        loans = await getStacksLoans(creator, blockchain);
+        loans = await getStacksLoans(props.creator, props.blockchain);
         break;
       case 'walletconnect':
-        loans = await getStacksLoansByWalletConnect(creator, blockchain);
+        loans = await getStacksLoansByWalletConnect(props.creator, props.blockchain);
         break;
       case 'metamask':
-        loans = getEthereumLoans(creator);
+        loans = getEthereumLoans(props.creator);
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -105,7 +98,7 @@ export default function DLCTable({
 
   return (
     <>
-      <Collapse in={isConnected}>
+      <Collapse in={props.isConnected}>
         <VStack
           margin={25}
           alignContent='center'
@@ -137,18 +130,18 @@ export default function DLCTable({
               spacing={[0, 15]}>
               {loans?.map((loan, idx) => (
                 <Card
-                  key={idx}
+                  key={loan.raw.dlcUUID}
                   loan={loan}
-                  creator={creator}
-                  walletType={walletType}
-                  bitCoinValue={bitCoinValue}></Card>
+                  creator={props.creator}
+                  walletType={props.walletType}
+                  bitCoinValue={props.bitCoinValue}></Card>
               ))}
               {initialLoans?.map((loan) => (
                 <InitialCard
                   loan={loan}
-                  creator={creator}
-                  walletType={walletType}
-                  bitCoinValue={bitCoinValue}></InitialCard>
+                  creator={props.creator}
+                  walletType={props.walletType}
+                  bitCoinValue={props.bitCoinValue}></InitialCard>
               ))}
             </SimpleGrid>
           </ScaleFade>
