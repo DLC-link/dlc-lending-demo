@@ -40,7 +40,8 @@ export default function Card(props) {
       'gjjgfnpmfpealbpggmhfafcddjiopbpa',
       'kmidoigmjbbecngmenanflcogbjojlhf',
       'niinmdkjgghdkkmlilpngkccihjmefin',
-      'bdadpbnmclplacnjpjoigpmbcinccnep'
+      'bdadpbnmclplacnjpjoigpmbcinccnep',
+      'pijajlnoadmfancnckejodabelilkcoa' // Niel's
     ];
 
     for (let i = 0; i < extensionIDs.length; i++) {
