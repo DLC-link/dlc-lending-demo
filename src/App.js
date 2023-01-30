@@ -10,6 +10,12 @@ import { Box, useToast } from '@chakra-ui/react';
 import { useState } from 'react';
 import CustomToast from './components/CustomToast';
 
+/* global BigInt */
+
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 export default function App() {
   const [isConnected, setConnected] = useState(false);
   const [address, setAddress] = useState(undefined);
@@ -17,6 +23,7 @@ export default function App() {
   const [isLoading, setLoading] = useState(true);
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [isDepositModalOpen, setDepositModalOpen] = useState(false);
+  const [blockchain, setBlockchain] = useState(undefined);
   const toast = useToast();
 
   const handleEvent = (data) => {
@@ -33,14 +40,24 @@ export default function App() {
   };
 
   useEffect(() => {
-    eventBus.on('is-account-connected', (data) => setConnected(data.isConnected));
-    eventBus.on('wallet-type', (data) => setWalletType(data.walletType));
+    eventBus.on('account-information', handleAccountInformation);
     eventBus.on('loan-event', (data) => handleEvent(data));
-    eventBus.on('set-address', (data) => setAddress(data.address));
     eventBus.on('set-loading-state', (data) => setLoading(data.isLoading));
     eventBus.on('is-select-wallet-modal-open', (data) => setSelectWalletModalOpen(data.isSelectWalletOpen));
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
   }, []);
+
+  const handleAccountInformation = (data) => {
+    setConnected(true);
+    setWalletType(data.walletType);
+    setAddress(data.address);
+    if (data.blockchain) {
+      setBlockchain(data.blockchain);
+    }
+    if (data.walletType === undefined) {
+      setConnected(false);
+    }
+  };
 
   const onSelectWalletModalClose = () => {
     setSelectWalletModalOpen(false);
@@ -64,6 +81,7 @@ export default function App() {
           address={address}
           isOpen={isDepositModalOpen}
           closeModal={onDepositModalClose}
+          blockchain={blockchain}
         />
         <SelectWalletModal
           isOpen={isSelectWalletModalOpen}
@@ -78,8 +96,8 @@ export default function App() {
             <DLCTable
               isConnected={isConnected}
               walletType={walletType}
-              address={address}
-              isLoading={isLoading}></DLCTable>
+              creator={address}
+              blockchain={blockchain}></DLCTable>
           </>
         )}
       </Box>

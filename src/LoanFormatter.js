@@ -10,10 +10,10 @@ const loanFormatter = {
     const rawData = {
       status: dlcData.status.data,
       owner: addressToString(dlcData.owner.address),
-      liquidationFee: toJson(dlcData['liquidation-fee'].value),
-      liquidationRatio: toJson(dlcData['liquidation-ratio'].value),
-      vaultCollateral: toJson(dlcData['vault-collateral'].value),
-      vaultLoan: toJson(dlcData['vault-loan'].value),
+      liquidationFee: dlcData['liquidation-fee'].value.toString(),
+      liquidationRatio: dlcData['liquidation-ratio'].value.toString(),
+      vaultCollateral: dlcData['vault-collateral'].value.toString(),
+      vaultLoan: dlcData['vault-loan'].value.toString(),
       ...(dlcData.dlc_uuid.hasOwnProperty('value') && {
         dlcUUID: bytesToHex(dlcData.dlc_uuid.value.buffer),
       }),

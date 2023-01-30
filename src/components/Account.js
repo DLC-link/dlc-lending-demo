@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { Text, HStack, Image } from '@chakra-ui/react';
 import { easyTruncateAddress } from '../utils';
-import { useEffect, useState } from 'react';
 
 export default function Account({ address, isConnected, walletType }) {
   const [walletLogo, setWalletLogo] = useState({ src: undefined, alt: undefined, boxSize: undefined });
