@@ -8,11 +8,10 @@ import { undefinedAccountInformation } from '../dtos';
 
 export default function Header({ address, isConnected, walletType, walletConnectClient, walletConnectSession }) {
   const disconnect = () => {
-    if (walletType === 'hiro') {
+    if (walletType === ('hiro' || 'xverse')) {
       userSession.signUserOut('/');
     } else if (walletType === 'walletconnect') {
       walletConnectDisconnect(walletConnectClient, walletConnectSession);
-      console.log(localStorage)
     }
     const accountInformation = new undefinedAccountInformation();
     eventBus.dispatch('account-information', accountInformation);

@@ -17,9 +17,10 @@ import loanFormatter from '../LoanFormatter';
 import { blockchains } from '../networks';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
-  const contractAddress = blockchains[blockchain].contractAddress;
-  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
+  const contractAddress = blockchains[blockchain].sampleContractAddress;
+  const contractName = blockchains[blockchain].sampleContractName;
   const network = blockchains[blockchain].network;
+
   return {
     contractAddress: contractAddress,
     contractName: contractName,
@@ -50,8 +51,18 @@ export async function sendLoanContractToStacks(loanContract, blockchain) {
   ];
   const senderAddress = undefined;
   const onFinishStatus = 'created';
+
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
+
+  //Network override because of the Hiro bug
+  if (blockchain === 'stacks:42') {
+    txOptions.network = new StacksMocknet({
+      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+    });
+  }
+
   try {
-    openContractCall(populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain));
+    openContractCall(txOptions);
   } catch (error) {
     console.error(error);
   }
@@ -62,8 +73,8 @@ export async function getStacksLoans(creator, blockchain) {
   const functionArgs = [principalCV(creator)];
   const senderAddress = creator;
   let loans = [];
+
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
-  txOptions.network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS });
 
   try {
     const response = await callReadOnlyFunction(txOptions);
@@ -80,7 +91,7 @@ export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
   const senderAddress = creator;
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
-  txOptions.network = new StacksMocknet({ url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS });
+
   try {
     const response = await callReadOnlyFunction(txOptions);
     return cvToValue(response.value);
@@ -90,8 +101,9 @@ export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
 }
 
 export async function borrowStacksLoanContract(creator, UUID, additionalLoan, blockchain) {
+  console.log(blockchain);
   const amount = customShiftValue(additionalLoan, 6, false);
-  const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
@@ -118,8 +130,12 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
     onFinishStatus,
     blockchain
   );
-
-  console.log(txOptions);
+  //Network override because of the Hiro bug
+  if (blockchain === 'stacks:42') {
+    txOptions.network = new StacksMocknet({
+      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+    });
+  }
 
   try {
     openContractCall(txOptions);
@@ -130,7 +146,7 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
 
 export async function repayStacksLoanContract(creator, UUID, additionalRepayment, blockchain) {
   const amount = customShiftValue(additionalRepayment, 6, false);
-  const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
@@ -148,65 +164,86 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
     ),
   ];
 
+  const txOptions = populateTxOptions(
+    functionName,
+    functionArgs,
+    standardFungiblePostConditionForRepay,
+    senderAddress,
+    onFinishStatus,
+    blockchain
+  );
+
+  //Network override because of the Hiro bug
+  if (blockchain === 'stacks:42') {
+    txOptions.network = new StacksMocknet({
+      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+    });
+  }
+
   try {
-    openContractCall(
-      populateTxOptions(
-        functionName,
-        functionArgs,
-        standardFungiblePostConditionForRepay,
-        senderAddress,
-        onFinishStatus,
-        blockchain
-      )
-    );
+    openContractCall(txOptions);
   } catch (error) {
     console.error(error);
   }
 }
 
 export async function liquidateStacksLoanContract(creator, UUID, blockchain) {
-  const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'attempt-liquidate';
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
   const onFinishStatus = 'liquidation-requested';
 
+  const txOptions = populateTxOptions(
+    functionName,
+    functionArgs,
+    contractFungiblePostCondition,
+    senderAddress,
+    onFinishStatus,
+    blockchain
+  );
+
+  //Network override because of the Hiro bug
+  if (blockchain === 'stacks:42') {
+    txOptions.network = new StacksMocknet({
+      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+    });
+  }
+
   try {
-    openContractCall(
-      populateTxOptions(
-        functionName,
-        functionArgs,
-        contractFungiblePostCondition,
-        senderAddress,
-        onFinishStatus,
-        blockchain
-      )
-    );
+    openContractCall();
   } catch (error) {
     console.error(error);
   }
 }
 
 export async function closeStacksLoanContract(creator, UUID, blockchain) {
-  const loanContractID = await getStacksLoanIDByUUID(creator, UUID);
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
   const onFinishStatus = 'closing-requested';
 
+  const txOptions = populateTxOptions(
+    functionName,
+    functionArgs,
+    contractFungiblePostCondition,
+    senderAddress,
+    onFinishStatus,
+    blockchain
+  );
+
+  //Network override because of the Hiro bug
+  if (blockchain === 'stacks:42') {
+    txOptions.network = new StacksMocknet({
+      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
+    });
+  }
+
   try {
-    openContractCall(
-      populateTxOptions(
-        functionName,
-        functionArgs,
-        contractFungiblePostCondition,
-        senderAddress,
-        onFinishStatus,
-        blockchain
-      )
-    );
+    openContractCall(txOptions);
   } catch (error) {
     console.error(error);
   }

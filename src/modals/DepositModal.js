@@ -95,7 +95,10 @@ export default function DepositModal({
   const sendLoanContract = (loanContract) => {
     switch (walletType) {
       case 'hiro':
-        sendLoanContractToStacks(loanContract, blockchain).then(eventBus.dispatch('create-loan', { loan: loanContract }));
+      case 'xverse':
+        sendLoanContractToStacks(loanContract, blockchain).then(
+          eventBus.dispatch('create-loan', { loan: loanContract })
+        );
         break;
       case 'metamask':
         sendLoanContractToEthereum(loanContract);

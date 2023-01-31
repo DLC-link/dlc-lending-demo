@@ -11,6 +11,9 @@ export default function Account({ address, isConnected, walletType }) {
       case 'hiro':
         setWalletLogo({ src: '/h_logo.png', alt: 'Hiro Wallet Logo', boxSize: [2, 4] });
         break;
+      case 'xverse':
+        setWalletLogo({ src: '/xverse_logo.png', alt: 'Xverse Wallet Logo', boxSize: [2, 4] });
+        break;
       case 'walletconnect':
         setWalletLogo({ src: '/wc_logo.png', alt: 'Wallet Connect Logo', boxSize: [2, 4] });
         break;
@@ -19,7 +22,7 @@ export default function Account({ address, isConnected, walletType }) {
         break;
     }
   }, [walletType]);
-  
+
   switch (isConnected) {
     case true:
       return (

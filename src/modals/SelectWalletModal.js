@@ -19,7 +19,7 @@ import eventBus from '../EventBus';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
 import { requestWalletConnectSessionAndAddress } from '../blockchainFunctions/walletConnectFunctions';
-import { hiroAccountInformation, metamaskAccountInformation, walletConnectAccountInformation } from '../dtos';
+import { stacksAccountInformation, metamaskAccountInformation, walletConnectAccountInformation } from '../dtos';
 
 export default function SelectWalletModal({ isOpen, closeModal, walletConnectClient }) {
   const blockchains = [
@@ -32,7 +32,8 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
     let accountInformation;
     switch (walletType) {
       case 'hiro':
-        accountInformation = new hiroAccountInformation(blockchain);
+      case 'xverse':
+        accountInformation = new stacksAccountInformation(walletType, blockchain);
         break;
       case 'metamask':
         accountInformation = new metamaskAccountInformation(address);
@@ -66,8 +67,10 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
     } catch (error) {}
   }
 
-  async function requestAndDispatchHiroAccountInformation(blockchain) {
+  async function requestAndDispatchStacksAccountInformation(blockchain, walletType) {
+    console.log(walletType);
     let isUserSessionStored = true;
+
     try {
       userSession.loadUserData();
     } catch (error) {
@@ -75,7 +78,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
     }
 
     if (isUserSessionStored) {
-      dispatchAccountInformation('hiro', undefined, blockchain);
+      dispatchAccountInformation(walletType, undefined, blockchain);
     } else {
       showConnect({
         appDetails: {
@@ -83,7 +86,7 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
           icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
         },
         onFinish: () => {
-          dispatchAccountInformation('hiro', undefined, blockchain);
+          dispatchAccountInformation(walletType, undefined, blockchain);
         },
         userSession,
       });
@@ -153,7 +156,38 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
                     <MenuItem
                       key={`chain-${idx}`}
                       onClick={async () => {
-                        await requestAndDispatchHiroAccountInformation(blockchain.id);
+                        await requestAndDispatchStacksAccountInformation(blockchain.id, 'hiro');
+                        closeModal();
+                      }}>
+                      <Text variant='selector'>{blockchain.name}</Text>
+                    </MenuItem>
+                  );
+                })}
+              </MenuList>
+            </Menu>
+            <Menu>
+              <MenuButton
+                width='100%'
+                variant='outline'>
+                <HStack
+                  w='100%'
+                  justifyContent='center'>
+                  <Image
+                    src='/xverse_logo.png'
+                    alt='Xverse Wallet Logo'
+                    width={25}
+                    height={25}
+                  />
+                  <Text variant='selector'>Xverse Wallet</Text>
+                </HStack>
+              </MenuButton>
+              <MenuList>
+                {blockchains.map((blockchain, idx) => {
+                  return (
+                    <MenuItem
+                      key={`chain-${idx}`}
+                      onClick={async () => {
+                        await requestAndDispatchStacksAccountInformation(blockchain.id, 'xverse');
                         closeModal();
                       }}>
                       <Text variant='selector'>{blockchain.name}</Text>

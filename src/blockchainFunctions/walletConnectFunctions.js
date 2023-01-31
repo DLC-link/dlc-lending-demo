@@ -10,15 +10,12 @@ import {
   standardPrincipalCV,
   noneCV,
 } from '@stacks/transactions';
-import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
-import { PostConditionMode } from '@stacks/transactions';
 import QRCodeModal from '@walletconnect/qrcode-modal';
 import Client from '@walletconnect/sign-client';
-import { hexToBytes } from '../utils';
 import { customShiftValue } from '../utils';
 import eventBus from '../EventBus';
-import loanFormatter from '../LoanFormatter';
 import { blockchains } from '../networks';
+import { getStacksLoanIDByUUID } from './stacksFunctions';
 
 const populateTxRequest = (
   creator,
@@ -30,8 +27,9 @@ const populateTxRequest = (
   walletConnectSession,
   method
 ) => {
-  const contractAddress = blockchains[blockchain].contractAddress;
-  const contractName = process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME;
+  const contractAddress = blockchains[blockchain].sampleContractAddress;
+  const contractName = blockchains[blockchain].sampleContractName;
+
   return {
     chainId: blockchain,
     topic: walletConnectSession.topic,
@@ -66,6 +64,7 @@ export async function initiateWalletConnectClient() {
       name: 'DLC.Link',
       description: 'Use Native Bitcoin Without Bridging',
       url: 'https://www.dlc.link/',
+      //.svg is not acceptable here, should upload .png
       icons: ['https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg'],
     },
   });
@@ -139,62 +138,6 @@ export async function sendLoanContractToStacksByWalletConnect(
   }
 }
 
-export async function getStacksLoansByWalletConnect(creator, blockchain) {
-  const functionName = 'get-creator-loans';
-  const functionArgs = [principalCV(creator)];
-  const senderAddress = creator;
-  const contractAddress = blockchains[blockchain].contractAddress;
-  const network = blockchains[blockchain].network;
-  let loans = [];
-
-  try {
-    const txOptions = {
-      contractAddress: contractAddress,
-      contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-      functionName: functionName,
-      functionArgs: functionArgs,
-      postConditions: [],
-      validateWithAbi: true,
-      senderAddress: senderAddress,
-      network: network,
-      fee: 100000,
-      anchorMode: 1,
-    };
-    const response = await callReadOnlyFunction(txOptions);
-    console.log(response)
-    loans = loanFormatter.formatAllDLC(response.list, 'clarity');
-    console.log(loans)
-  } catch (error) {
-    console.error(error);
-  }
-  return loans;
-}
-
-export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
-  const functionName = 'get-loan-id-by-uuid';
-  const functionArgs = [bufferCV(hexToBytes(UUID))];
-  const senderAddress = creator;
-  const contractAddress = blockchains[blockchain].contractAddress;
-  const network = blockchains[blockchain].network;
-  try {
-    const response = await callReadOnlyFunction({
-      contractAddress: contractAddress,
-      contractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-      functionName: functionName,
-      functionArgs: functionArgs,
-      postConditions: [],
-      validateWithAbi: true,
-      senderAddress: senderAddress,
-      network: network,
-      fee: 100000,
-      anchorMode: 1,
-    });
-    return cvToValue(response.value);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 export async function borrowStacksLoanContractByWalletConnect(
   creator,
   walletConnectClient,
@@ -245,7 +188,7 @@ export async function borrowStacksLoanContractByWalletConnect(
   }
 }
 
-export async function repayStacksLoanContract(
+export async function repayStacksLoanContractByWalletConnect(
   creator,
   walletConnectClient,
   walletConnectSession,

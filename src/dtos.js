@@ -1,8 +1,8 @@
 import { userSession } from './hiroWalletUserSession';
 
-export class hiroAccountInformation {
-  constructor(blockchain) {
-    this.walletType = 'hiro';
+export class stacksAccountInformation {
+  constructor(walletType, blockchain) {
+    this.walletType = walletType;
     this.address = userSession.loadUserData().profile.stxAddress.testnet;
     this.blockchain = blockchain;
   }
