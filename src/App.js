@@ -34,7 +34,11 @@ export default function App() {
       return toast({
         id: data.status,
         position: 'right-top',
-        render: () => <CustomToast data={data} walletType={walletType}></CustomToast>,
+        render: () => (
+          <CustomToast
+            data={data}
+            walletType={walletType}></CustomToast>
+        ),
       });
     }
   };
@@ -48,7 +52,8 @@ export default function App() {
   }, []);
 
   const handleAccountInformation = (data) => {
-    setConnected(data.walletType ? true : false);
+    const isWalletTypeDefined = data.walletType ? true : false;
+    setConnected(isWalletTypeDefined);
     setWalletType(data.walletType);
     setAddress(data.address);
     setBlockchain(data.blockchain);
