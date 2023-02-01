@@ -9,7 +9,6 @@ import DLCTable from './components/DLCTable';
 import { Box, useToast } from '@chakra-ui/react';
 import { useState } from 'react';
 import CustomToast from './components/CustomToast';
-import Client from '@walletconnect/sign-client';
 import { initiateWalletConnectClient } from './blockchainFunctions/walletConnectFunctions';
 
 /* global BigInt */
@@ -74,7 +73,8 @@ export default function App() {
   };
 
   const handleAccountInformation = (data) => {
-    setConnected(data.walletType ? true : false);
+    const isWalletTypeDefined = data.walletType ? true : false;
+    setConnected(isWalletTypeDefined);
     setWalletType(data.walletType);
     setAddress(data.address);
     setBlockchain(data.blockchain);
