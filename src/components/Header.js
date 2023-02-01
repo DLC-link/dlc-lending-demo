@@ -3,15 +3,14 @@ import eventBus from '../EventBus';
 import { Button, Text, HStack, Flex, Image, Spacer } from '@chakra-ui/react';
 import { userSession } from '../hiroWalletUserSession';
 import Account from './Account';
-import { undefinedAccountInformation } from '../dtos';
+import { createAccountInformation } from '../factoryFunctions';
 
 export default function Header({ address, isConnected, walletType }) {
   const disconnect = () => {
     if (walletType === 'hiro') {
       userSession.signUserOut('/');
     }
-    const accountInformation = new undefinedAccountInformation();
-    eventBus.dispatch('account-information', accountInformation);
+    eventBus.dispatch('account-information', {});
   };
 
   const openSelectWalletModal = () => {
