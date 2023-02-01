@@ -4,7 +4,6 @@ import { Button, Text, HStack, Flex, Image, Spacer } from '@chakra-ui/react';
 import { userSession } from '../hiroWalletUserSession';
 import Account from './Account';
 import { walletConnectDisconnect } from '../blockchainFunctions/walletConnectFunctions';
-import { undefinedAccountInformation } from '../dtos';
 
 export default function Header({ address, isConnected, walletType, walletConnectClient, walletConnectSession }) {
   const disconnect = () => {
@@ -13,8 +12,7 @@ export default function Header({ address, isConnected, walletType, walletConnect
     } else if (walletType === 'walletconnect') {
       walletConnectDisconnect(walletConnectClient, walletConnectSession);
     }
-    const accountInformation = new undefinedAccountInformation();
-    eventBus.dispatch('account-information', accountInformation);
+    eventBus.dispatch('account-information', {});
   };
 
   const openSelectWalletModal = () => {

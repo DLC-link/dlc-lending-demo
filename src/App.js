@@ -74,18 +74,11 @@ export default function App() {
   };
 
   const handleAccountInformation = (data) => {
-    setConnected(true);
+    setConnected(data.walletType ? true : false);
     setWalletType(data.walletType);
     setAddress(data.address);
-    if (data.blockchain) {
-      setBlockchain(data.blockchain);
-    }
-    if (data.walletConnectSession) {
-      setWalletConnectSession(data.walletConnectSession);
-    }
-    if (data.walletType === undefined) {
-      setConnected(false);
-    }
+    setBlockchain(data.blockchain);
+    data.walletConnectSession && setWalletConnectSession(data.walletConnectSession);
   };
 
   return (

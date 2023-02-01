@@ -19,7 +19,7 @@ import eventBus from '../EventBus';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
 import { requestWalletConnectSessionAndAddress } from '../blockchainFunctions/walletConnectFunctions';
-import { stacksAccountInformation, metamaskAccountInformation, walletConnectAccountInformation } from '../dtos';
+import { createAccountInformation } from '../factoryFunctions';
 
 export default function SelectWalletModal({ isOpen, closeModal, walletConnectClient }) {
   const blockchains = [
@@ -33,13 +33,14 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        accountInformation = new stacksAccountInformation(walletType, blockchain);
+        accountInformation = createAccountInformation('hiro', blockchain);
         break;
       case 'metamask':
-        accountInformation = new metamaskAccountInformation(address);
+        accountInformation = createAccountInformation('metamask', blockchain, address);
         break;
       case 'walletconnect':
-        accountInformation = new walletConnectAccountInformation(address, blockchain, walletConnectSession);
+        accountInformation = createAccountInformation('walletconnect', blockchain, address, walletConnectSession);
+        break;
     }
     eventBus.dispatch('account-information', accountInformation);
   }
