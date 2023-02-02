@@ -147,23 +147,18 @@ export async function borrowStacksLoanContractByWalletConnect(
   additionalLoan
 ) {
   const amount = customShiftValue(additionalLoan, 6, false);
-  const loanContractID = await getStacksLoanIDByUUID(
-    creator,
-    walletConnectClient,
-    walletConnectSession,
-    blockchain,
-    UUID
-  );
+
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
-  const assetAddress = process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS;
-  const assetContractName = process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME;
-  const assetName = process.env.REACT_APP_STACKS_ASSET_NAME;
+  const assetAddress = blockchains[blockchain].assetContractAddress;
+  const assetContractName = blockchains[blockchain].assetContractName;
+  const assetName = blockchains[blockchain].assetName;
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
-      process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+      blockchains[blockchain].sampleContractAddress,
+      blockchains[blockchain].sampleContractName,
       FungibleConditionCode.GreaterEqual,
       amount,
       createAssetInfo(assetAddress, assetContractName, assetName)
@@ -197,18 +192,12 @@ export async function repayStacksLoanContractByWalletConnect(
   additionalRepayment
 ) {
   const amount = customShiftValue(additionalRepayment, 6, false);
-  const loanContractID = await getStacksLoanIDByUUID(
-    creator,
-    walletConnectClient,
-    walletConnectSession,
-    blockchain,
-    UUID
-  );
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
-  const assetAddress = process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS;
-  const assetContractName = process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME;
-  const assetName = process.env.REACT_APP_STACKS_ASSET_NAME;
+  const assetAddress = blockchains[blockchain].assetContractAddress;
+  const assetContractName = blockchains[blockchain].assetContractName;
+  const assetName = blockchains[blockchain].assetName;
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
@@ -244,13 +233,7 @@ export async function liquidateStacksLoanContractByWalletConnect(
   blockchain,
   UUID
 ) {
-  const loanContractID = await getStacksLoanIDByUUID(
-    creator,
-    walletConnectClient,
-    walletConnectSession,
-    blockchain,
-    UUID
-  );
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'attempt-liquidate';
   const functionArgs = [uintCV(parseInt(loanContractID))];
 
@@ -279,13 +262,7 @@ export async function closeStacksLoanContractByWalletConnect(
   blockchain,
   UUID
 ) {
-  const loanContractID = await getStacksLoanIDByUUID(
-    creator,
-    walletConnectClient,
-    walletConnectSession,
-    blockchain,
-    UUID
-  );
+  const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
 

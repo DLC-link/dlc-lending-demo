@@ -101,21 +101,20 @@ export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
 }
 
 export async function borrowStacksLoanContract(creator, UUID, additionalLoan, blockchain) {
-  console.log(blockchain);
   const amount = customShiftValue(additionalLoan, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'borrow-requested';
-  const assetAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
-  const assetContractName = process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME;
-  const assetName = process.env.REACT_APP_STACKS_ASSET_NAME;
+  const assetAddress = blockchains[blockchain].assetContractAddress;
+  const assetContractName = blockchains[blockchain].assetContractName;
+  const assetName = blockchains[blockchain].assetName;
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-      process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+      blockchains[blockchain].sampleContractAddress,
+      blockchains[blockchain].sampleContractName,
       FungibleConditionCode.GreaterEqual,
       amount,
       createAssetInfo(assetAddress, assetContractName, assetName)
@@ -130,6 +129,8 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
     onFinishStatus,
     blockchain
   );
+
+  console.log(txOptions);
   //Network override because of the Hiro bug
   if (blockchain === 'stacks:42') {
     txOptions.network = new StacksMocknet({
@@ -151,9 +152,9 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'repay-requested';
-  const assetAddress = process.env.REACT_APP_STACKS_MANAGER_ADDRESS;
-  const assetContractName = process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME;
-  const assetName = process.env.REACT_APP_STACKS_ASSET_NAME;
+  const assetAddress = blockchains[blockchain].assetContractAddress;
+  const assetContractName = blockchains[blockchain].assetContractName;
+  const assetName = blockchains[blockchain].assetName;
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
