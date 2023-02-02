@@ -10,6 +10,7 @@ const baseStyle = definePartsStyle({
     shadow: '2xl',
     borderRadius: 'md',
     border: '1px',
+    borderColor: 'accent',
     bg: 'transparent',
     _hover: {
       color: 'white',
@@ -17,20 +18,16 @@ const baseStyle = definePartsStyle({
     },
   },
   list: {
-    borderRadius: 'xl',
-    border: 'none',
-    bg: 'white',
-    size: 'xxl',    
+    borderRadius: 'md',
+    border: '1px',
+    borderColor: 'accent',
+    bg: 'white', 
+    width: '250px'
   },
   item: {
-    color: 'accent',
     bg: 'transparent',
+    justifyContent:'center',
     _hover: {
-      color: 'white',
-      bg: 'accent',
-    },
-    _focus: {
-      color: 'white',
       bg: 'accent',
     },
   },

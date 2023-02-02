@@ -35,6 +35,7 @@ export default function Card({
         onRepayModalClose();
       }
     });
+    console.log(loan.formatted.formattedUUID)
   });
 
   const onBorrowModalClose = () => {
@@ -123,7 +124,6 @@ export default function Card({
 
   const lockBTC = async () => {
     const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
-    console.log(loan);
     try {
       const response = await fetch(URL, {
         method: 'POST',

@@ -4,6 +4,7 @@ import { abi as loanManagerABI } from '../loanManagerABI';
 import { fixedTwoDecimalShift } from '../utils';
 import eventBus from '../EventBus';
 import loanFormatter from '../LoanFormatter';
+import { createAndDispatchAccountInformation } from '../accountInformation';
 
 let loanManagerETH;
 let usdcContract;
@@ -16,6 +17,23 @@ try {
   usdcContract = new ethers.Contract(process.env.REACT_APP_USDC_CONTRACT_ADDRESS, usdcForDLCsABI, signer);
 } catch (error) {
   console.error(error);
+}
+
+export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
+  try {
+    const { ethereum } = window;
+    if (!ethereum) {
+      alert('Install MetaMask!');
+      return;
+    }
+    const accounts = await ethereum.request({
+      method: 'eth_requestAccounts',
+    });
+    const metaMaskAddress = accounts[0];
+    createAndDispatchAccountInformation('metamask', blockchain, metaMaskAddress);
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export async function isAllowedInMetamask(creator, vaultLoan) {

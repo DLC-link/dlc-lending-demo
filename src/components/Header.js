@@ -7,10 +7,14 @@ import { walletConnectDisconnect } from '../blockchainFunctions/walletConnectFun
 
 export default function Header({ address, isConnected, walletType, walletConnectClient, walletConnectSession }) {
   const disconnect = () => {
-    if (walletType === ('hiro' || 'xverse')) {
-      userSession.signUserOut('/');
-    } else if (walletType === 'walletconnect') {
-      walletConnectDisconnect(walletConnectClient, walletConnectSession);
+    switch (walletType) {
+      case 'hiro':
+      case 'xverse':
+        userSession.signUserOut('/');
+        break;
+      case 'walletconnect':
+        walletConnectDisconnect(walletConnectClient, walletConnectSession);
+        break;
     }
     eventBus.dispatch('account-information', {});
   };

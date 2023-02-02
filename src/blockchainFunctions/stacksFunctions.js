@@ -9,12 +9,15 @@ import {
   makeContractFungiblePostCondition,
   makeStandardFungiblePostCondition,
 } from '@stacks/transactions';
+import { userSession } from '../hiroWalletUserSession';
+import { showConnect } from '@stacks/connect';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { openContractCall } from '@stacks/connect';
 import { customShiftValue, fixedTwoDecimalUnshift, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
 import loanFormatter from '../LoanFormatter';
 import { blockchains } from '../networks';
+import { createAndDispatchAccountInformation } from '../accountInformation';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
   const contractAddress = blockchains[blockchain].sampleContractAddress;
@@ -40,6 +43,31 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
     },
   };
 };
+
+export async function requestAndDispatchHiroOrXverseAccountInformation(blockchain, walletType) {
+  let isUserSessionStored = true;
+
+  try {
+    userSession.loadUserData();
+  } catch (error) {
+    isUserSessionStored = false;
+  }
+
+  if (isUserSessionStored) {
+    createAndDispatchAccountInformation(walletType, undefined, blockchain);
+  } else {
+    showConnect({
+      appDetails: {
+        name: 'DLC.Link',
+        icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
+      },
+      onFinish: () => {
+        createAndDispatchAccountInformation(walletType, undefined, blockchain);
+      },
+      userSession,
+    });
+  }
+}
 
 export async function sendLoanContractToStacks(loanContract, blockchain) {
   const functionName = 'setup-loan';

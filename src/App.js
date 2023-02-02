@@ -64,21 +64,20 @@ export default function App() {
     eventBus.on('is-deposit-modal-open', (data) => setDepositModalOpen(data.isDepositOpen));
   }, []);
 
+  const handleAccountInformation = (data) => {
+    setConnected(!!data.walletType);
+    setWalletType(data.walletType);
+    setAddress(data.address);
+    setBlockchain(data.blockchain);
+    data.walletConnectSession && setWalletConnectSession(data.walletConnectSession);
+  };
+
   const onSelectWalletModalClose = () => {
     setSelectWalletModalOpen(false);
   };
 
   const onDepositModalClose = () => {
     setDepositModalOpen(false);
-  };
-
-  const handleAccountInformation = (data) => {
-    const isWalletTypeDefined = data.walletType ? true : false;
-    setConnected(isWalletTypeDefined);
-    setWalletType(data.walletType);
-    setAddress(data.address);
-    setBlockchain(data.blockchain);
-    data.walletConnectSession && setWalletConnectSession(data.walletConnectSession);
   };
 
   return (

@@ -8,6 +8,7 @@ export default function Account({ address, isConnected, walletType }) {
 
   const walletLogos = {
     hiro: { src: '/h_logo.png', alt: 'Hiro Wallet Logo', boxSize: [2, 4] },
+    xverse: { src: '/xverse_logo.png', alt: 'Xverse Wallet Logo', boxSize: [2, 4] },
     walletconnect: { src: '/wc_logo.png', alt: 'Wallet Connect Logo', boxSize: [2, 4] },
     metamask: { src: '/mm_logo.png', alt: 'Metamask Logo', boxSize: [3, 6] },
   };

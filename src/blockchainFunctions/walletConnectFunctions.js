@@ -1,14 +1,9 @@
 import {
   uintCV,
-  bufferCV,
-  cvToValue,
-  callReadOnlyFunction,
   createAssetInfo,
   FungibleConditionCode,
   makeContractFungiblePostCondition,
   makeStandardFungiblePostCondition,
-  standardPrincipalCV,
-  noneCV,
 } from '@stacks/transactions';
 import QRCodeModal from '@walletconnect/qrcode-modal';
 import Client from '@walletconnect/sign-client';
@@ -16,8 +11,9 @@ import { customShiftValue } from '../utils';
 import eventBus from '../EventBus';
 import { blockchains } from '../networks';
 import { getStacksLoanIDByUUID } from './stacksFunctions';
+import { createAndDispatchAccountInformation } from '../accountInformation';
 
-const populateTxRequest = (
+const populateTxOptions = (
   creator,
   functionName,
   functionArgs,
@@ -99,6 +95,20 @@ export async function requestWalletConnectSessionAndAddress(walletConnectClient,
   };
 }
 
+export async function requestAndDispatchWalletConnectAccountInformation(walletConnectClient, blockchain) {
+  const { walletConnectSession, walletConnectAddress } = await requestWalletConnectSessionAndAddress(
+    walletConnectClient,
+    blockchain
+  );
+
+  createAndDispatchAccountInformation(
+    'walletconnect',
+    walletConnectAddress,
+    blockchain,
+    walletConnectSession
+  );
+}
+
 export async function walletConnectDisconnect(walletConnectClient, walletConnectSession) {
   await walletConnectClient.pairing.delete(walletConnectSession.topic, {
     code: 100,
@@ -121,7 +131,8 @@ export async function sendLoanContractToStacksByWalletConnect(
     uintCV(loanContract.emergencyRefundTime),
   ];
   const onFinishStatus = 'created';
-  const txRequest = populateTxRequest(
+
+  const txOptions = populateTxOptions(
     creator,
     functionName,
     functionArgs,
@@ -131,8 +142,9 @@ export async function sendLoanContractToStacksByWalletConnect(
     walletConnectSession,
     'stacks_contractCall'
   );
+
   try {
-    walletConnectClient.request(txRequest).then((txId) => dispatchEvent(onFinishStatus, txId));
+    walletConnectClient.request(txOptions).then((txId) => dispatchEvent(onFinishStatus, txId));
   } catch (error) {
     console.error(error);
   }
@@ -151,6 +163,7 @@ export async function borrowStacksLoanContractByWalletConnect(
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
+  const onFinishStatus = 'borrow-requested';
   const assetAddress = blockchains[blockchain].assetContractAddress;
   const assetContractName = blockchains[blockchain].assetContractName;
   const assetName = blockchains[blockchain].assetName;
@@ -165,19 +178,19 @@ export async function borrowStacksLoanContractByWalletConnect(
     ),
   ];
 
+  const txOptions = populateTxOptions(
+    creator,
+    functionName,
+    functionArgs,
+    contractFungiblePostConditionForBorrow,
+    undefined,
+    blockchain,
+    walletConnectSession,
+    'stacks_contractCall'
+  );
+
   try {
-    await walletConnectClient.request(
-      populateTxRequest(
-        creator,
-        functionName,
-        functionArgs,
-        contractFungiblePostConditionForBorrow,
-        undefined,
-        blockchain,
-        walletConnectSession,
-        'stacks_contractCall'
-      )
-    );
+    walletConnectClient.request(txOptions).then((txId) => dispatchEvent(onFinishStatus, txId));
   } catch (error) {
     console.error(error);
   }
@@ -195,6 +208,7 @@ export async function repayStacksLoanContractByWalletConnect(
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
+  const onFinishStatus = 'repay-requested';
   const assetAddress = blockchains[blockchain].assetContractAddress;
   const assetContractName = blockchains[blockchain].assetContractName;
   const assetName = blockchains[blockchain].assetName;
@@ -208,19 +222,19 @@ export async function repayStacksLoanContractByWalletConnect(
     ),
   ];
 
+  const txOptions = populateTxOptions(
+    creator,
+    functionName,
+    functionArgs,
+    standardFungiblePostConditionForRepay,
+    undefined,
+    blockchain,
+    walletConnectSession,
+    'stacks_contractCall'
+  );
+
   try {
-    await walletConnectClient.request(
-      populateTxRequest(
-        creator,
-        functionName,
-        functionArgs,
-        standardFungiblePostConditionForRepay,
-        undefined,
-        blockchain,
-        walletConnectSession,
-        'stacks_contractCall'
-      )
-    );
+    walletConnectClient.request(txOptions).then((txId) => dispatchEvent(onFinishStatus, txId));
   } catch (error) {
     console.error(error);
   }
@@ -236,20 +250,21 @@ export async function liquidateStacksLoanContractByWalletConnect(
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'attempt-liquidate';
   const functionArgs = [uintCV(parseInt(loanContractID))];
+  const onFinishStatus = 'liquidation-requested';
+
+  const txOptions = populateTxOptions(
+    creator,
+    functionName,
+    functionArgs,
+    [],
+    undefined,
+    blockchain,
+    walletConnectSession,
+    'stacks_contractCall'
+  );
 
   try {
-    await walletConnectClient.request(
-      populateTxRequest(
-        creator,
-        functionName,
-        functionArgs,
-        [],
-        undefined,
-        blockchain,
-        walletConnectSession,
-        'stacks_contractCall'
-      )
-    );
+    walletConnectClient.request(txOptions).then((txId) => dispatchEvent(onFinishStatus, txId));
   } catch (error) {
     console.error(error);
   }
@@ -265,20 +280,21 @@ export async function closeStacksLoanContractByWalletConnect(
   const loanContractID = await getStacksLoanIDByUUID(creator, UUID, blockchain);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
+  const onFinishStatus = 'closing-requested';
+
+  const txOptions = populateTxOptions(
+    creator,
+    functionName,
+    functionArgs,
+    [],
+    undefined,
+    blockchain,
+    walletConnectSession,
+    'stacks_contractCall'
+  );
 
   try {
-    await walletConnectClient.request(
-      populateTxRequest(
-        creator,
-        functionName,
-        functionArgs,
-        [],
-        undefined,
-        blockchain,
-        walletConnectSession,
-        'stacks_contractCall'
-      )
-    );
+    walletConnectClient.request(txOptions).then((txId) => dispatchEvent(onFinishStatus, txId));
   } catch (error) {
     console.error(error);
   }
