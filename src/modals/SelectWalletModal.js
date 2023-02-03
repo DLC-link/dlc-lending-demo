@@ -13,6 +13,7 @@ import {
   MenuItem,
   MenuList,
   Menu,
+  Tooltip,
 } from '@chakra-ui/react';
 import { Image } from '@chakra-ui/react';
 import { requestAndDispatchHiroOrXverseAccountInformation } from '../blockchainFunctions/stacksFunctions';
@@ -49,21 +50,24 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
             <Menu>
               {({ isOpen }) => (
                 <>
-                  <MenuButton
-                    width='100%'
-                    variant='outline'>
-                    <HStack
-                      w='100%'
-                      justifyContent='center'>
-                      <Image
-                        src='/mm_logo.png'
-                        alt='Metamask Logo'
-                        width={25}
-                        height={25}
-                      />
-                      <Text variant='selector'>{isOpen ? 'Choose Network' : 'Metamask'}</Text>
-                    </HStack>
-                  </MenuButton>
+                  <Tooltip label='Not yet available!' placement='top-start'>
+                    <MenuButton
+                      disabled
+                      width='100%'
+                      variant='outline'>
+                      <HStack
+                        w='100%'
+                        justifyContent='center'>
+                        <Image
+                          src='/mm_logo.png'
+                          alt='Metamask Logo'
+                          width={25}
+                          height={25}
+                        />
+                        <Text variant='selector'>{isOpen ? 'Choose Network' : 'Metamask'}</Text>
+                      </HStack>
+                    </MenuButton>
+                  </Tooltip>
                   <MenuList>
                     {blockchains.map((blockchain, idx) => {
                       return (
@@ -81,7 +85,6 @@ export default function SelectWalletModal({ isOpen, closeModal, walletConnectCli
                 </>
               )}
             </Menu>
-            <Menu></Menu>
             <Menu>
               {({ isOpen }) => (
                 <>

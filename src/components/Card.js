@@ -12,7 +12,7 @@ import RepayModal from '../modals/RepayModal';
 import { liquidateStacksLoanContract, closeStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
 import { liquidateEthereumLoanContract } from '../blockchainFunctions/ethereumFunctions';
 
-export default function Card(loan, creator, walletType, blockchain, bitCoinValue) {
+export default function Card({ loan, creator, walletType, blockchain, bitCoinValue }) {
   const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
   const [isRepayModalOpen, setRepayModalOpen] = useState(false);
 
