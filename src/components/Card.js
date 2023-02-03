@@ -12,7 +12,7 @@ import RepayModal from '../modals/RepayModal';
 import { liquidateStacksLoanContract, closeStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
 import { liquidateEthereumLoanContract } from '../blockchainFunctions/ethereumFunctions';
 
-export default function Card(props) {
+export default function Card(loan, creator, walletType, blockchain, bitCoinValue) {
   const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
   const [isRepayModalOpen, setRepayModalOpen] = useState(false);
 
@@ -41,7 +41,7 @@ export default function Card(props) {
       'kmidoigmjbbecngmenanflcogbjojlhf',
       'niinmdkjgghdkkmlilpngkccihjmefin',
       'bdadpbnmclplacnjpjoigpmbcinccnep',
-      'pijajlnoadmfancnckejodabelilkcoa' // Niel's
+      'pijajlnoadmfancnckejodabelilkcoa', // Niel's
     ];
 
     for (let i = 0; i < extensionIDs.length; i++) {
@@ -64,12 +64,13 @@ export default function Card(props) {
   };
 
   const liquidateLoanContract = async () => {
-    switch (props.walletType) {
+    switch (walletType) {
       case 'hiro':
-        liquidateStacksLoanContract(props.creator, props.loan.raw.dlcUUID);
+      case 'xverse':
+        liquidateStacksLoanContract(creator, loan.raw.dlcUUID, blockchain);
         break;
       case 'metamask':
-        liquidateEthereumLoanContract(props.loan.raw.id);
+        liquidateEthereumLoanContract(loan.raw.id);
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -78,9 +79,10 @@ export default function Card(props) {
   };
 
   const closeLoanContract = async () => {
-    switch (props.walletType) {
+    switch (walletType) {
       case 'hiro':
-        closeStacksLoanContract(props.creator, props.loan.raw.dlcUUID);
+      case 'xverse':
+        closeStacksLoanContract(creator, loan.raw.dlcUUID, blockchain);
         break;
       case 'metamask':
         break;
@@ -97,8 +99,8 @@ export default function Card(props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uuid: props.loan.formatted.formattedUUID,
-          acceptCollateral: parseInt(props.loan.raw.vaultCollateral),
+          uuid: loan.formatted.formattedUUID,
+          acceptCollateral: parseInt(loan.raw.vaultCollateral),
           offerCollateral: 1000,
           totalOutcomes: 100,
         }),
@@ -135,7 +137,7 @@ export default function Card(props) {
         marginBottom={25}>
         <VStack margin={15}>
           <Flex>
-            <Status status={props.loan.raw.status}></Status>
+            <Status status={loan.raw.status}></Status>
           </Flex>
           <TableContainer width={250}>
             <Table
@@ -147,7 +149,7 @@ export default function Card(props) {
                     <Text variant='property'>UUID</Text>
                   </Td>
                   <Td>
-                    <Text>{easyTruncateAddress(props.loan.formatted.formattedUUID)}</Text>
+                    <Text>{easyTruncateAddress(loan.formatted.formattedUUID)}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -155,7 +157,7 @@ export default function Card(props) {
                     <Text variant='property'>Owner</Text>
                   </Td>
                   <Td>
-                    <Text>{easyTruncateAddress(props.loan.raw.owner)}</Text>
+                    <Text>{easyTruncateAddress(loan.raw.owner)}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -163,7 +165,7 @@ export default function Card(props) {
                     <Text variant='property'>Vault Collateral</Text>
                   </Td>
                   <Td>
-                    <Text>{props.loan.formatted.formattedVaultCollateral}</Text>
+                    <Text>{loan.formatted.formattedVaultCollateral}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -171,7 +173,7 @@ export default function Card(props) {
                     <Text variant='property'>Vault Loan</Text>
                   </Td>
                   <Td>
-                    <Text>{props.loan.formatted.formattedVaultLoan}</Text>
+                    <Text>{loan.formatted.formattedVaultLoan}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -179,7 +181,7 @@ export default function Card(props) {
                     <Text variant='property'>Liquidation Fee</Text>
                   </Td>
                   <Td>
-                    <Text>{props.loan.formatted.formattedLiquidationFee}</Text>
+                    <Text>{loan.formatted.formattedLiquidationFee}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -187,16 +189,16 @@ export default function Card(props) {
                     <Text variant='property'>Liquidation Ratio</Text>
                   </Td>
                   <Td>
-                    <Text>{props.loan.formatted.formattedLiquidationRatio}</Text>
+                    <Text>{loan.formatted.formattedLiquidationRatio}</Text>
                   </Td>
                 </Tr>
-                {props.loan.formatted.formattedClosingPrice && (
+                {loan.formatted.formattedClosingPrice && (
                   <Tr>
                     <Td>
                       <Text variant='property'>Closing Price</Text>
                     </Td>
                     <Td>
-                      <Text>{props.loan.formatted.formattedClosingPrice}</Text>
+                      <Text>{loan.formatted.formattedClosingPrice}</Text>
                     </Td>
                   </Tr>
                 )}
@@ -204,7 +206,7 @@ export default function Card(props) {
             </Table>
           </TableContainer>
           <Flex>
-            {props.loan.raw.status === 'ready' && (
+            {loan.raw.status === 'ready' && (
               <VStack>
                 <Button
                   variant='outline'
@@ -213,7 +215,7 @@ export default function Card(props) {
                 </Button>
               </VStack>
             )}
-            {props.loan.raw.status === ('not-ready' || 'pre-liquidated' || 'pre-paid') && (
+            {loan.raw.status === ('not-ready' || 'pre-liquidated' || 'pre-paid') && (
               <Button
                 _hover={{
                   shadow: 'none',
@@ -223,14 +225,14 @@ export default function Card(props) {
                 color='gray'
                 variant='outline'></Button>
             )}
-            {props.loan.raw.status === 'funded' && (
+            {loan.raw.status === 'funded' && (
               <VStack>
                 <Button
                   variant='outline'
                   onClick={() => setBorrowModalOpen(true)}>
                   BORROW
                 </Button>
-                {props.loan.raw.vaultLoan > 0 ? (
+                {loan.raw.vaultLoan > 0 ? (
                   <Button
                     variant='outline'
                     onClick={() => setRepayModalOpen(true)}>
@@ -243,11 +245,7 @@ export default function Card(props) {
                     CLOSE LOAN
                   </Button>
                 )}
-                {countCollateralToDebtRatio(
-                  props.bitCoinValue,
-                  props.loan.raw.vaultCollateral,
-                  props.loan.raw.vaultLoan
-                ) < 140 && (
+                {countCollateralToDebtRatio(bitCoinValue, loan.raw.vaultCollateral, loan.raw.vaultLoan) < 140 && (
                   <Button
                     variant='outline'
                     onClick={() => liquidateLoanContract()}>
@@ -262,19 +260,21 @@ export default function Card(props) {
       <BorrowModal
         isOpen={isBorrowModalOpen}
         closeModal={onBorrowModalClose}
-        walletType={props.walletType}
-        vaultLoanAmount={props.loan.raw.vaultLoan}
-        BTCDeposit={props.loan.raw.vaultCollateral}
-        uuid={props.loan.raw.dlcUUID}
-        creator={props.creator}></BorrowModal>
+        walletType={walletType}
+        vaultLoanAmount={loan.raw.vaultLoan}
+        BTCDeposit={loan.raw.vaultCollateral}
+        uuid={loan.raw.dlcUUID}
+        creator={creator}
+        blockchain={blockchain}></BorrowModal>
       <RepayModal
         isOpen={isRepayModalOpen}
         closeModal={onRepayModalClose}
-        walletType={props.walletType}
-        vaultLoanAmount={props.loan.raw.vaultLoan}
-        BTCDeposit={props.loan.raw.vaultCollateral}
-        uuid={props.loan.raw.dlcUUID}
-        creator={props.creator}></RepayModal>
+        walletType={walletType}
+        vaultLoanAmount={loan.raw.vaultLoan}
+        BTCDeposit={loan.raw.vaultCollateral}
+        uuid={loan.raw.dlcUUID}
+        creator={creator}
+        blockchain={blockchain}></RepayModal>
     </>
   );
 }

@@ -52,8 +52,7 @@ export default function App() {
   }, []);
 
   const handleAccountInformation = (data) => {
-    const isWalletTypeDefined = data.walletType ? true : false;
-    setConnected(isWalletTypeDefined);
+    setConnected(!!data.walletType);
     setWalletType(data.walletType);
     setAddress(data.address);
     setBlockchain(data.blockchain);

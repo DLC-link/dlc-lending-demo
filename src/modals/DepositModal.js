@@ -29,13 +29,13 @@ import {
   fixedTwoDecimalUnshift,
   countCollateralToDebtRatio,
   formatCollateralInUSD,
-  formatBitcoinInUSDAmount
+  formatBitcoinInUSDAmount,
 } from '../utils';
 import eventBus from '../EventBus';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
 
-export default function DepositModal({ isOpen, closeModal, walletType }) {
+export default function DepositModal({ isOpen, closeModal, walletType, blockchain, Z }) {
   const [collateralAmount, setCollateralAmount] = useState(undefined);
   const [vaultLoanAmount, setVaultLoanAmount] = useState(undefined);
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -86,7 +86,10 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   const sendLoanContract = (loanContract) => {
     switch (walletType) {
       case 'hiro':
-        sendLoanContractToStacks(loanContract).then(eventBus.dispatch('create-loan', { loan: loanContract }));
+      case 'xverse':
+        sendLoanContractToStacks(loanContract, blockchain).then(
+          eventBus.dispatch('create-loan', { loan: loanContract })
+        );
         break;
       case 'metamask':
         sendLoanContractToEthereum(loanContract);
