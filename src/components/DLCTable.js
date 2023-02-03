@@ -31,10 +31,6 @@ export default function DLCTable({ isConnected, creator, walletType, blockchain 
   }, []);
 
   useEffect(() => {
-    console.log(loans);
-  }, [loans]);
-
-  useEffect(() => {
     refreshLoansTable(false);
   }, [initialLoans]);
 

@@ -17,9 +17,8 @@ import {
 } from '@chakra-ui/react';
 import { Image } from '@chakra-ui/react';
 import { requestAndDispatchHiroOrXverseAccountInformation } from '../blockchainFunctions/stacksFunctions';
-import { requestAndDispatchMetaMaskAccountInformation } from '../blockchainFunctions/ethereumFunctions';
 
-export default function SelectWalletModal({ isOpen, closeModal, walletConnectClient }) {
+export default function SelectWalletModal({ isOpen, closeModal }) {
   const blockchains = [
     { id: 'stacks:1', name: 'Mainnet' },
     { id: 'stacks:2147483648', name: 'Testnet' },

@@ -1,4 +1,4 @@
-import { StacksMainnet, StacksMocknet, StacksTestnet } from '@stacks/network';
+import { StacksMocknet } from '@stacks/network';
 import {
   uintCV,
   bufferCV,
@@ -13,7 +13,7 @@ import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { openContractCall } from '@stacks/connect';
-import { customShiftValue, fixedTwoDecimalUnshift, hexToBytes } from '../utils';
+import { customShiftValue, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
 import loanFormatter from '../LoanFormatter';
 import { blockchains } from '../networks';
