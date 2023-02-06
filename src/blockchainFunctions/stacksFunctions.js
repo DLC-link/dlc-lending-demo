@@ -20,19 +20,17 @@ import { blockchains } from '../networks';
 import { createAndDispatchAccountInformation } from '../accountInformation';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
-  const contractAddress = blockchains[blockchain].sampleContractAddress;
-  const contractName = blockchains[blockchain].sampleContractName;
-  const network = blockchains[blockchain].network;
+  const { loanContractAddress, loanContractName, network } = blockchains[blockchain];
 
   return {
-    contractAddress: contractAddress,
-    contractName: contractName,
-    functionName: functionName,
-    functionArgs: functionArgs,
-    postConditions: postConditions,
+    contractAddress: loanContractAddress,
+    contractName: loanContractName,
+    functionName,
+    functionArgs,
+    postConditions,
     validateWithAbi: true,
-    senderAddress: senderAddress,
-    network: network,
+    senderAddress,
+    network,
     fee: 100000,
     anchorMode: 1,
     onFinish: (data) => {
@@ -45,12 +43,13 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
 };
 
 export async function requestAndDispatchHiroOrXverseAccountInformation(blockchain, walletType) {
-  let isUserSessionStored = true;
+  let isUserSessionStored = false;
 
   try {
     userSession.loadUserData();
+    isUserSessionStored = true;
   } catch (error) {
-    isUserSessionStored = false;
+    console.error(error)
   }
 
   if (isUserSessionStored) {
@@ -103,7 +102,7 @@ export async function getStacksLoans(creator, blockchain) {
   let loans = [];
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
-
+ console.log(txOptions)
   try {
     const response = await callReadOnlyFunction(txOptions);
     loans = loanFormatter.formatAllDLC(response.list, 'clarity');
@@ -135,9 +134,7 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'borrow-requested';
-  const assetAddress = blockchains[blockchain].assetContractAddress;
-  const assetContractName = blockchains[blockchain].assetContractName;
-  const assetName = blockchains[blockchain].assetName;
+  const { assetContractAddress, assetContractName, assetName } = blockchains[blockchain];
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
@@ -145,7 +142,7 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
       blockchains[blockchain].sampleContractName,
       FungibleConditionCode.GreaterEqual,
       amount,
-      createAssetInfo(assetAddress, assetContractName, assetName)
+      createAssetInfo(assetContractAddress, assetContractName, assetName)
     ),
   ];
 
@@ -180,16 +177,14 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'repay-requested';
-  const assetAddress = blockchains[blockchain].assetContractAddress;
-  const assetContractName = blockchains[blockchain].assetContractName;
-  const assetName = blockchains[blockchain].assetName;
+  const { assetContractAddress, assetContractName, assetName } = blockchains[blockchain];
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
       creator,
       FungibleConditionCode.LessEqual,
       amount,
-      createAssetInfo(assetAddress, assetContractName, assetName)
+      createAssetInfo(assetContractAddress, assetContractName, assetName)
     ),
   ];
 

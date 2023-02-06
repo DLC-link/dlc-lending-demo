@@ -10,8 +10,8 @@ const mocknet = new StacksMocknet({
 function createBlockchainInformation(
   name,
   network,
-  sampleContractAddress,
-  sampleContractName,
+  loanContractAddress,
+  loanContractName,
   managerContractAddress,
   managerContractName,
   assetContractAddress,
@@ -21,8 +21,8 @@ function createBlockchainInformation(
   return {
     name,
     network,
-    sampleContractAddress,
-    sampleContractName,
+    loanContractAddress,
+    loanContractName,
     managerContractAddress,
     managerContractName,
     assetContractAddress,
