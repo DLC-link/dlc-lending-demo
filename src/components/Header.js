@@ -7,8 +7,11 @@ import { createAccountInformation } from '../factoryFunctions';
 
 export default function Header({ address, isConnected, walletType }) {
   const disconnect = () => {
-    if (walletType === 'hiro') {
-      userSession.signUserOut('/');
+    switch (walletType) {
+      case 'hiro':
+      case 'xverse':
+        userSession.signUserOut('/');
+        break;
     }
     eventBus.dispatch('account-information', {});
   };

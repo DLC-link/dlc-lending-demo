@@ -1,18 +1,58 @@
-export const networkParams = {
-  '0x63564c40': {
-    chainId: '0x63564c40',
-    rpcUrls: ['https://api.harmony.one'],
-    chainName: 'Harmony Mainnet',
-    nativeCurrency: { name: 'ONE', decimals: 18, symbol: 'ONE' },
-    blockExplorerUrls: ['https://explorer.harmony.one'],
-    iconUrls: ['https://harmonynews.one/wp-content/uploads/2019/11/slfdjs.png'],
-  },
-  '0xa4ec': {
-    chainId: '0xa4ec',
-    rpcUrls: ['https://forno.celo.org'],
-    chainName: 'Celo Mainnet',
-    nativeCurrency: { name: 'CELO', decimals: 18, symbol: 'CELO' },
-    blockExplorerUrl: ['https://explorer.celo.org'],
-    iconUrls: ['https://celo.org/images/marketplace-icons/icon-celo-CELO-color-f.svg'],
-  },
+
+import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
+
+const mainnet = new StacksMainnet();
+const testnet = new StacksTestnet();
+const mocknet = new StacksMocknet({
+  url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS,
+});
+
+function createBlockchainInformation(
+  name,
+  network,
+  loanContractAddress,
+  loanContractName,
+  managerContractAddress,
+  managerContractName,
+  assetContractAddress,
+  assetContractName,
+  assetName
+) {
+  return {
+    name,
+    network,
+    loanContractAddress,
+    loanContractName,
+    managerContractAddress,
+    managerContractName,
+    assetContractAddress,
+    assetContractName,
+    assetName,
+  };
+}
+
+export const blockchains = {
+  'stacks:1': createBlockchainInformation('Mainnet', mainnet, undefined, undefined),
+  'stacks:2147483648': createBlockchainInformation(
+    'Testnet',
+    testnet,
+    process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
+    process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+    process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
+    process.env.REACT_APP_STACKS_MANAGER_NAME,
+    process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
+    process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME,
+    process.env.REACT_APP_STACKS_ASSET_NAME
+  ),
+  'stacks:42': createBlockchainInformation(
+    'Mocknet',
+    mocknet,
+    process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
+    process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
+    process.env.REACT_APP_STACKS_MANAGER_ADDRESS,
+    process.env.REACT_APP_STACKS_MANAGER_NAME,
+    process.env.REACT_APP_STACKS_MANAGER_ADDRESS,
+    process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME,
+    process.env.REACT_APP_STACKS_ASSET_NAME
+  ),
 };

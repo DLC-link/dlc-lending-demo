@@ -9,7 +9,7 @@ import { getStacksLoans } from '../blockchainFunctions/stacksFunctions';
 import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
 import InitialCard from './InitialCard';
 
-export default function DLCTable({ isConnected, creator, walletType }) {
+export default function DLCTable({ isConnected, creator, walletType, blockchain }) {
   const [bitCoinValue, setBitCoinValue] = useState(0);
   const [loans, setLoans] = useState([]);
   const [isLoading, setLoading] = useState(true);
@@ -63,7 +63,8 @@ export default function DLCTable({ isConnected, creator, walletType }) {
     let loans = undefined;
     switch (walletType) {
       case 'hiro':
-        loans = getStacksLoans(creator);
+      case 'xverse':
+        loans = await getStacksLoans(creator, blockchain);
         break;
       case 'metamask':
         loans = getEthereumLoans(creator);
@@ -130,6 +131,7 @@ export default function DLCTable({ isConnected, creator, walletType }) {
                   loan={loan}
                   creator={creator}
                   walletType={walletType}
+                  blockchain={blockchain}
                   bitCoinValue={bitCoinValue}></Card>
               ))}
               {initialLoans?.map((loan) => (
