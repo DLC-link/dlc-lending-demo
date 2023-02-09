@@ -82,7 +82,7 @@ export default function BorrowModal({
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        borrowStacksLoanContract(creator, uuid, additionalLoan, blockchain);
+        borrowStacksLoanContract(creator, uuid, additionalLoan, blockchain, walletType);
         break;
       case 'metamask':
         break;
