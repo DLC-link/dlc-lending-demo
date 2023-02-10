@@ -3,7 +3,6 @@ import eventBus from '../EventBus';
 import { Button, Text, HStack, Flex, Image, Spacer } from '@chakra-ui/react';
 import { userSession } from '../hiroWalletUserSession';
 import Account from './Account';
-import { createAccountInformation } from '../factoryFunctions';
 
 export default function Header({ address, isConnected, walletType }) {
   const disconnect = () => {

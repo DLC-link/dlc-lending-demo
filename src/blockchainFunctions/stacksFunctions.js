@@ -15,7 +15,7 @@ import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV
 import { openContractCall } from '@stacks/connect';
 import { customShiftValue, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
-import loanFormatter from '../LoanFormatter';
+import { formatAllLoans } from '../LoanFormatter';
 import { blockchains } from '../networks';
 import { createAndDispatchAccountInformation } from '../accountInformation';
 
@@ -99,17 +99,16 @@ export async function getStacksLoans(creator, blockchain) {
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(creator)];
   const senderAddress = creator;
-  let loans = [];
+  let formattedLoans = [];
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
- console.log(txOptions)
   try {
     const response = await callReadOnlyFunction(txOptions);
-    loans = loanFormatter.formatAllDLC(response.list, 'clarity');
+    formattedLoans = formatAllLoans(response.list, 'clarity');
   } catch (error) {
     console.error(error);
   }
-  return loans;
+  return formattedLoans;
 }
 
 export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {

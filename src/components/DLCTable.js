@@ -6,7 +6,7 @@ import { RepeatClockIcon } from '@chakra-ui/icons';
 import { VStack, Text, HStack, Collapse, IconButton, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';
 import { getStacksLoans } from '../blockchainFunctions/stacksFunctions';
-import { getEthereumLoans } from '../blockchainFunctions/ethereumFunctions';
+import { getAllEthereumLoansForAddress } from '../blockchainFunctions/ethereumFunctions';
 import InitialCard from './InitialCard';
 
 export default function DLCTable({ isConnected, creator, walletType, blockchain }) {
@@ -22,17 +22,13 @@ export default function DLCTable({ isConnected, creator, walletType, blockchain 
     eventBus.on('loan-event', (data) => {
       if (data.status === 'setup') {
         initialLoans.shift();
+      } else if (data.status === 'initialized') {
+        initialLoans.push(data.loan);
       }
       refreshLoansTable(true);
     });
-    eventBus.on('create-loan', (data) => {
-      initialLoans.push(data.loan);
-    });
   }, []);
 
-  useEffect(() => {
-    refreshLoansTable(false);
-  }, [initialLoans]);
 
   const fetchBitcoinValue = async () => {
     let bitCoinValue = undefined;
@@ -67,7 +63,7 @@ export default function DLCTable({ isConnected, creator, walletType, blockchain 
         loans = await getStacksLoans(creator, blockchain);
         break;
       case 'metamask':
-        loans = getEthereumLoans(creator);
+        loans = getAllEthereumLoansForAddress(creator, blockchain);
         break;
       default:
         console.error('Unsupported wallet type!');

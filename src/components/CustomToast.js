@@ -3,6 +3,7 @@ import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 
 export default function CustomToast({ data }) {
   const eventMap = {
+    initialized: 'Vault initialized!',
     created: 'Vault created!',
     setup: 'Vault established!',
     ready: 'Loan is ready!',
@@ -68,7 +69,7 @@ export default function CustomToast({ data }) {
               fontWeight='extrabold'>
               {message}
             </Text>
-            {success && (
+            {success && data.status !== 'initialized' && (
               <Text
                 fontSize={8}
                 fontWeight='bold'>

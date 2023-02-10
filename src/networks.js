@@ -1,4 +1,3 @@
-
 import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
 
 const mainnet = new StacksMainnet();
@@ -31,6 +30,14 @@ function createBlockchainInformation(
   };
 }
 
+function createEthereumBlockchainInformation(name, protocolContractAddress, usdcContractAddress) {
+  return {
+    name,
+    protocolContractAddress,
+    usdcContractAddress,
+  };
+}
+
 export const blockchains = {
   'stacks:1': createBlockchainInformation('Mainnet', mainnet, undefined, undefined),
   'stacks:2147483648': createBlockchainInformation(
@@ -54,5 +61,14 @@ export const blockchains = {
     process.env.REACT_APP_STACKS_MANAGER_ADDRESS,
     process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME,
     process.env.REACT_APP_STACKS_ASSET_NAME
+  ),
+};
+
+export const ethereumBlockchains = {
+  'ethereum:1': createEthereumBlockchainInformation('Mainnet', undefined, undefined),
+  'ethereum:5': createEthereumBlockchainInformation(
+    'Goerli Testnet',
+    process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS,
+    process.env.REACT_APP_ETHEREUM_USDC_CONTRACT_ADDRESS
   ),
 };

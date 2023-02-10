@@ -26,6 +26,7 @@ import {
   formatBitcoinInUSDAmount,
 } from '../utils';
 import { borrowStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
+import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
 
 export default function BorrowModal({
   isOpen,
@@ -36,6 +37,7 @@ export default function BorrowModal({
   uuid,
   creator,
   blockchain,
+  id
 }) {
   const [additionalLoan, setAdditionalLoan] = useState();
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -85,6 +87,7 @@ export default function BorrowModal({
         borrowStacksLoanContract(creator, uuid, additionalLoan, blockchain);
         break;
       case 'metamask':
+        borrowEthereumLoan(creator, uuid, additionalLoan, blockchain)
         break;
       default:
         console.error('Unsupported wallet type!');

@@ -2,8 +2,9 @@ import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
 import { cvToValue, deserializeCV } from '@stacks/transactions';
 import { io as ioClient } from 'socket.io-client';
 import { ethers } from 'ethers';
-import { abi as loanManagerABI } from './loanManagerABI';
-import { abi as usdcForDLCsABI } from './usdcForDLCsABI';
+import { abi as protocolContractABI } from './abis/protocolContractABI';
+import { abi as usdcContractABI } from './abis/usdcContractABI';
+import { abi as dlcManagerContractABI } from './abis/dlcManagerContractABI';
 import eventBus from './EventBus';
 
 const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
@@ -48,10 +49,14 @@ function handleTx(txInfo) {
     'validate-price-data': 'liquidating',
     'close-loan': 'closing',
     'post-close-dlc': 'closed',
-    'borrow': 'borrowed',
-    'repay': 'repaid',
+    borrow: 'borrowed',
+    repay: 'repaid',
   };
-  eventBus.dispatch("loan-event", { status: txMap[txInfo.contract_call.function_name], txId: txInfo.tx_id, chain: 'stacks' });
+  eventBus.dispatch('loan-event', {
+    status: txMap[txInfo.contract_call.function_name],
+    txId: txInfo.tx_id,
+    chain: 'stacks',
+  });
 }
 
 function startStacksObserver() {
@@ -66,8 +71,8 @@ function startStacksObserver() {
     stacksSocket.socket.connect();
   });
 
-  stacksSocket.socket.on("connect", async () => {
-    console.log("[Stacks] (Re)connected stacksSocket");
+  stacksSocket.socket.on('connect', async () => {
+    console.log('[Stacks] (Re)connected stacksSocket');
   });
 
   setInterval(() => {
@@ -81,17 +86,15 @@ function startStacksObserver() {
   stacksSocket.subscribeAddressTransactions(contractFullName);
 
   // Handling incoming txs
-  stacksSocket.socket.on(
-    "address-transaction",
-    async (address, txWithTransfers) => {
-      console.log(`TX happened on ${address}`);
-      const _tx = txWithTransfers.tx;
-      if (_tx.tx_status !== "success") {
-        eventBus.dispatch({ status: 'failed', txId: _tx.tx_id, chain: 'stacks'});
-      }
-      const txInfo = await fetchTXInfo(_tx.tx_id);
-      handleTx(txInfo);
-    });
+  stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
+    console.log(`TX happened on ${address}`);
+    const _tx = txWithTransfers.tx;
+    if (_tx.tx_status !== 'success') {
+      eventBus.dispatch({ status: 'failed', txId: _tx.tx_id, chain: 'stacks' });
+    }
+    const txInfo = await fetchTXInfo(_tx.tx_id);
+    handleTx(txInfo);
+  });
 }
 
 function startEthObserver() {
@@ -100,37 +103,52 @@ function startEthObserver() {
     const provider = new ethers.providers.Web3Provider(ethereum);
     const signer = provider.getSigner();
 
-    const loanManagerETH = new ethers.Contract(process.env.REACT_APP_ETHEREUM_CONTRACT_ADDRESS, loanManagerABI, signer);
+    const protocolContractETH = new ethers.Contract(
+      process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS,
+      protocolContractABI,
+      signer
+    );
+    const usdcContractETH = new ethers.Contract(
+      process.env.REACT_APP_ETHEREUM_USDC_CONTRACT_ADDRESS,
+      usdcContractABI,
+      signer
+    );
+    const dlcManagerContractETH = new ethers.Contract(
+      process.env.REACT_APP_ETHEREUM_DLCMANAGER_CONTRACT_ADDRESS,
+      dlcManagerContractABI,
+      signer
+    );
 
-    const usdcContract = new ethers.Contract(process.env.REACT_APP_USDC_CONTRACT_ADDRESS, usdcForDLCsABI, signer);
-
-    loanManagerETH.on('CreateDLC', (...args) =>
-      eventBus.dispatch('fetch-loans-bg', {
+    protocolContractETH.on('SetupLoan', (...args) =>
+      eventBus.dispatch('loan-event', {
         status: 'setup',
         txId: args[args.length - 1].transactionHash,
       })
     );
-    loanManagerETH.on('CreateDLCInternal', (...args) =>
-      eventBus.dispatch('fetch-loans-bg', {
+
+    dlcManagerContractETH.on('CreateDLC', (...args) =>
+      eventBus.dispatch('loan-event', {
         status: 'ready',
         txId: args[args.length - 1].transactionHash,
       })
     );
-    loanManagerETH.on('SetStatusFunded', (...args) =>
-      eventBus.dispatch('fetch-loans-bg', {
+
+    dlcManagerContractETH.on('SetStatusFunded', (...args) =>
+      eventBus.dispatch('loan-event', {
         status: 'funded',
         txId: args[args.length - 1].transactionHash,
       })
     );
-    loanManagerETH.on('CloseDLC', (...args) =>
-      eventBus.dispatch('fetch-loans-bg', {
+
+    protocolContractETH.on('CloseDLC', (...args) =>
+      eventBus.dispatch('loan-event', {
         status: 'closed',
         txId: args[args.length - 1].transactionHash,
       })
     );
-    usdcContract.on('Approval', (...args) => {
-      console.log(args);
-      eventBus.dispatch('fetch-loans-bg', {
+    
+    usdcContractETH.on('Approval', (...args) => {
+      eventBus.dispatch('loan-event', {
         status: 'approved',
         txId: args[args.length - 1].transactionHash,
       });

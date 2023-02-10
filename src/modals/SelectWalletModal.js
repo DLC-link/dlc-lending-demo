@@ -17,12 +17,18 @@ import {
 } from '@chakra-ui/react';
 import { Image } from '@chakra-ui/react';
 import { requestAndDispatchHiroOrXverseAccountInformation } from '../blockchainFunctions/stacksFunctions';
+import { requestAndDispatchMetaMaskAccountInformation } from '../blockchainFunctions/ethereumFunctions';
 
 export default function SelectWalletModal({ isOpen, closeModal }) {
   const blockchains = [
     { id: 'stacks:1', name: 'Mainnet' },
     { id: 'stacks:2147483648', name: 'Testnet' },
     { id: 'stacks:42', name: 'Mocknet' },
+  ];
+
+  const ethereumBlockchains = [
+    { id: 'ethereum:1', name: 'Mainnet' },
+    { id: 'ethereum:5', name: 'Goerli Testnet' },
   ];
 
   return (
@@ -49,9 +55,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
             <Menu>
               {({ isOpen }) => (
                 <>
-                  <Tooltip label='Not yet available!' placement='top-start'>
                     <MenuButton
-                      disabled
                       width='100%'
                       variant='outline'>
                       <HStack
@@ -66,14 +70,13 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                         <Text variant='selector'>{isOpen ? 'Choose Network' : 'Metamask'}</Text>
                       </HStack>
                     </MenuButton>
-                  </Tooltip>
                   <MenuList>
-                    {blockchains.map((blockchain, idx) => {
+                    {ethereumBlockchains.map((blockchain, idx) => {
                       return (
                         <MenuItem
                           key={`chain-${idx}`}
                           onClick={() => {
-                            // requestAndDispatchMetaMaskAccountInformation();
+                            requestAndDispatchMetaMaskAccountInformation(blockchain.id);
                             closeModal();
                           }}>
                           <Text variant='selector'>{blockchain.name}</Text>
