@@ -88,7 +88,7 @@ export default function RepayModal({
         repayStacksLoanContract(creator, uuid, additionalRepay, blockchain);
         break;
       case 'metamask':
-        repayEthereumLoan(creator, id, additionalRepay, blockchain)
+        repayEthereumLoan(uuid, additionalRepay, blockchain)
         break;
       default:
         console.error('Unsupported wallet type!');

@@ -85,7 +85,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
         closeStacksLoanContract(creator, loan.raw.dlcUUID, blockchain);
         break;
       case 'metamask':
-        closeEthereumLoan(loan.raw.id, blockchain);
+        closeEthereumLoan(loan.raw.uuid, blockchain);
         break;
       default:
         console.error('Unsupported wallet type!');

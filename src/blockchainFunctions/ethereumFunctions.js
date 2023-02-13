@@ -17,7 +17,6 @@ try {
   console.error(error);
 }
 
-
 export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
   try {
     const { ethereum } = window;
@@ -122,7 +121,7 @@ export async function getEthereumLoanByUUID(UUID, blockchain) {
 export async function borrowEthereumLoan(creator, UUID, additionalLoan, blockchain) {
   const { protocolContractAddress } = ethereumBlockchains[blockchain];
   const protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
-  const loan = await getEthereumLoanByUUID(UUID, blockchain)
+  const loan = await getEthereumLoanByUUID(UUID, blockchain);
   if (isAllowedInMetamask(creator, additionalLoan, blockchain)) {
     try {
       await protocolContractETH.borrow(parseInt(loan.id._hex), additionalLoan).then((response) =>
@@ -140,9 +139,9 @@ export async function borrowEthereumLoan(creator, UUID, additionalLoan, blockcha
 export async function repayEthereumLoan(UUID, additionalRepayment, blockchain) {
   const { protocolContractAddress } = ethereumBlockchains[blockchain];
   const protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
-  const loanID = getEthereumLoanByUUID(UUID, blockchain);
+  const loan = await getEthereumLoanByUUID(UUID, blockchain);
   try {
-    protocolContractETH.repay(loanID, additionalRepayment).then((response) =>
+    protocolContractETH.repay(parseInt(loan.id._hex), additionalRepayment).then((response) =>
       eventBus.dispatch('loan-event', {
         status: 'repay-requested',
         txId: response.hash,
@@ -156,9 +155,9 @@ export async function repayEthereumLoan(UUID, additionalRepayment, blockchain) {
 export async function liquidateEthereumLoan(UUID, blockchain) {
   const { protocolContractAddress } = ethereumBlockchains[blockchain];
   const protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
-  const loanID = getEthereumLoanByUUID(UUID);
+  const loan = await getEthereumLoanByUUID(UUID, blockchain);
   try {
-    protocolContractETH.attemptLiquidate(loanID).then((response) =>
+    protocolContractETH.attemptLiquidate(parseInt(loan.id._hex)).then((response) =>
       eventBus.dispatch('loan-event', {
         status: 'liquidation-requested',
         txId: response.hash,
@@ -172,9 +171,9 @@ export async function liquidateEthereumLoan(UUID, blockchain) {
 export async function closeEthereumLoan(UUID, blockchain) {
   const { protocolContractAddress } = ethereumBlockchains[blockchain];
   const protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
-  const loanID = getEthereumLoanByUUID(UUID, blockchain);
+  const loan = await getEthereumLoanByUUID(UUID, blockchain);
   try {
-    protocolContractETH.closeLoan(loanID).then((response) =>
+    protocolContractETH.closeLoan(parseInt(loan.id._hex)).then((response) =>
       eventBus.dispatch('loan-event', {
         status: 'closing-requested',
         txId: response.hash,
