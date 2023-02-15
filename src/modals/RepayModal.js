@@ -83,7 +83,7 @@ export default function RepayModal({
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        repayStacksLoanContract(creator, uuid, additionalRepay, blockchain);
+        repayStacksLoanContract(creator, uuid, additionalRepay, blockchain, walletType);
         break;
       case 'metamask':
         break;
