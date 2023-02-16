@@ -11,7 +11,7 @@ import InitialCard from './InitialCard';
 
 export default function DLCTable({ isConnected, creator, walletType, blockchain }) {
   const [bitCoinValue, setBitCoinValue] = useState(0);
-  const [loans, setLoans] = useState([]);
+  const [loans, setLoans] = useState(undefined);
   const [isLoading, setLoading] = useState(true);
   const [isManualLoading, setManualLoading] = useState(undefined);
   const [initialLoans, setInitialLoans] = useState([]);
@@ -28,7 +28,6 @@ export default function DLCTable({ isConnected, creator, walletType, blockchain 
       refreshLoansTable(true);
     });
   }, []);
-
 
   const fetchBitcoinValue = async () => {
     let bitCoinValue = undefined;
@@ -56,19 +55,20 @@ export default function DLCTable({ isConnected, creator, walletType, blockchain 
   };
 
   const fetchAllLoans = async () => {
-    let loans = undefined;
+    let loans;
     switch (walletType) {
       case 'hiro':
       case 'xverse':
         loans = await getStacksLoans(creator, blockchain);
         break;
       case 'metamask':
-        loans = getAllEthereumLoansForAddress(creator, blockchain);
+        loans = await getAllEthereumLoansForAddress(creator, blockchain);
         break;
       default:
         console.error('Unsupported wallet type!');
         break;
     }
+    eventBus.dispatch('loans', loans)
     return loans;
   };
 
@@ -121,17 +121,18 @@ export default function DLCTable({ isConnected, creator, walletType, blockchain 
             <SimpleGrid
               columns={[1, 4]}
               spacing={[0, 15]}>
-              {loans?.map((loan) => (
+              {loans?.map((loan, i) => (
                 <Card
-                  key={loan.raw.dlcUUID}
+                  key={i}
                   loan={loan}
                   creator={creator}
                   walletType={walletType}
                   blockchain={blockchain}
                   bitCoinValue={bitCoinValue}></Card>
               ))}
-              {initialLoans?.map((loan) => (
+              {initialLoans?.map((loan, j) => (
                 <InitialCard
+                  key={j}
                   loan={loan}
                   creator={creator}
                   walletType={walletType}

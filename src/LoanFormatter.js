@@ -1,6 +1,7 @@
 import { customShiftValue, fixedTwoDecimalShift } from './utils';
 import { addressToString } from '@stacks/transactions';
 import { bytesToHex } from 'micro-stacks/common';
+import { ethers } from 'ethers';
 
 const statuses = {
   0: 'none',
@@ -27,6 +28,20 @@ function convertClarityResponseToUsableFormat(loanContract) {
   };
 }
 
+function formatClarityResponseForVisualization(rawLoanContract) {
+  const formattedLoan = {
+    raw: rawLoanContract,
+    formatted: {
+      uuid: `0x${rawLoanContract.uuid}`,
+      vaultCollateral: customShiftValue(rawLoanContract.vaultCollateral, 8, true) + ' BTC',
+      vaultLoan: '$ ' + customShiftValue(rawLoanContract.vaultLoan, 6, true),
+      liquidationFee: fixedTwoDecimalShift(rawLoanContract.liquidationFee) + ' %',
+      liquidationRatio: fixedTwoDecimalShift(rawLoanContract.liquidationRatio) + ' %',
+    },
+  };
+  return formattedLoan;
+}
+
 function convertSolidityResponseToUsableFormat(loanContract) {
   return {
     id: parseInt(loanContract.id._hex),
@@ -37,41 +52,18 @@ function convertSolidityResponseToUsableFormat(loanContract) {
     vaultLoan: parseInt(loanContract.vaultLoan._hex),
     liquidationFee: parseInt(loanContract.liquidationFee._hex),
     liquidationRatio: parseInt(loanContract.liquidationRatio._hex),
-    ...(parseInt(loanContract.closingPrice._hex) !== 0 && {
-      closingPrice: parseInt(loanContract.closingPrice._hex),
-    }),
   };
 }
 
-function formatClarityResponseForVisualization(raw) {
+function formatSolidityResponseForVisualization(rawLoanContract) {
   const formattedLoan = {
-    raw: raw,
+    raw: rawLoanContract,
     formatted: {
-      uuid: `0x${raw.uuid}`,
-      vaultCollateral: customShiftValue(raw.vaultCollateral, 8, true) + ' BTC',
-      vaultLoan: '$ ' + customShiftValue(raw.vaultLoan, 6, true),
-      liquidationFee: fixedTwoDecimalShift(raw.liquidationFee) + ' %',
-      liquidationRatio: fixedTwoDecimalShift(raw.liquidationRatio) + ' %',
-      ...(raw.hasOwnProperty('closingPrice') && {
-        closingPrice: '$ ' + Math.round((customShiftValue(raw.closingPrice, 8, true) + Number.EPSILON) * 100) / 100,
-      }),
-    },
-  };
-  return formattedLoan;
-}
-
-function formatSolidityResponseForVisualization(raw) {
-  const formattedLoan = {
-    raw: raw,
-    formatted: {
-      uuid: raw.uuid,
-      liquidationFee: fixedTwoDecimalShift(raw.liquidationFee) + ' %',
-      liquidationRatio: fixedTwoDecimalShift(raw.liquidationRatio) + ' %',
-      vaultCollateral: customShiftValue(raw.vaultCollateral, 8, true) + ' BTC',
-      vaultLoan: '$ ' + customShiftValue(raw.vaultLoan, 6, true),
-      ...(raw.hasOwnProperty('closingPrice') && {
-        closingPrice: '$ ' + Math.round((customShiftValue(raw.closingPrice, 8, true) + Number.EPSILON) * 100) / 100,
-      }),
+      uuid: rawLoanContract.uuid,
+      liquidationFee: fixedTwoDecimalShift(rawLoanContract.liquidationFee) + ' %',
+      liquidationRatio: fixedTwoDecimalShift(rawLoanContract.liquidationRatio) + ' %',
+      vaultCollateral: customShiftValue(rawLoanContract.vaultCollateral, 8, true) + ' BTC',
+      vaultLoan: '$ ' + customShiftValue(rawLoanContract.vaultLoan, 18, true),
     },
   };
   return formattedLoan;
@@ -82,15 +74,15 @@ export function formatAllLoans(loans, responseType) {
   switch (responseType) {
     case 'solidity':
       for (const loan of loans) {
-        const convertedLoan = convertSolidityResponseToUsableFormat(loan)
-        const formattedLoan = formatSolidityResponseForVisualization(convertedLoan)
+        const convertedLoan = convertSolidityResponseToUsableFormat(loan);
+        const formattedLoan = formatSolidityResponseForVisualization(convertedLoan);
         formattedLoans.push(formattedLoan);
       }
       break;
     case 'clarity':
       for (const loan of loans) {
-        const convertedLoan = convertClarityResponseToUsableFormat(loan)
-        const formattedLoan = formatClarityResponseForVisualization(convertedLoan)
+        const convertedLoan = convertClarityResponseToUsableFormat(loan);
+        const formattedLoan = formatClarityResponseForVisualization(convertedLoan);
         formattedLoans.push(formattedLoan);
       }
       break;

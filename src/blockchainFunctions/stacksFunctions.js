@@ -16,11 +16,11 @@ import { openContractCall } from '@stacks/connect';
 import { customShiftValue, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
 import { formatAllLoans } from '../LoanFormatter';
-import { blockchains } from '../networks';
+import { stacksBlockchains } from '../networks';
 import { createAndDispatchAccountInformation } from '../accountInformation';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
-  const { loanContractAddress, loanContractName, network } = blockchains[blockchain];
+  const { loanContractAddress, loanContractName, network } = stacksBlockchains[blockchain];
 
   return {
     contractAddress: loanContractAddress,
@@ -133,12 +133,12 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'borrow-requested';
-  const { assetContractAddress, assetContractName, assetName } = blockchains[blockchain];
+  const { assetContractAddress, assetContractName, assetName } = stacksBlockchains[blockchain];
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      blockchains[blockchain].sampleContractAddress,
-      blockchains[blockchain].sampleContractName,
+      stacksBlockchains[blockchain].sampleContractAddress,
+      stacksBlockchains[blockchain].sampleContractName,
       FungibleConditionCode.GreaterEqual,
       amount,
       createAssetInfo(assetContractAddress, assetContractName, assetName)
@@ -176,7 +176,7 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'repay-requested';
-  const { assetContractAddress, assetContractName, assetName } = blockchains[blockchain];
+  const { assetContractAddress, assetContractName, assetName } = stacksBlockchains[blockchain];
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(

@@ -7,20 +7,18 @@ import {
   ModalHeader,
   ModalBody,
   ModalCloseButton,
-  Button,
   Text,
   MenuButton,
   MenuItem,
   MenuList,
   Menu,
-  Tooltip,
 } from '@chakra-ui/react';
 import { Image } from '@chakra-ui/react';
 import { requestAndDispatchHiroOrXverseAccountInformation } from '../blockchainFunctions/stacksFunctions';
 import { requestAndDispatchMetaMaskAccountInformation } from '../blockchainFunctions/ethereumFunctions';
 
 export default function SelectWalletModal({ isOpen, closeModal }) {
-  const blockchains = [
+  const stacksBlockchains = [
     { id: 'stacks:1', name: 'Mainnet' },
     { id: 'stacks:2147483648', name: 'Testnet' },
     { id: 'stacks:42', name: 'Mocknet' },
@@ -106,7 +104,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                     </HStack>
                   </MenuButton>
                   <MenuList>
-                    {blockchains.map((blockchain, idx) => {
+                    {stacksBlockchains.map((blockchain, idx) => {
                       return (
                         <MenuItem
                           key={`chain-${idx}`}
@@ -141,7 +139,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                     </HStack>
                   </MenuButton>
                   <MenuList>
-                    {blockchains.map((blockchain, idx) => {
+                    {stacksBlockchains.map((blockchain, idx) => {
                       return (
                         <MenuItem
                           key={`chain-${idx}`}

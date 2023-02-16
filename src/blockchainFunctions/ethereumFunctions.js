@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { abi as usdcContractABI } from '../abis/usdcContractABI';
+import { abi as usdcABI } from '../abis/usdcABI';
 import { abi as protocolContractABI } from '../abis/protocolContractABI';
 import { fixedTwoDecimalShift } from '../utils';
 import eventBus from '../EventBus';
@@ -34,21 +34,19 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
 }
 
 export async function isAllowedInMetamask(creator, vaultLoan, blockchain) {
-  const { protocolContractAddress, usdcContractAddress } = ethereumBlockchains[blockchain];
+  const { protocolContractAddress, usdcAddress } = ethereumBlockchains[blockchain];
+  const usdcETH = new ethers.Contract(usdcAddress, usdcABI, signer);
   const desiredAmount = 1000000n * 10n ** 18n;
-  const usdcContractETH = new ethers.Contract(usdcContractAddress, usdcContractABI, signer);
-  const allowedAmount = await usdcContractETH.allowance(creator, protocolContractAddress);
+  const allowedAmount = await usdcETH.allowance(creator, protocolContractAddress);
 
   if (fixedTwoDecimalShift(vaultLoan) > parseInt(allowedAmount)) {
     try {
-      await usdcContractETH
-        .approve(process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS, desiredAmount)
-        .then((response) =>
-          eventBus.dispatch('loan-event', {
-            status: 'approve-requested',
-            txId: response.hash,
-          })
-        );
+      await usdcETH.approve(process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS, desiredAmount).then((response) =>
+        eventBus.dispatch('loan-event', {
+          status: 'approve-requested',
+          txId: response.hash,
+        })
+      );
       return false;
     } catch (error) {
       console.error(error);
@@ -122,14 +120,18 @@ export async function borrowEthereumLoan(creator, UUID, additionalLoan, blockcha
   const { protocolContractAddress } = ethereumBlockchains[blockchain];
   const protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
   const loan = await getEthereumLoanByUUID(UUID, blockchain);
-  if (isAllowedInMetamask(creator, additionalLoan, blockchain)) {
+  console.log(additionalLoan);
+  console.log(ethers.utils.parseUnits(additionalLoan.toString(), 'ether'));
+  if (await isAllowedInMetamask(creator, ethers.utils.parseUnits(additionalLoan.toString(), 'ether'), blockchain)) {
     try {
-      await protocolContractETH.borrow(parseInt(loan.id._hex), additionalLoan).then((response) =>
-        eventBus.dispatch('loan-event', {
-          status: 'borrow-requested',
-          txId: response.hash,
-        })
-      );
+      await protocolContractETH
+        .borrow(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))
+        .then((response) =>
+          eventBus.dispatch('loan-event', {
+            status: 'borrow-requested',
+            txId: response.hash,
+          })
+        );
     } catch (error) {
       console.error(error);
     }
@@ -141,12 +143,14 @@ export async function repayEthereumLoan(UUID, additionalRepayment, blockchain) {
   const protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
   const loan = await getEthereumLoanByUUID(UUID, blockchain);
   try {
-    protocolContractETH.repay(parseInt(loan.id._hex), additionalRepayment).then((response) =>
-      eventBus.dispatch('loan-event', {
-        status: 'repay-requested',
-        txId: response.hash,
-      })
-    );
+    protocolContractETH
+      .repay(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalRepayment.toString(), 'ether'))
+      .then((response) =>
+        eventBus.dispatch('loan-event', {
+          status: 'repay-requested',
+          txId: response.hash,
+        })
+      );
   } catch (error) {
     console.error(error);
   }

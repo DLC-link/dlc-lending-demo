@@ -6,7 +6,7 @@ const mocknet = new StacksMocknet({
   url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS,
 });
 
-function createBlockchainInformation(
+function createStacksBlockchainInformation(
   name,
   network,
   loanContractAddress,
@@ -30,17 +30,17 @@ function createBlockchainInformation(
   };
 }
 
-function createEthereumBlockchainInformation(name, protocolContractAddress, usdcContractAddress) {
+function createEthereumBlockchainInformation(name, protocolContractAddress, usdcAddress) {
   return {
     name,
     protocolContractAddress,
-    usdcContractAddress,
+    usdcAddress,
   };
 }
 
-export const blockchains = {
-  'stacks:1': createBlockchainInformation('Mainnet', mainnet, undefined, undefined),
-  'stacks:2147483648': createBlockchainInformation(
+export const stacksBlockchains = {
+  'stacks:1': createStacksBlockchainInformation('Mainnet', mainnet, undefined, undefined),
+  'stacks:2147483648': createStacksBlockchainInformation(
     'Testnet',
     testnet,
     process.env.REACT_APP_STACKS_TESTNET_CONTRACT_ADDRESS,
@@ -51,7 +51,7 @@ export const blockchains = {
     process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME,
     process.env.REACT_APP_STACKS_ASSET_NAME
   ),
-  'stacks:42': createBlockchainInformation(
+  'stacks:42': createStacksBlockchainInformation(
     'Mocknet',
     mocknet,
     process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
@@ -68,7 +68,7 @@ export const ethereumBlockchains = {
   'ethereum:1': createEthereumBlockchainInformation('Mainnet', undefined, undefined),
   'ethereum:5': createEthereumBlockchainInformation(
     'Goerli Testnet',
-    process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS,
-    process.env.REACT_APP_ETHEREUM_USDC_CONTRACT_ADDRESS
+    process.env.REACT_APP_GOERLI_PROTOCOL_CONTRACT_ADDRESS,
+    process.env.REACT_APP_GOERLI_USDC_ADDRESS
   ),
 };
