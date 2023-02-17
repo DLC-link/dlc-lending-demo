@@ -63,7 +63,7 @@ function formatSolidityResponseForVisualization(rawLoanContract) {
       liquidationFee: fixedTwoDecimalShift(rawLoanContract.liquidationFee) + ' %',
       liquidationRatio: fixedTwoDecimalShift(rawLoanContract.liquidationRatio) + ' %',
       vaultCollateral: customShiftValue(rawLoanContract.vaultCollateral, 8, true) + ' BTC',
-      vaultLoan: '$ ' + customShiftValue(rawLoanContract.vaultLoan, 18, true),
+      vaultLoan: '$ ' + customShiftValue(rawLoanContract.vaultLoan, 18, true).toFixed(2),
     },
   };
   return formattedLoan;

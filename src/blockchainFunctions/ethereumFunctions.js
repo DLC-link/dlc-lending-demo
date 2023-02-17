@@ -41,7 +41,7 @@ export async function isAllowedInMetamask(creator, vaultLoan, blockchain) {
 
   if (fixedTwoDecimalShift(vaultLoan) > parseInt(allowedAmount)) {
     try {
-      await usdcETH.approve(process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS, desiredAmount).then((response) =>
+      await usdcETH.approve(process.env.REACT_APP_GOERLI_PROTOCOL_CONTRACT_ADDRESS, desiredAmount).then((response) =>
         eventBus.dispatch('loan-event', {
           status: 'approve-requested',
           txId: response.hash,
@@ -120,8 +120,6 @@ export async function borrowEthereumLoan(creator, UUID, additionalLoan, blockcha
   const { protocolContractAddress } = ethereumBlockchains[blockchain];
   const protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
   const loan = await getEthereumLoanByUUID(UUID, blockchain);
-  console.log(additionalLoan);
-  console.log(ethers.utils.parseUnits(additionalLoan.toString(), 'ether'));
   if (await isAllowedInMetamask(creator, ethers.utils.parseUnits(additionalLoan.toString(), 'ether'), blockchain)) {
     try {
       await protocolContractETH

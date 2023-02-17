@@ -138,8 +138,8 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      blockchains[blockchain].loanContractAddress,
-      blockchains[blockchain].loanContractName,
+      stacksBlockchains[blockchain].loanContractAddress,
+      stacksBlockchains[blockchain].loanContractName,
       FungibleConditionCode.GreaterEqual,
       amount,
       createAssetInfo(assetContractAddress, assetContractName, assetName)
