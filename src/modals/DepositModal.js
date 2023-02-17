@@ -84,7 +84,7 @@ export default function DepositModal({ isOpen, closeModal, walletType, blockchai
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        sendLoanContractToStacks(loanContract, blockchain).then(
+        sendLoanContractToStacks(loanContract, blockchain, walletType).then(
           eventBus.dispatch('loan-event', { status: 'initialized', loan: loanContract })
         );
         break;
