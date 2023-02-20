@@ -1,7 +1,7 @@
 import { customShiftValue, fixedTwoDecimalShift } from './utils';
 import { addressToString } from '@stacks/transactions';
 import { bytesToHex } from 'micro-stacks/common';
-import { ethers } from 'ethers';
+import { compose, map } from 'ramda';
 
 const statuses = {
   0: 'none',
@@ -70,21 +70,13 @@ function formatSolidityResponseForVisualization(rawLoanContract) {
 }
 
 export function formatAllLoans(loans, responseType) {
-  const formattedLoans = [];
+  let formattedLoans = [];
   switch (responseType) {
     case 'solidity':
-      for (const loan of loans) {
-        const convertedLoan = convertSolidityResponseToUsableFormat(loan);
-        const formattedLoan = formatSolidityResponseForVisualization(convertedLoan);
-        formattedLoans.push(formattedLoan);
-      }
+      formattedLoans = compose(map(formatSolidityResponseForVisualization), map(convertSolidityResponseToUsableFormat))(loans);
       break;
     case 'clarity':
-      for (const loan of loans) {
-        const convertedLoan = convertClarityResponseToUsableFormat(loan);
-        const formattedLoan = formatClarityResponseForVisualization(convertedLoan);
-        formattedLoans.push(formattedLoan);
-      }
+      formattedLoans = compose(map(formatClarityResponseForVisualization), map(convertClarityResponseToUsableFormat))(loans);
       break;
     default:
       console.error('Unsupported language!');

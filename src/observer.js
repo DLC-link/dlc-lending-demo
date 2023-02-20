@@ -120,10 +120,6 @@ function startEthObserver() {
     const dlcManagerETH = new ethers.Contract(process.env.REACT_APP_GOERLI_DLC_MANAGER_ADDRESS, dlcManagerABI, signer);
 
     protocolContractETH.on('SetupLoan', (...args) => {
-      console.log(loanUUIDs);
-      console.log(args[0]);
-      console.log(typeof args[0]);
-      console.log(loanUUIDs.includes(args[0]));
       if (loanUUIDs.includes(args[0])) {
         eventBus.dispatch('loan-event', {
           status: 'setup',
