@@ -15,12 +15,12 @@ import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV
 import { openContractCall } from '@stacks/connect';
 import { customShiftValue, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
-import loanFormatter from '../LoanFormatter';
-import { blockchains } from '../networks';
+import { formatAllLoans } from '../LoanFormatter';
+import { stacksBlockchains } from '../networks';
 import { createAndDispatchAccountInformation } from '../accountInformation';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
-  const { loanContractAddress, loanContractName, network } = blockchains[blockchain];
+  const { loanContractAddress, loanContractName, network } = stacksBlockchains[blockchain];
 
   return {
     contractAddress: loanContractAddress,
@@ -99,17 +99,16 @@ export async function getStacksLoans(creator, blockchain) {
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(creator)];
   const senderAddress = creator;
-  let loans = [];
+  let formattedLoans = [];
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
- console.log(txOptions)
   try {
     const response = await callReadOnlyFunction(txOptions);
-    loans = loanFormatter.formatAllDLC(response.list, 'clarity');
+    formattedLoans = formatAllLoans(response.list, 'clarity');
   } catch (error) {
     console.error(error);
   }
-  return loans;
+  return formattedLoans;
 }
 
 export async function getStacksLoanIDByUUID(creator, UUID, blockchain) {
@@ -135,12 +134,12 @@ export async function borrowStacksLoanContract(creator, UUID, additionalLoan, bl
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'borrow-requested';
-  const { assetContractAddress, assetContractName, assetName } = blockchains[blockchain];
+  const { assetContractAddress, assetContractName, assetName } = stacksBlockchains[blockchain];
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      blockchains[blockchain].loanContractAddress,
-      blockchains[blockchain].loanContractName,
+      stacksBlockchains[blockchain].loanContractAddress,
+      stacksBlockchains[blockchain].loanContractName,
       FungibleConditionCode.GreaterEqual,
       amount,
       createAssetInfo(assetContractAddress, assetContractName, assetName)
@@ -177,7 +176,7 @@ export async function repayStacksLoanContract(creator, UUID, additionalRepayment
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'repay-requested';
-  const { assetContractAddress, assetContractName, assetName } = blockchains[blockchain];
+  const { assetContractAddress, assetContractName, assetName } = stacksBlockchains[blockchain];
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(

@@ -27,6 +27,7 @@ import {
   formatBitcoinInUSDAmount,
 } from '../utils';
 import { repayStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
+import { repayEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
 
 export default function RepayModal({
   isOpen,
@@ -37,6 +38,7 @@ export default function RepayModal({
   uuid,
   creator,
   blockchain,
+  id
 }) {
   const [additionalRepay, setAdditionalRepay] = useState();
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -86,6 +88,7 @@ export default function RepayModal({
         repayStacksLoanContract(creator, uuid, additionalRepay, blockchain, walletType);
         break;
       case 'metamask':
+        repayEthereumLoan(uuid, additionalRepay, blockchain)
         break;
       default:
         console.error('Unsupported wallet type!');

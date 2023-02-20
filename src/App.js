@@ -90,6 +90,7 @@ export default function App() {
         {isConnected && (
           <>
             <DepositWithdraw
+              walletType={walletType}
               isConnected={isConnected}
               isLoading={isLoading}></DepositWithdraw>
             <DLCTable

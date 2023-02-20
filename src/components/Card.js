@@ -3,14 +3,14 @@
 import { useEffect } from 'react';
 import { Flex, Text, VStack, Button, TableContainer, Tbody, Table, Tr, Td } from '@chakra-ui/react';
 import { easyTruncateAddress } from '../utils';
-import { customShiftValue, fixedTwoDecimalShift } from '../utils';
+import { customShiftValue } from '../utils';
 import Status from './Status';
 import eventBus from '../EventBus';
 import { useState } from 'react';
 import BorrowModal from '../modals/BorrowModal';
 import RepayModal from '../modals/RepayModal';
 import { liquidateStacksLoanContract, closeStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
-import { liquidateEthereumLoanContract } from '../blockchainFunctions/ethereumFunctions';
+import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
 
 export default function Card({ loan, creator, walletType, blockchain, bitCoinValue }) {
   const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
@@ -70,7 +70,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
         liquidateStacksLoanContract(creator, loan.raw.dlcUUID, blockchain, walletType);
         break;
       case 'metamask':
-        liquidateEthereumLoanContract(loan.raw.id);
+        liquidateEthereumLoan(loan.raw.id, blockchain);
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -85,6 +85,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
         closeStacksLoanContract(creator, loan.raw.dlcUUID, blockchain, walletType);
         break;
       case 'metamask':
+        closeEthereumLoan(loan.raw.uuid, blockchain);
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -94,12 +95,13 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
 
   const lockBTC = async () => {
     const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
+    console.log(loan);
     try {
       const response = await fetch(URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uuid: loan.formatted.formattedUUID,
+          uuid: loan.formatted.uuid,
           acceptCollateral: parseInt(loan.raw.vaultCollateral),
           offerCollateral: 1000,
           totalOutcomes: 100,
@@ -149,7 +151,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
                     <Text variant='property'>UUID</Text>
                   </Td>
                   <Td>
-                    <Text>{easyTruncateAddress(loan.formatted.formattedUUID)}</Text>
+                    <Text>{easyTruncateAddress(loan.formatted.uuid)}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -165,7 +167,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
                     <Text variant='property'>Vault Collateral</Text>
                   </Td>
                   <Td>
-                    <Text>{loan.formatted.formattedVaultCollateral}</Text>
+                    <Text>{loan.formatted.vaultCollateral}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -173,7 +175,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
                     <Text variant='property'>Vault Loan</Text>
                   </Td>
                   <Td>
-                    <Text>{loan.formatted.formattedVaultLoan}</Text>
+                    <Text>{loan.formatted.vaultLoan}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -181,7 +183,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
                     <Text variant='property'>Liquidation Fee</Text>
                   </Td>
                   <Td>
-                    <Text>{loan.formatted.formattedLiquidationFee}</Text>
+                    <Text>{loan.formatted.liquidationFee}</Text>
                   </Td>
                 </Tr>
                 <Tr>
@@ -189,16 +191,16 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
                     <Text variant='property'>Liquidation Ratio</Text>
                   </Td>
                   <Td>
-                    <Text>{loan.formatted.formattedLiquidationRatio}</Text>
+                    <Text>{loan.formatted.liquidationRatio}</Text>
                   </Td>
                 </Tr>
-                {loan.formatted.formattedClosingPrice && (
+                {loan.formatted.closingPrice && (
                   <Tr>
                     <Td>
                       <Text variant='property'>Closing Price</Text>
                     </Td>
                     <Td>
-                      <Text>{loan.formatted.formattedClosingPrice}</Text>
+                      <Text>{loan.formatted.closingPrice}</Text>
                     </Td>
                   </Tr>
                 )}
@@ -263,7 +265,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
         walletType={walletType}
         vaultLoanAmount={loan.raw.vaultLoan}
         BTCDeposit={loan.raw.vaultCollateral}
-        uuid={loan.raw.dlcUUID}
+        uuid={loan.formatted.uuid}
         creator={creator}
         blockchain={blockchain}></BorrowModal>
       <RepayModal
@@ -272,7 +274,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
         walletType={walletType}
         vaultLoanAmount={loan.raw.vaultLoan}
         BTCDeposit={loan.raw.vaultCollateral}
-        uuid={loan.raw.dlcUUID}
+        uuid={loan.formatted.uuid}
         creator={creator}
         blockchain={blockchain}></RepayModal>
     </>
