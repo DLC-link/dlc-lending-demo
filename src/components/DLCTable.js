@@ -125,6 +125,7 @@ export default function DLCTable({ isConnected, creator, walletType, blockchain 
                 <Card
                   key={i}
                   loan={loan}
+                  status={loan.raw.status}
                   creator={creator}
                   walletType={walletType}
                   blockchain={blockchain}

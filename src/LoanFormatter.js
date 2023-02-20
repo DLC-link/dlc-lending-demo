@@ -4,14 +4,14 @@ import { bytesToHex } from 'micro-stacks/common';
 import { compose, map } from 'ramda';
 
 const statuses = {
-  0: 'none',
-  1: 'not-ready',
-  2: 'ready',
-  3: 'funded',
-  4: 'pre-repaid',
-  5: 'repaid',
-  6: 'pre-liquidated',
-  7: 'liquidated',
+  none: 0,
+  'not-ready': 1,
+  ready: 2,
+  funded: 3,
+  'pre-repaid': 4,
+  repaid: 5,
+  'pre-liquidated': 6,
+  liquidated: 7,
 };
 
 function convertClarityResponseToUsableFormat(loanContract) {
@@ -19,7 +19,7 @@ function convertClarityResponseToUsableFormat(loanContract) {
     ...(loanContract.value.data.dlc_uuid.hasOwnProperty('value') && {
       uuid: bytesToHex(loanContract.value.data.dlc_uuid.value.buffer),
     }),
-    status: loanContract.value.data.status.data,
+    status: statuses[loanContract.value.data.status.data],
     owner: addressToString(loanContract.value.data.owner.address),
     vaultCollateral: loanContract.value.data['vault-collateral'].value.toString(),
     vaultLoan: loanContract.value.data['vault-loan'].value.toString(),
@@ -46,7 +46,7 @@ function convertSolidityResponseToUsableFormat(loanContract) {
   return {
     id: parseInt(loanContract.id._hex),
     uuid: loanContract.dlcUUID,
-    status: statuses[loanContract.status],
+    status: loanContract.status,
     owner: loanContract.owner,
     vaultCollateral: parseInt(loanContract.vaultCollateral._hex),
     vaultLoan: parseInt(loanContract.vaultLoan._hex),
@@ -73,10 +73,16 @@ export function formatAllLoans(loans, responseType) {
   let formattedLoans = [];
   switch (responseType) {
     case 'solidity':
-      formattedLoans = compose(map(formatSolidityResponseForVisualization), map(convertSolidityResponseToUsableFormat))(loans);
+      formattedLoans = compose(
+        map(formatSolidityResponseForVisualization),
+        map(convertSolidityResponseToUsableFormat)
+      )(loans);
       break;
     case 'clarity':
-      formattedLoans = compose(map(formatClarityResponseForVisualization), map(convertClarityResponseToUsableFormat))(loans);
+      formattedLoans = compose(
+        map(formatClarityResponseForVisualization),
+        map(convertClarityResponseToUsableFormat)
+      )(loans);
       break;
     default:
       console.error('Unsupported language!');

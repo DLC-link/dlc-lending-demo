@@ -11,10 +11,13 @@ import BorrowModal from '../modals/BorrowModal';
 import RepayModal from '../modals/RepayModal';
 import { liquidateStacksLoanContract, closeStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
 import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { lockBTC } from '../blockchainFunctions/bitcoinFunctions';
+import { ActionButtons } from './ActionButtons';
 
-export default function Card({ loan, creator, walletType, blockchain, bitCoinValue }) {
+export default function Card({ loan, creator, walletType, blockchain, bitCoinValue, status }) {
   const [isBorrowModalOpen, setBorrowModalOpen] = useState(false);
   const [isRepayModalOpen, setRepayModalOpen] = useState(false);
+  const [action, setAction] = useState(undefined);
 
   useEffect(() => {
     eventBus.on('loan-event', (event) => {
@@ -25,43 +28,41 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
     });
   });
 
+  const onBorrowModalOpen = () => {
+    setBorrowModalOpen(true);
+  };
+
   const onBorrowModalClose = () => {
     setBorrowModalOpen(false);
+  };
+
+  const onRepayModalOpen = () => {
+    setRepayModalOpen(true);
   };
 
   const onRepayModalClose = () => {
     setRepayModalOpen(false);
   };
 
-  const sendOfferForSigning = async (offer) => {
-    console.log('Offer: ', offer);
-    const extensionIDs = [
-      'nminefocgojkadkocbddiddjmoooonhe',
-      'gjjgfnpmfpealbpggmhfafcddjiopbpa',
-      'kmidoigmjbbecngmenanflcogbjojlhf',
-      'niinmdkjgghdkkmlilpngkccihjmefin',
-      'bdadpbnmclplacnjpjoigpmbcinccnep',
-      'pijajlnoadmfancnckejodabelilkcoa', // Niel's
-    ];
-
-    for (let i = 0; i < extensionIDs.length; i++) {
-      chrome.runtime.sendMessage(
-        extensionIDs[i],
-        {
-          action: 'get-offer',
-          data: { offer: offer },
-        },
-        {},
-        function () {
-          if (chrome.runtime.lastError) {
-            console.log('Failure: ' + chrome.runtime.lastError.message);
-          } else {
-            console.log('Success: Found receiving end.');
-          }
-        }
-      );
+  useEffect(() => {
+    console.log(status);
+    switch (status) {
+      case 2:
+        setAction('lockLoan');
+        break;
+      case 3:
+        setAction('fundedLoan');
+        break;
+      case 1:
+      case 4:
+      case 5:
+      case 7:
+        setAction('pendingLoan');
+        break;
+      case 6:
+        setAction('closedLoan');
     }
-  };
+  }, [loan, status]);
 
   const liquidateLoanContract = async () => {
     switch (walletType) {
@@ -91,38 +92,6 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
         console.error('Unsupported wallet type!');
         break;
     }
-  };
-
-  const lockBTC = async () => {
-    const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
-    console.log(loan);
-    try {
-      const response = await fetch(URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uuid: loan.formatted.uuid,
-          acceptCollateral: parseInt(loan.raw.vaultCollateral),
-          offerCollateral: 1000,
-          totalOutcomes: 100,
-        }),
-      });
-      const responseStream = await response.json();
-      if (!response.ok) {
-        console.error(responseStream.errors[0].message);
-      }
-      sendOfferForSigning(responseStream);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const countCollateralToDebtRatio = (bitCoinValue, vaultCollateral, loan) => {
-    const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true);
-    const formattedVaultLoan = customShiftValue(loan, 6, true);
-    const collateralToDebtRatio = ((bitCoinValue * formattedVaultCollateral) / formattedVaultLoan) * 100;
-    const roundedCollateralToDebtRatio = Math.round((collateralToDebtRatio + Number.EPSILON) * 100) / 100;
-    return roundedCollateralToDebtRatio;
   };
 
   return (
@@ -207,56 +176,14 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
               </Tbody>
             </Table>
           </TableContainer>
-          <Flex>
-            {loan.raw.status === 'ready' && (
-              <VStack>
-                <Button
-                  variant='outline'
-                  onClick={lockBTC}>
-                  LOCK BTC
-                </Button>
-              </VStack>
-            )}
-            {loan.raw.status === ('not-ready' || 'pre-liquidated' || 'pre-paid') && (
-              <Button
-                _hover={{
-                  shadow: 'none',
-                }}
-                isLoading
-                loadingText='PENDING'
-                color='gray'
-                variant='outline'></Button>
-            )}
-            {loan.raw.status === 'funded' && (
-              <VStack>
-                <Button
-                  variant='outline'
-                  onClick={() => setBorrowModalOpen(true)}>
-                  BORROW
-                </Button>
-                {loan.raw.vaultLoan > 0 ? (
-                  <Button
-                    variant='outline'
-                    onClick={() => setRepayModalOpen(true)}>
-                    REPAY LOAN
-                  </Button>
-                ) : (
-                  <Button
-                    variant='outline'
-                    onClick={() => closeLoanContract()}>
-                    CLOSE LOAN
-                  </Button>
-                )}
-                {countCollateralToDebtRatio(bitCoinValue, loan.raw.vaultCollateral, loan.raw.vaultLoan) < 140 && (
-                  <Button
-                    variant='outline'
-                    onClick={() => liquidateLoanContract()}>
-                    LIQUIDATE
-                  </Button>
-                )}
-              </VStack>
-            )}
-          </Flex>
+          <ActionButtons
+            loan={loan}
+            action={action}
+            onBorrowModalOpen={onBorrowModalOpen}
+            onRepayModalOpen={onRepayModalOpen}
+            closeLoanContract={closeLoanContract}
+            liquidateLoanContract={liquidateLoanContract}
+            bitCoinValue={bitCoinValue}></ActionButtons>
         </VStack>
       </Flex>
       <BorrowModal

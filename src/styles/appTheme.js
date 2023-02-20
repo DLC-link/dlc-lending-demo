@@ -1,7 +1,7 @@
-import { calc, extendTheme } from '@chakra-ui/react';
+import { extendTheme } from '@chakra-ui/react';
 import { menuTheme } from './menuTheme';
 
-export const theme = extendTheme({
+export const appTheme = extendTheme({
   components: {
     Menu: menuTheme,
     Text: {
@@ -14,8 +14,7 @@ export const theme = extendTheme({
         selector: {
           fontSize: 'md',
           fontWeight: 'extrabold',
-          bgGradient: 'linear(to-r, primary1, primary2)',
-          bgClip: 'text',
+          color: 'white',
         },
         property: {
           fontWeight: 'extrabold',
@@ -48,7 +47,7 @@ export const theme = extendTheme({
     Button: {
       baseStyle: {
         margin: '15px',
-        width: '100px',
+        width: '200px',
         shadow: '2xl',
         fontSize: 'sm',
         fontWeight: 'bold',
@@ -56,11 +55,14 @@ export const theme = extendTheme({
       variants: {
         outline: {
           fontSize: 'sm',
-          color: 'accent',
+          color: 'white',
           bg: 'transparent',
+          borderColor: 'accent',
+          transition: 'all .25s ease',
           _hover: {
-            color: 'white',
-            bg: 'accent',
+            bg: 'secondary1',
+            borderColor: 'white',
+            transform: 'translateY(-2.5px)',
           },
         },
         connect: {
