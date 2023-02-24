@@ -103,7 +103,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
         body: JSON.stringify({
           uuid: loan.formatted.uuid,
           acceptCollateral: parseInt(loan.raw.vaultCollateral),
-          offerCollateral: 1000,
+          offerCollateral: 0,
           totalOutcomes: 100,
         }),
       });
