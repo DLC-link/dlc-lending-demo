@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Flex, Text, VStack, Button, TableContainer, Tbody, Table, Tr, Td } from '@chakra-ui/react';
 import { easyTruncateAddress } from '../utils';
-import { customShiftValue, fixedTwoDecimalShift } from '../utils';
+import { customShiftValue } from '../utils';
 import Status from './Status';
 import eventBus from '../EventBus';
 import { useState } from 'react';
@@ -98,7 +98,7 @@ export default function Card(props) {
         body: JSON.stringify({
           uuid: props.loan.formatted.formattedUUID,
           acceptCollateral: parseInt(props.loan.raw.vaultCollateral),
-          offerCollateral: 1000,
+          offerCollateral: 0,
           totalOutcomes: 100,
         }),
       });
@@ -247,12 +247,12 @@ export default function Card(props) {
                   props.loan.raw.vaultCollateral,
                   props.loan.raw.vaultLoan
                 ) < 140 && (
-                  <Button
-                    variant='outline'
-                    onClick={() => liquidateLoanContract()}>
-                    LIQUIDATE
-                  </Button>
-                )}
+                    <Button
+                      variant='outline'
+                      onClick={() => liquidateLoanContract()}>
+                      LIQUIDATE
+                    </Button>
+                  )}
               </VStack>
             )}
           </Flex>
