@@ -6,11 +6,13 @@ import Account from './Account';
 
 export default function Header({ address, isConnected, walletType }) {
   const disconnect = () => {
-    if (walletType === 'hiro') {
-      userSession.signUserOut('/');
+    switch (walletType) {
+      case 'hiro':
+      case 'xverse':
+        userSession.signUserOut('/');
+        break;
     }
-    eventBus.dispatch('set-address', { address: '' });
-    eventBus.dispatch('is-account-connected', { isConnected: false });
+    eventBus.dispatch('account-information', {});
   };
 
   const openSelectWalletModal = () => {

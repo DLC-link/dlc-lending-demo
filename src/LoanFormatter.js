@@ -1,84 +1,86 @@
 import { customShiftValue, fixedTwoDecimalShift } from './utils';
 import { addressToString } from '@stacks/transactions';
-import { bytesToHex, bytesToUtf8 } from 'micro-stacks/common';
-import { toJson } from './utils';
+import { bytesToHex } from 'micro-stacks/common';
+import { compose, map } from 'ramda';
 
-const loanFormatter = {
-  formatClarityResponse(dlc) {
-    const dlcData = dlc.value.data;
-
-    const rawData = {
-      status: dlcData.status.data,
-      owner: addressToString(dlcData.owner.address),
-      liquidationFee: toJson(dlcData['liquidation-fee'].value),
-      liquidationRatio: toJson(dlcData['liquidation-ratio'].value),
-      vaultCollateral: toJson(dlcData['vault-collateral'].value),
-      vaultLoan: toJson(dlcData['vault-loan'].value),
-      ...(dlcData.dlc_uuid.hasOwnProperty('value') && {
-        dlcUUID: bytesToHex(dlcData.dlc_uuid.value.buffer),
-      }),
-    };
-    return this.formatToReadable(rawData);
-  },
-
-  formatSolidityResponse(dlc) {
-    const rawData = {
-      id: parseInt(dlc.id._hex),
-      status: dlc.status,
-      owner: dlc.owner,
-      liquidationFee: parseInt(dlc.liquidationFee._hex),
-      liquidationRatio: parseInt(dlc.liquidationRatio._hex),
-      vaultCollateral: parseInt(dlc.vaultCollateral._hex),
-      vaultLoan: parseInt(dlc.vaultLoan._hex),
-      ...(parseInt(dlc.closingPrice._hex) !== 0 && {
-        closingPrice: parseInt(dlc.closingPrice._hex),
-      }),
-      ...(dlc.dlc_uuid !== '' && {
-        dlcUUID: dlc.dlc_uuid,
-      }),
-    };
-    return this.formatToReadable(rawData);
-  },
-
-  formatToReadable(rawData) {
-    const loan = {
-      raw: rawData,
-      formatted: {
-        formattedUUID: `0x${rawData.dlcUUID}`,
-        formattedLiquidationFee: fixedTwoDecimalShift(rawData.liquidationFee) + ' %',
-        formattedLiquidationRatio: fixedTwoDecimalShift(rawData.liquidationRatio) + ' %',
-        formattedVaultCollateral: customShiftValue(rawData.vaultCollateral, 8, true) + ' BTC',
-        formattedVaultLoan: '$ ' + customShiftValue(rawData.vaultLoan, 6, true),
-        ...(rawData.hasOwnProperty('closingPrice') && {
-          formattedClosingPrice:
-            '$ ' + Math.round((customShiftValue(rawData.closingPrice, 8, true) + Number.EPSILON) * 100) / 100,
-        }),
-      },
-    };
-    return loan;
-  },
-
-  formatAllDLC(dlcArray, responseType) {
-    const loans = [];
-    switch (responseType) {
-      case 'solidity':
-        for (const dlc of dlcArray) {
-          const loan = this.formatSolidityResponse(dlc);
-          loans.push(loan);
-        }
-        break;
-      case 'clarity':
-        for (const dlc of dlcArray) {
-          const loan = this.formatClarityResponse(dlc);
-          loans.push(loan);
-        }
-        break;
-      default:
-        console.log('Unsupported language!');
-        break;
-    }
-    return loans;
-  },
+const statuses = {
+  0: 'none',
+  1: 'not-ready',
+  2: 'ready',
+  3: 'funded',
+  4: 'pre-repaid',
+  5: 'repaid',
+  6: 'pre-liquidated',
+  7: 'liquidated',
 };
 
-export default loanFormatter;
+function convertClarityResponseToUsableFormat(loanContract) {
+  return {
+    ...(loanContract.value.data.dlc_uuid.hasOwnProperty('value') && {
+      uuid: bytesToHex(loanContract.value.data.dlc_uuid.value.buffer),
+    }),
+    status: loanContract.value.data.status.data,
+    owner: addressToString(loanContract.value.data.owner.address),
+    vaultCollateral: loanContract.value.data['vault-collateral'].value.toString(),
+    vaultLoan: loanContract.value.data['vault-loan'].value.toString(),
+    liquidationFee: loanContract.value.data['liquidation-fee'].value.toString(),
+    liquidationRatio: loanContract.value.data['liquidation-ratio'].value.toString(),
+  };
+}
+
+function formatClarityResponseForVisualization(rawLoanContract) {
+  const formattedLoan = {
+    raw: rawLoanContract,
+    formatted: {
+      uuid: `0x${rawLoanContract.uuid}`,
+      vaultCollateral: customShiftValue(rawLoanContract.vaultCollateral, 8, true) + ' BTC',
+      vaultLoan: '$ ' + customShiftValue(rawLoanContract.vaultLoan, 6, true),
+      liquidationFee: fixedTwoDecimalShift(rawLoanContract.liquidationFee) + ' %',
+      liquidationRatio: fixedTwoDecimalShift(rawLoanContract.liquidationRatio) + ' %',
+    },
+  };
+  return formattedLoan;
+}
+
+function convertSolidityResponseToUsableFormat(loanContract) {
+  return {
+    id: parseInt(loanContract.id._hex),
+    uuid: loanContract.dlcUUID,
+    status: statuses[loanContract.status],
+    owner: loanContract.owner,
+    vaultCollateral: parseInt(loanContract.vaultCollateral._hex),
+    vaultLoan: parseInt(loanContract.vaultLoan._hex),
+    liquidationFee: parseInt(loanContract.liquidationFee._hex),
+    liquidationRatio: parseInt(loanContract.liquidationRatio._hex),
+  };
+}
+
+function formatSolidityResponseForVisualization(rawLoanContract) {
+  const formattedLoan = {
+    raw: rawLoanContract,
+    formatted: {
+      uuid: rawLoanContract.uuid,
+      liquidationFee: fixedTwoDecimalShift(rawLoanContract.liquidationFee) + ' %',
+      liquidationRatio: fixedTwoDecimalShift(rawLoanContract.liquidationRatio) + ' %',
+      vaultCollateral: customShiftValue(rawLoanContract.vaultCollateral, 8, true) + ' BTC',
+      vaultLoan: '$ ' + customShiftValue(rawLoanContract.vaultLoan, 18, true).toFixed(2),
+    },
+  };
+  return formattedLoan;
+}
+
+export function formatAllLoans(loans, responseType) {
+  let formattedLoans = [];
+  switch (responseType) {
+    case 'solidity':
+      formattedLoans = compose(map(formatSolidityResponseForVisualization), map(convertSolidityResponseToUsableFormat))(loans);
+      break;
+    case 'clarity':
+      formattedLoans = compose(map(formatClarityResponseForVisualization), map(convertClarityResponseToUsableFormat))(loans);
+      break;
+    default:
+      console.error('Unsupported language!');
+      break;
+  }
+  return formattedLoans;
+}

@@ -29,13 +29,13 @@ import {
   fixedTwoDecimalUnshift,
   countCollateralToDebtRatio,
   formatCollateralInUSD,
-  formatBitcoinInUSDAmount
+  formatBitcoinInUSDAmount,
 } from '../utils';
 import eventBus from '../EventBus';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
 
-export default function DepositModal({ isOpen, closeModal, walletType }) {
+export default function DepositModal({ isOpen, closeModal, walletType, blockchain }) {
   const [collateralAmount, setCollateralAmount] = useState(undefined);
   const [vaultLoanAmount, setVaultLoanAmount] = useState(undefined);
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
@@ -69,14 +69,11 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
 
   const handleCollateralChange = (collateralAmount) => setCollateralAmount(collateralAmount.target.value);
 
-  const handleLoanChange = (vaultLoanAmount) => setVaultLoanAmount(vaultLoanAmount.target.value);
-
   const createAndSendLoanContract = () => {
     sendLoanContract(createLoanContract());
   };
 
   const createLoanContract = () => ({
-    vaultLoanAmount: parseInt(fixedTwoDecimalUnshift(vaultLoanAmount)),
     BTCDeposit: parseInt(customShiftValue(collateralAmount, 8, false)),
     liquidationRatio: fixedTwoDecimalUnshift(liquidationRatio),
     liquidationFee: fixedTwoDecimalUnshift(liquidationFee),
@@ -86,10 +83,15 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
   const sendLoanContract = (loanContract) => {
     switch (walletType) {
       case 'hiro':
-        sendLoanContractToStacks(loanContract).then(eventBus.dispatch('create-loan', { loan: loanContract }));
+      case 'xverse':
+        sendLoanContractToStacks(loanContract, blockchain, walletType).then(
+          eventBus.dispatch('loan-event', { status: 'initialized', loan: loanContract })
+        );
         break;
       case 'metamask':
-        sendLoanContractToEthereum(loanContract);
+        sendLoanContractToEthereum(loanContract, blockchain).then(
+          eventBus.dispatch('loan-event', { status: 'initialized', loan: loanContract })
+        );
         break;
       default:
         console.log('Unsupported wallet type!');
@@ -177,75 +179,11 @@ export default function DepositModal({ isOpen, closeModal, walletType }) {
                 ${USDAmount} at 1 BTC = ${bitCoinInUSDAsString}
               </Text>
             </FormControl>
-            {walletType === 'metamask' && (
-              <FormControl isInvalid={isLoanError}>
-                <FormLabel>Loan Amount</FormLabel>
-                {!isLoanError ? (
-                  <FormHelperText
-                    fontSize='x-small'
-                    marginTop={15}
-                    marginBottom={15}
-                    marginLeft={50}>
-                    Enter the amount of USDC you would like to loan.
-                  </FormHelperText>
-                ) : (
-                  <FormErrorMessage
-                    fontSize='x-small'
-                    marginTop={15}
-                    marginBottom={15}
-                    marginLeft={50}>
-                    Enter a valid amount of USDC
-                  </FormErrorMessage>
-                )}
-                <HStack
-                  marginLeft={50}
-                  marginRight={50}
-                  spacing={35}>
-                  <NumberInput>
-                    <NumberInputField
-                      padding={15}
-                      bgGradient='linear(to-r, primary1, primary2)'
-                      bgClip='text'
-                      value={vaultLoanAmount}
-                      width={200}
-                      onChange={handleLoanChange}
-                    />
-                  </NumberInput>
-                  <Image
-                    src='/usdc_logo.png'
-                    alt='USD Coin Logo'
-                    width={25}
-                    height={25}></Image>
-                </HStack>
-              </FormControl>
-            )}
             <TableContainer
               margin='15px'
               width='350px'>
               <Table>
                 <Tbody>
-                  {walletType === 'metamask' && (
-                    <Tr>
-                      <Td
-                        fontSize='sm'
-                        color='gray'>
-                        Collateral to debt ratio:
-                      </Td>
-                      {!isCollateralToDebtRatioError ? (
-                        <Td
-                          fontSize='sm'
-                          color='green'>
-                          {collateralToDebtRatio}%
-                        </Td>
-                      ) : (
-                        <Td
-                          fontSize='sm'
-                          color='red'>
-                          {collateralToDebtRatio}%
-                        </Td>
-                      )}
-                    </Tr>
-                  )}
                   <Tr>
                     <Td
                       fontSize='sm'

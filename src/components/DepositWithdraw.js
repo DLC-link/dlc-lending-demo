@@ -19,15 +19,26 @@ import {
 } from '@chakra-ui/react';
 import { customShiftValue, fixedTwoDecimalShift } from '../utils';
 
-export default function DepositWithdraw(props) {
-  const isConnected = props.isConnected;
-  const isLoading = props.isLoading;
+export default function DepositWithdraw({ isConnected, isLoading, walletType }) {
   const [depositAmount, setDepositAmount] = useState(0);
   const [loanAmount, setLoanAmount] = useState(0);
 
   useEffect(() => {
     eventBus.on('change-deposit-amount', (data) => setDepositAmount(customShiftValue(data.depositAmount, 8, true)));
-    eventBus.on('change-loan-amount', (data) => setLoanAmount(customShiftValue(data.loanAmount, 6, true)));
+    eventBus.on('change-loan-amount', (data) => {
+      switch (walletType) {
+        case 'hiro':
+        case 'xverse':
+        case 'walletconnect':
+          setLoanAmount(customShiftValue(data.loanAmount, 6, true));
+          break;
+        case 'metamask':
+          setLoanAmount(customShiftValue(data.loanAmount, 18, true));
+          break;
+        default:
+          console.error('Unsupported wallet type!');
+      }
+    });
   }, []);
 
   const openDepositModal = () => {
