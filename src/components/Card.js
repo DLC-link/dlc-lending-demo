@@ -67,7 +67,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        liquidateStacksLoanContract(creator, loan.raw.dlcUUID, blockchain, walletType);
+        liquidateStacksLoanContract(creator, loan.raw.uuid, blockchain, walletType);
         break;
       case 'metamask':
         liquidateEthereumLoan(loan.raw.id, blockchain);
@@ -82,7 +82,7 @@ export default function Card({ loan, creator, walletType, blockchain, bitCoinVal
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        closeStacksLoanContract(creator, loan.raw.dlcUUID, blockchain, walletType);
+        closeStacksLoanContract(creator, loan.raw.uuid, blockchain, walletType);
         break;
       case 'metamask':
         closeEthereumLoan(loan.raw.uuid, blockchain);
