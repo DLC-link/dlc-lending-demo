@@ -1,4 +1,4 @@
-import { customShiftValue, fixedTwoDecimalShift } from './utils';
+import { customShiftValue, fixedTwoDecimalShift } from '../utils';
 import { addressToString } from '@stacks/transactions';
 import { bytesToHex } from 'micro-stacks/common';
 import { compose, map } from 'ramda';

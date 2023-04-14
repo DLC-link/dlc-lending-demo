@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
-import { Text, HStack, Image } from '@chakra-ui/react';
-import { easyTruncateAddress } from '../utils';
+import { Text, HStack, Image, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import { easyTruncateAddress } from '../utilities/formatFunctions';
+import { useDispatch } from 'react-redux';
+import { logout } from '../store/accountSlice';
+import { useSelector } from 'react-redux';
+import { openSelectWalletModal } from '../store/componentSlice';
 
-export default function Account({ address, isConnected, walletType }) {
+export default function Account() {
   const [walletLogo, setWalletLogo] = useState(undefined);
+  const address = useSelector((state) => state.account.address);
+  const walletType = useSelector((state) => state.account.walletType);
+  const dispatch = useDispatch();
 
   const walletLogos = {
     hiro: { src: '/h_logo.png', alt: 'Hiro Wallet Logo', boxSize: [2, 4] },
@@ -18,36 +25,56 @@ export default function Account({ address, isConnected, walletType }) {
   }, [walletType]);
 
   return (
-    <HStack
-      height={[25, 50]}
-      width={[150, 350]}
-      borderRadius='lg'
-      shadow='dark-lg'
-      alignItems='center'
-      justifyContent='center'>
-      {walletLogo ? (
+    <Menu>
+      {address ? (
         <>
-          <Image
-            src={walletLogo.src}
-            alt={walletLogo.alt}
-            boxSize={walletLogo.boxSize}
-          />
-          <CheckCircleIcon
-            boxSize={[2, 4]}
-            color='secondary1'
-          />
+          <MenuButton
+            margin='0px'
+            height='50px'
+            width='250px'
+            borderRadius='lg'
+            shadow='dark-lg'>
+            <HStack>
+              {walletLogo && (
+                <Image
+                  src={walletLogo.src}
+                  alt={walletLogo.alt}
+                  boxSize={walletLogo.boxSize}
+                />
+              )}
+              <CheckCircleIcon
+                boxSize='15px'
+                color='secondary1'
+              />
+              <Text fontSize='15px'>Account:{easyTruncateAddress(address)}</Text>
+            </HStack>
+          </MenuButton>
+          <MenuList
+            width='250px'
+            margin='0px'>
+            <MenuItem onClick={() => dispatch(logout())}>Disconnect Wallet</MenuItem>
+          </MenuList>
         </>
       ) : (
-        <WarningIcon
-          boxSize={[1, 3]}
-          color='primary2'
-        />
+        <MenuButton
+          height='50px'
+          width='250px'
+          borderRadius='lg'
+          shadow='dark-lg'
+          onClick={() => dispatch(openSelectWalletModal())}>
+          <HStack>
+            <WarningIcon
+              boxSize='15px'
+              color='secondary2'
+            />
+            <Text
+              fontSize='15px'
+              fontWeight='bold'>
+              Connect Wallet
+            </Text>
+          </HStack>
+        </MenuButton>
       )}
-      {isConnected ? (
-        <Text fontSize={[5, 15]}>Account:{easyTruncateAddress(address)}</Text>
-      ) : (
-        <Text fontSize={[5, 15]}>Account: Not connected</Text>
-      )}
-    </HStack>
+    </Menu>
   );
 }
