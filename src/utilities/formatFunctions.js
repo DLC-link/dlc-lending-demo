@@ -1,12 +1,7 @@
 import { hexToBytes as hexToBytesMS } from 'micro-stacks/common';
 
 export const easyTruncateAddress = (address) => {
-    if (!address) return '';
-    return (
-        address.substring(0, 4) +
-        '...' +
-        address.substring(address.length - 4, address.length)
-    );
+    return address?.slice(0, 4) + '...' + address?.slice(-4);
 };
 
 export function customShiftValue(value, shift, unshift) {

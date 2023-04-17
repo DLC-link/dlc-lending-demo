@@ -14,17 +14,38 @@ import {
 } from '../blockchainFunctions/stacksFunctions';
 import { lockBTC } from '../blockchainFunctions/bitcoinFunctions';
 import { useSelector } from 'react-redux';
-import { loanStatuses } from '../enums/loanStatuses';
+import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import { selectLoanByUUID } from '../store/loansSlice';
-import { countCollateralToDebtRatio } from '../utils';
 
-export function ActionButtons({ loanUUID }) {
+export function ActionButtons({ loanUUID, canBeLiquidated }) {
   const walletType = useSelector((state) => state.account.walletType);
   const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
 
-  function renderButton(loan) {
+  let borrowAction;
+  let repayAction;
+  let closeAction;
+  let liquidateAction;
+
+  switch (walletType) {
+    case 'xverse':
+    case 'hiro':
+      borrowAction = () => borrowStacksLoan(loan.uuid);
+      repayAction = () => repayStacksLoan(loan.uuid);
+      closeAction = () => closeStacksLoan(loan.uuid);
+      liquidateAction = () => liquidateStacksLoan(loan.uuid);
+      break;
+    case 'metamask':
+      borrowAction = () => borrowEthereumLoan(loan.uuid);
+      repayAction = () => repayEthereumLoan(loan.uuid);
+      closeAction = () => closeEthereumLoan(loan.uuid);
+      liquidateAction = () => liquidateEthereumLoan(loan.uuid);
+  }
+
+function setActionButton() {
     switch (loan.status) {
-      case loanStatuses.READY:
+      case solidityLoanStatuses.READY:
+      case clarityLoanStatuses.READY:
+        console.log('ready');
         return (
           <Flex>
             <VStack>
@@ -36,27 +57,8 @@ export function ActionButtons({ loanUUID }) {
             </VStack>
           </Flex>
         );
-      case loanStatuses.FUNDED:
-        let borrowAction;
-        let repayAction;
-        let closeAction;
-        let liquidateAction;
-
-        switch (walletType) {
-          case 'xverse':
-          case 'hiro':
-            borrowAction = () => borrowStacksLoan(loan.uuid);
-            repayAction = () => repayStacksLoan(loan.uuid);
-            closeAction = () => closeStacksLoan(loan.uuid);
-            liquidateAction = () => liquidateStacksLoan(loan.uuid);
-            break;
-          case 'metamask':
-            borrowAction = () => borrowEthereumLoan(loan.uuid);
-            repayAction = () => repayEthereumLoan(loan.uuid);
-            closeAction = () => closeEthereumLoan(loan.uuid);
-            liquidateAction = () => liquidateEthereumLoan(loan.uuid);
-        }
-
+      case solidityLoanStatuses.FUNDED:
+      case clarityLoanStatuses.FUNDED:
         return (
           <Flex>
             <HStack>
@@ -84,7 +86,7 @@ export function ActionButtons({ loanUUID }) {
                   </Button>
                 </VStack>
               )}
-              {countCollateralToDebtRatio(bitCoinValue, loan.raw.vaultCollateral, loan.raw.vaultLoan) < 140 && (
+              {canBeLiquidated && (
                 <VStack>
                   <Tooltip
                     label='Liquidate the vault and redeem the collateral value for WBTC. The NFT will be burned.'
@@ -103,10 +105,12 @@ export function ActionButtons({ loanUUID }) {
             </HStack>
           </Flex>
         );
-      case loanStatuses.NOTREADY:
-      case loanStatuses.FUNDED:
-      case loanStatuses.PREREPAID:
-      case loanStatuses.PRELIQUIDATED:
+      case solidityLoanStatuses.NOTREADY:
+      case clarityLoanStatuses.NOTREADY:
+      case solidityLoanStatuses.PREREPAID:
+      case clarityLoanStatuses.PREREPAID:
+      case solidityLoanStatuses.PRELIQUIDATED:
+      case clarityLoanStatuses.PRELIQUIDATED:
         return (
           <Flex>
             <Button
@@ -119,13 +123,12 @@ export function ActionButtons({ loanUUID }) {
               }}></Button>
           </Flex>
         );
-
-      case loanStatuses.REPAID:
-      case loanStatuses.LIQUIDATED:
+      case solidityLoanStatuses.REPAID || clarityLoanStatuses.REPAID:
+      case solidityLoanStatuses.LIQUIDATED || clarityLoanStatuses.LIQUIDATED:
         break;
       default:
         break;
     }
-  }
-  return <>{renderButton(loan)}</>;
+  };
+  return <>{setActionButton()}</>;
 }

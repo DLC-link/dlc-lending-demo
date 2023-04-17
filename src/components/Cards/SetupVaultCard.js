@@ -12,7 +12,7 @@ export default function SetupVaultCard() {
                 marginRight="15px"
                 marginTop="25px"
                 marginBottom="25px"
-                height="450px"
+                height="300px"
                 width="250px"
                 borderRadius="lg"
                 shadow="dark-lg"
@@ -32,12 +32,12 @@ export default function SetupVaultCard() {
                 <VStack margin="15px" justifyContent="center">
                     <Text fontSize="9xl">+</Text>
                     <Text
-                        fontSize="5xl"
+                        fontSize="3xl"
                         fontWeight="bold"
                         color="inherit"
                         textAlign="center"
                     >
-                        SETUP VAULT
+                        SETUP LOAN
                     </Text>
                 </VStack>
             </Flex>

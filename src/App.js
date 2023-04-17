@@ -5,12 +5,12 @@ import Header from './components/Header';
 import Intro from './components/Intro';
 import React, { useEffect } from 'react';
 import DepositModal from './modals/DepositModal';
-import DLCTable from './components/LoansScreen';
 import { Box, useToast } from '@chakra-ui/react';
 import CustomToast from './components/CustomToast';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { closeDepositModal } from './store/componentSlice';
+import LoansScreen from './components/LoansScreen';
 
 /* global BigInt */
 
@@ -52,7 +52,7 @@ export default function App() {
         {address && (
           <>
             <DepositWithdraw isConnected={address}></DepositWithdraw>
-            <DLCTable isConnected={address}></DLCTable>
+            <LoansScreen isConnected={address}></LoansScreen>
           </>
         )}
       </Box>

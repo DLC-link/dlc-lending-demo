@@ -10,7 +10,7 @@ export const accountSlice = createSlice({
     reducers: {
         login: (state, action) => {
             state.walletType = action.payload.walletType;
-            state.address = action.payload.address.toLowerCase();
+            state.address = action.payload.address;
             state.blockchain = action.payload.blockchain;
         },
         logout: (state) => {

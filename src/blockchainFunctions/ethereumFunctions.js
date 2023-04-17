@@ -6,7 +6,7 @@ import eventBus from '../EventBus';
 import { EthereumNetworks } from '../networks/ethereumNetworks';
 import { login } from '../store/accountSlice';
 import store from '../store/store';
-import { formatAllLoans } from '../utilities/loanFormatter';
+import { formatAllLoanContracts } from '../utilities/loanFormatter';
 
 let protocolContractETH;
 let usdcETH;
@@ -123,8 +123,8 @@ export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
   let formattedLoans = [];
   try {
-    const response = await protocolContractETH.getAllLoansForAddress(address);
-    formattedLoans = formatAllLoans(response, 'solidity');
+    const loanContracts = await protocolContractETH.getAllLoansForAddress(address);
+    formattedLoans = formatAllLoanContracts(loanContracts, 'solidity');
   } catch (error) {
     console.error(error);
   }

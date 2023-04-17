@@ -6,13 +6,14 @@ import eventBus from '../EventBus';
 import { RefreshOutlined } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchLoans, selectAllLoans } from '../store/loansSlice';
+import { fetchBitcoinValue } from '../store/externalDataSlice';
 
-export default function LoansPage() {
+export default function LoansScreen() {
   const dispatch = useDispatch();
   const initialLoans = [];
-  const loans = useSelector(selectAllVaults);
-  const loansStoreStatus = useSelector((state) => state.vaults.status);
-  const isLoading = useSelector((state) => state.vaults.status === 'loading');
+  const loans = useSelector(selectAllLoans);
+  const loansStoreStatus = useSelector((state) => state.loans.status);
+  const isLoading = useSelector((state) => state.loans.status === 'loading');
   const address = useSelector((state) => state.account.address);
 
   const handleLoanEvent = (event) => {
@@ -41,6 +42,7 @@ export default function LoansPage() {
 
   const refreshLoansTable = async (isManual) => {
     dispatch(fetchLoans(address));
+    dispatch(fetchBitcoinValue());
   };
 
   return (

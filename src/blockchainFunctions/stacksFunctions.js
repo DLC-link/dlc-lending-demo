@@ -15,14 +15,13 @@ import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV
 import { openContractCall } from '@stacks/connect';
 import { customShiftValue, hexToBytes } from '../utils';
 import eventBus from '../EventBus';
-import { formatAllLoans } from '../utilities/loanFormatter';
+import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { stacksBlockchains } from '../networks';
 import store from '../store/store';
 import { login, logout } from '../store/accountSlice';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
   const { loanContractAddress, loanContractName, network } = stacksBlockchains[blockchain];
-
   return {
     contractAddress: loanContractAddress,
     contractName: loanContractName,
@@ -77,8 +76,7 @@ export async function requestAndDispatchStacksAccountInformation(walletType, blo
 }
 
 export async function sendLoanContractToStacks(loanContract) {
-  const walletType = store.getState().accountInformation.walletType = walletType;
-  const blockchain = store.getState().accountInformation.blockchain = blockchain;
+  const { walletType, blockchain } = store.getState().accountInformation;
 
   const functionName = 'setup-loan';
   const functionArgs = [
@@ -107,18 +105,19 @@ export async function sendLoanContractToStacks(loanContract) {
 }
 
 export async function getAllStacksLoansForAddress() {
-  const address = store.getState().accountInformation.address = address;
-  const blockchain = store.getState().accountInformation.blockchain = blockchain;
+  const { address, blockchain } = store.getState().account;
 
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(address)];
-  const senderAddress = address
+  const senderAddress = address;
+
   let formattedLoans = [];
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
   try {
     const response = await callReadOnlyFunction(txOptions);
-    formattedLoans = formatAllLoans(response.list, 'clarity');
+    const loanContracts = response.list;
+    formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
   } catch (error) {
     console.error(error);
   }
@@ -126,8 +125,7 @@ export async function getAllStacksLoansForAddress() {
 }
 
 export async function getStacksLoanIDByUUID(UUID) {
-  const address = store.getState().accountInformation.address = address;
-  const blockchain = store.getState().accountInformation.blockchain = blockchain;
+  const { address, blockchain } = store.getState().account;
 
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
@@ -144,9 +142,7 @@ export async function getStacksLoanIDByUUID(UUID) {
 }
 
 export async function borrowStacksLoan(UUID, additionalLoan) {
-  const address = store.getState().accountInformation.address = address;
-  const walletType = store.getState().accountInformation.walletType = walletType;
-  const blockchain = store.getState().accountInformation.blockchain = blockchain;
+  const { walletType, blockchain } = store.getState().account;
 
   const amount = customShiftValue(additionalLoan, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
@@ -190,9 +186,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
 }
 
 export async function repayStacksLoan(UUID, additionalRepayment) {
-  const address = store.getState().accountInformation.address = address;
-  const walletType = store.getState().accountInformation.walletType = walletType;
-  const blockchain = store.getState().accountInformation.blockchain = blockchain;
+  const { address, walletType, blockchain } = store.getState().account;
 
   const amount = customShiftValue(additionalRepayment, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
@@ -235,9 +229,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
 }
 
 export async function liquidateStacksLoan(UUID) {
-  const address = store.getState().accountInformation.address = address;
-  const walletType = store.getState().accountInformation.walletType = walletType;
-  const blockchain = store.getState().accountInformation.blockchain = blockchain;
+  const { address, walletType, blockchain } = store.getState().account;
 
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'attempt-liquidate';
@@ -270,9 +262,7 @@ export async function liquidateStacksLoan(UUID) {
 }
 
 export async function closeStacksLoan(UUID) {
-  const address = store.getState().accountInformation.address = address;
-  const walletType = store.getState().accountInformation.walletType = walletType;
-  const blockchain = store.getState().accountInformation.blockchain = blockchain;
+  const { address, walletType, blockchain } = store.getState().account;
 
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'close-loan';

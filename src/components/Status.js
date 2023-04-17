@@ -1,13 +1,20 @@
-import { Text, HStack } from '@chakra-ui/react';
+import { Text, HStack, Spacer, Tooltip } from '@chakra-ui/react';
+import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import PaidIcon from '@mui/icons-material/Paid';
+import { ArrowForwardIosRounded, ErrorOutlineOutlined } from '@mui/icons-material';
+import { InfoIcon } from '@chakra-ui/icons';
 
-export default function Status(props) {
-  const setStatusComponent = (status) => {
+export default function Status({ status, canBeLiquidated }) {
+  let statusComponent;
+  let liquidationIndicator;
+
+  const setStatusComponent = () => {
     switch (status) {
-      case 'not-ready':
+      case solidityLoanStatuses.NOTREADY:
+      case clarityLoanStatuses.NOTREADY:
         return (
           <HStack spacing={2}>
             <HourglassEmptyIcon sx={{ color: 'orange' }} />
@@ -18,18 +25,8 @@ export default function Status(props) {
             </Text>
           </HStack>
         );
-      case 'unfunded':
-        return (
-          <HStack spacing={2}>
-            <CurrencyBitcoinIcon sx={{ color: 'orange' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Unfunded
-            </Text>
-          </HStack>
-        );
-      case 'pre-repaid':
+      case solidityLoanStatuses.PREREPAID:
+      case clarityLoanStatuses.PREREPAID:
         return (
           <HStack spacing={2}>
             <HourglassEmptyIcon sx={{ color: 'orange' }} />
@@ -40,7 +37,8 @@ export default function Status(props) {
             </Text>
           </HStack>
         );
-      case 'pre-liquidated':
+      case solidityLoanStatuses.PRELIQUIDATED:
+      case clarityLoanStatuses.PRELIQUIDATED:
         return (
           <HStack spacing={2}>
             <HourglassEmptyIcon sx={{ color: 'orange' }} />
@@ -51,7 +49,8 @@ export default function Status(props) {
             </Text>
           </HStack>
         );
-      case 'ready':
+      case solidityLoanStatuses.READY:
+      case clarityLoanStatuses.READY:
         return (
           <HStack spacing={2}>
             <CurrencyBitcoinIcon sx={{ color: 'orange' }} />
@@ -62,7 +61,8 @@ export default function Status(props) {
             </Text>
           </HStack>
         );
-      case 'funded':
+      case solidityLoanStatuses.FUNDED:
+      case clarityLoanStatuses.FUNDED:
         return (
           <HStack spacing={2}>
             <CurrencyBitcoinIcon sx={{ color: 'green' }} />
@@ -73,7 +73,8 @@ export default function Status(props) {
             </Text>
           </HStack>
         );
-      case 'liquidated':
+      case solidityLoanStatuses.LIQUIDATED:
+      case clarityLoanStatuses.LIQUIDATED:
         return (
           <HStack spacing={2}>
             <CurrencyExchangeIcon sx={{ color: 'green' }} />
@@ -84,7 +85,8 @@ export default function Status(props) {
             </Text>
           </HStack>
         );
-      case 'repaid':
+      case solidityLoanStatuses.REPAID:
+      case clarityLoanStatuses.REPAID:
         return (
           <HStack spacing={2}>
             <PaidIcon sx={{ color: 'green' }} />
@@ -96,8 +98,23 @@ export default function Status(props) {
           </HStack>
         );
       default:
-        <Text>Unknown Status</Text>;
+        break;
     }
   };
-  return setStatusComponent(props.status);
+  statusComponent = setStatusComponent();
+  liquidationIndicator = canBeLiquidated ? (
+    <Tooltip label={'WILL BE LIQUIDATED'}>
+    <CurrencyExchangeIcon sx={{ color: 'red' }}></CurrencyExchangeIcon>
+    </Tooltip>
+  ) : (
+    <Tooltip label={'COLLATERAL TO DEBT RATIO IS OKAY'}>
+    <InfoIcon sx={{ color: 'green' }}></InfoIcon>
+    </Tooltip>
+  );
+  return (
+    <>
+      {statusComponent}
+      {liquidationIndicator}
+    </>
+  );
 }

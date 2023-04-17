@@ -52,33 +52,30 @@ export const selectAllLoans = (state) => {
 };
 
 export const selectLoanByUUID = (state, uuid) => {
-  return state.loans.loans.find((vault) => vault.uuid === uuid);
+  return state.loans.loans.find((loan) => loan.uuid === uuid);
 };
 
 export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
-  const address = store.getState().account.address;
-  const walletType = store.getState().account.walletType;
-  const blockchain = store.getState().account.blockchain;
+  const { address, walletType, blockchain } = store.getState().account;
 
-  let vaults = [];
+  let loans = [];
   let responseType = '';
 
   switch (walletType) {
     case 'metamask':
-      vaults = await getAllEthereumLoansForAddress(address);
+      loans = await getAllEthereumLoansForAddress(address);
       responseType = 'solidity';
       break;
     case 'xverse':
     case 'hiro':
     case 'walletConnect':
-      vaults = await getAllStacksLoansForAddress(address, blockchain);
+      loans = await getAllStacksLoansForAddress(address, blockchain);
       responseType = 'clarity';
       break;
     default:
       throw new Error('Unsupported wallet type!');
   }
 
-  const formattedLoans = formatAllLoans(vaults, responseType);
-  
-  return formattedLoans;
+  console.log('Inside fetchLoans, loans: ', loans);
+  return loans;
 });
