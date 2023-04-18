@@ -7,6 +7,7 @@ import { EthereumNetworks } from '../networks/ethereumNetworks';
 import { login } from '../store/accountSlice';
 import store from '../store/store';
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
+import { add } from 'ramda';
 
 let protocolContractETH;
 let usdcETH;
@@ -20,7 +21,7 @@ export async function setEthereumProvider() {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const { chainId } = await provider.getNetwork();
-        if (chainId !== currentEthereumNetwork) {
+        if (chainId !== currentEthereumNetwork.slice(9)) {
             await changeEthereumNetwork();
         }
         protocolContractETH = new ethers.Contract(
@@ -36,7 +37,9 @@ export async function setEthereumProvider() {
 
 async function changeEthereumNetwork() {
     const { ethereum } = window;
-    const formattedChainId = '0x' + currentEthereumNetwork.toString(16);
+    const shortenedChainID = currentEthereumNetwork.slice(9);
+    console.log(shortenedChainID)
+    const formattedChainId = '0x' + shortenedChainID.toString(16);
     try {
         eventBus.dispatch('is-info-modal-open', { isInfoModalOpen: true });
         await ethereum.request({
@@ -68,6 +71,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
             blockchain,
         };
         currentEthereumNetwork = blockchain;
+        await setEthereumProvider();
 
         store.dispatch(login(accountInformation));
     } catch (error) {

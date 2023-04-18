@@ -11,6 +11,7 @@ export const componentSlice = createSlice({
     },
     reducers: {
         openDepositModal: (state) => {
+            console.log('openDepositModal')
             state.isDepositModalOpen = true;
         },
         closeDepositModal: (state) => {

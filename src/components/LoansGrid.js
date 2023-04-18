@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { VStack, HStack, Collapse, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Cards/Card';
-import SetupVaultCard from './Cards/SetupVaultCard';
+import SetupVaultCard from './Cards/SetupLoanCard';
 import { useSelector } from 'react-redux';
 import { selectAllLoans } from '../store/loansSlice';
 

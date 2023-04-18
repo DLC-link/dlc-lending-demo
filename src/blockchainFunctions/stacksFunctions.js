@@ -18,7 +18,7 @@ import eventBus from '../EventBus';
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { stacksBlockchains } from '../networks';
 import store from '../store/store';
-import { login, logout } from '../store/accountSlice';
+import { login } from '../store/accountSlice';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
   const { loanContractAddress, loanContractName, network } = stacksBlockchains[blockchain];
@@ -43,23 +43,32 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
 };
 
 export async function requestAndDispatchStacksAccountInformation(walletType, blockchain) {
-  let isUserSessionStored = false;
   let accountInformation = {};
+  const isUserSignedIn = userSession.isUserSignedIn();
+  
+  if (isUserSignedIn) {
+    let address;
+    console.log(blockchain)
+    switch (blockchain) {
+      case 'stacks:1':
+        address = userSession.loadUserData().profile.stxAddress.mainnet;
+        break;
+      case 'stacks:2147483648':
+        address = userSession.loadUserData().profile.stxAddress.testnet;
+        break;
+      case 'stacks:42':
+        address = userSession.loadUserData().profile.stxAddress.testnet
+        break;
+      default:
+        throw new Error('Invalid blockchain!');
+    }
 
-  try {
-    userSession.loadUserData();
-    isUserSessionStored = true;
-  } catch (error) {
-    throw new Error('No user session found!');
-  }
-
-  if (isUserSessionStored) {
-    const address = userSession.loadUserData().profile.stxAddress.testnet;
     accountInformation = {
       walletType: walletType,
       address: address,
       blockchain,
     };
+
     store.dispatch(login(accountInformation));
   } else {
     showConnect({
@@ -76,7 +85,8 @@ export async function requestAndDispatchStacksAccountInformation(walletType, blo
 }
 
 export async function sendLoanContractToStacks(loanContract) {
-  const { walletType, blockchain } = store.getState().accountInformation;
+  const { walletType, blockchain } = store.getState().account
+  console.log(walletType)
 
   const functionName = 'setup-loan';
   const functionArgs = [

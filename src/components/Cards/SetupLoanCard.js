@@ -2,7 +2,7 @@ import { Flex, Text, VStack } from '@chakra-ui/react';
 import { openDepositModal } from '../../store/componentSlice';
 import { useDispatch } from 'react-redux';
 
-export default function SetupVaultCard() {
+export default function SetupLoanCard() {
     const dispatch = useDispatch();
 
     return (

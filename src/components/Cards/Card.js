@@ -36,7 +36,6 @@ export default function Card({ loanUUID }) {
     const temporaryCanBeLiquidated =
       countCollateralToDebtRatio(bitcoinValue, loan.vaultCollateral, loan.vaultLoan) < 140;
     setCanBeLiquidated(temporaryCanBeLiquidated);
-    console.log(loan)
   }, [loan]);
 
   useEffect(() => {

@@ -103,18 +103,18 @@ export default function Status({ status, canBeLiquidated }) {
   };
   statusComponent = setStatusComponent();
   liquidationIndicator = canBeLiquidated ? (
-    <Tooltip label={'WILL BE LIQUIDATED'}>
-    <CurrencyExchangeIcon sx={{ color: 'red' }}></CurrencyExchangeIcon>
+    <Tooltip label={'The collateral-to-debt ratio is lower than the liquidation ratio.'}>
+      <CurrencyExchangeIcon sx={{ color: 'red' }}></CurrencyExchangeIcon>
     </Tooltip>
   ) : (
-    <Tooltip label={'COLLATERAL TO DEBT RATIO IS OKAY'}>
-    <InfoIcon sx={{ color: 'green' }}></InfoIcon>
+    <Tooltip label={'The collateral-to-debt ratio exceeds liquidation ratio.'}>
+      <InfoIcon sx={{ color: 'green' }}></InfoIcon>
     </Tooltip>
   );
   return (
-    <>
+    <HStack>
       {statusComponent}
       {liquidationIndicator}
-    </>
+    </HStack>
   );
 }

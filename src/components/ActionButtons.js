@@ -41,7 +41,7 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
       liquidateAction = () => liquidateEthereumLoan(loan.uuid);
   }
 
-function setActionButton() {
+  function setActionButton() {
     switch (loan.status) {
       case solidityLoanStatuses.READY:
       case clarityLoanStatuses.READY:
@@ -129,6 +129,9 @@ function setActionButton() {
       default:
         break;
     }
-  };
-  return <>{setActionButton()}</>;
+  }
+
+  const actionButton = setActionButton();
+
+  return <>{actionButton}</>;
 }
