@@ -3,14 +3,13 @@ import { addressToString } from '@stacks/transactions';
 import { bytesToHex } from 'micro-stacks/common';
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 
-function formatClarityLoanContract(loanContract) {
+export function formatClarityLoanContract(loanContract) {
   const loanContractData = loanContract.value.data;
 
-  console.log(loanContractData)
   const uuid = loanContractData.dlc_uuid.hasOwnProperty('value')
     ? bytesToHex(loanContract.value.data.dlc_uuid.value.buffer)
-    : undefined;
-  const formattedUUID = loanContractData.dlc_uuid.hasOwnProperty('value') ? `0x${uuid}` : undefined;
+    : null;
+  const formattedUUID = loanContractData.dlc_uuid.hasOwnProperty('value') ? `0x${uuid}` : null;
   const status = loanContractData.status.data;
   const owner = addressToString(loanContractData.owner.address);
   const vaultCollateral = loanContractData['vault-collateral'].value.toString();
@@ -22,8 +21,12 @@ function formatClarityLoanContract(loanContract) {
   const liquidationRatio = loanContractData['liquidation-ratio'].value.toString();
   const formattedLiquidationRatio = parseInt(liquidationRatio._hex);
   return {
-    uuid,
-    formattedUUID,
+    ...(uuid && {
+      uuid,
+    }),
+    ...(formattedUUID && {
+      formattedUUID,
+    }),
     status,
     owner,
     vaultCollateral,
@@ -37,10 +40,10 @@ function formatClarityLoanContract(loanContract) {
   };
 }
 
-function formatSolidityLoanContract(loanContract) {
+export function formatSolidityLoanContract(loanContract) {
   const uuid = loanContract.dlcUUID;
   const formattedUUID = uuid;
-  const status = solidityLoanStatuses[loanContract.status];
+  const status = Object.values(solidityLoanStatuses)[loanContract.status];
   const owner = loanContract.owner;
   const vaultCollateral = parseInt(loanContract.vaultCollateral._hex);
   const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true) + ' BTC';

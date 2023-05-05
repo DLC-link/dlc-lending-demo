@@ -1,50 +1,42 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 export const componentSlice = createSlice({
-    name: 'component',
-    initialState: {
-        isDepositModalOpen: false,
-        isSelectWalletModalOpen: false,
-        isInfoModalOpen: false,
-        isBorrowModalOpen: false,
-        isRepayModalOpen: false,
+  name: 'component',
+  initialState: {
+    isDepositModalOpen: false,
+    isSelectWalletModalOpen: false,
+    isInfoModalOpen: false,
+    isBorrowModalOpen: false,
+    isRepayModalOpen: false,
+    loanForModal: null,
+  },
+  reducers: {
+    toggleDepositModalVisibility: (state, action) => {
+      state.isDepositModalOpen = action.payload;
     },
-    reducers: {
-        openDepositModal: (state) => {
-            console.log('openDepositModal')
-            state.isDepositModalOpen = true;
-        },
-        closeDepositModal: (state) => {
-            state.isDepositModalOpen = false;
-        },
-        openBorrowModal: (state) => {
-            state.isBorrowModalOpen = true;
-        },
-        closeBorrowModal: (state) => {
-            state.isBorrowModalOpen = false;
-        },
-        openRepayModal: (state) => {
-            state.isRepayModalOpen = true;
-        },
-        closeRepayModal: (state) => {
-            state.isRepayModalOpen = false;
-        },
-        openSelectWalletModal: (state) => {
-            state.isSelectWalletModalOpen = true;
-        },
-        closeSelectWalletModal: (state) => {
-            state.isSelectWalletModalOpen = false;
-        },
-        openInfoModal: (state) => {
-            state.isInfoModalOpen = true;
-        },
-        closeInfoModal: (state) => {
-            state.isInfoModalOpen = false;
-        },
-        
+    toggleBorrowModalVisibility: (state, action) => {
+      state.loanForModal = action.payload.loan;
+      state.isBorrowModalOpen = action.payload.isOpen;
     },
+    toggleRepayModalVisibility: (state, action) => {
+      state.loanForModal = action.payload.loan;
+      state.isRepayModalOpen = action.payload.isOpen;
+    },
+    toggleSelectWalletModalVisibility: (state, action) => {
+      state.isSelectWalletModalOpen = action.payload;
+    },
+    toggleInfoModalVisibility: (state, action) => {
+      state.isInfoModalOpen = action.payload;
+    },
+  },
 });
 
-export const { openDepositModal, closeDepositModal, openSelectWalletModal, closeSelectWalletModal, openInfoModal, closeInfoModal, openBorrowModal, closeBorrowModal, openRepayModal, closeRepayModal } = componentSlice.actions;
+export const {
+    toggleDepositModalVisibility,
+    toggleBorrowModalVisibility,
+    toggleRepayModalVisibility,
+    toggleSelectWalletModalVisibility,
+    toggleInfoModalVisibility,
+} = componentSlice.actions;
 
 export default componentSlice.reducer;

@@ -14,14 +14,22 @@ import { showConnect } from '@stacks/connect';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { openContractCall } from '@stacks/connect';
 import { customShiftValue, hexToBytes } from '../utils';
-import eventBus from '../EventBus';
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
-import { stacksBlockchains } from '../networks';
 import store from '../store/store';
+
+import { StacksNetworks } from '../networks/networks';
+
 import { login } from '../store/accountSlice';
+import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
-  const { loanContractAddress, loanContractName, network } = stacksBlockchains[blockchain];
+  console.log('blockchain', blockchain);
+  const { loanContractAddress, loanContractName, network } = StacksNetworks[blockchain];
+
+  console.log('loanContractAddress', loanContractAddress);
+  console.log('loanContractName', loanContractName);
+  console.log('network', network);
+
   return {
     contractAddress: loanContractAddress,
     contractName: loanContractName,
@@ -34,60 +42,76 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
     fee: 100000,
     anchorMode: 1,
     onFinish: (data) => {
-      eventBus.dispatch('loan-event', { status: onFinishStatus, txId: data.txId, chain: 'stacks' });
+      if (typeof onFinishStatus !== 'string') {
+        store.dispatch(loanSetupRequested(onFinishStatus));
+      } else {
+        store.dispatch(loanEventReceived({ txHash: data.txId, status: onFinishStatus }));
+      }
     },
     onCancel: () => {
-      eventBus.dispatch('loan-event', { status: 'cancelled' });
+      store.dispatch(loanEventReceived({ status: onFinishStatus }));
     },
   };
 };
 
 export async function requestAndDispatchStacksAccountInformation(walletType, blockchain) {
-  let accountInformation = {};
   const isUserSignedIn = userSession.isUserSignedIn();
-  
-  if (isUserSignedIn) {
-    let address;
-    console.log(blockchain)
-    switch (blockchain) {
-      case 'stacks:1':
-        address = userSession.loadUserData().profile.stxAddress.mainnet;
-        break;
-      case 'stacks:2147483648':
-        address = userSession.loadUserData().profile.stxAddress.testnet;
-        break;
-      case 'stacks:42':
-        address = userSession.loadUserData().profile.stxAddress.testnet
-        break;
-      default:
-        throw new Error('Invalid blockchain!');
-    }
 
-    accountInformation = {
-      walletType: walletType,
-      address: address,
-      blockchain,
-    };
+  let address;
+  switch (blockchain) {
+    case 'stacks:1':
+      address = isUserSignedIn
+        ? userSession.loadUserData().profile.stxAddress.mainnet
+        : await showConnectAndGetAddress(blockchain);
+      break;
+    case 'stacks:2147483648':
+    case 'stacks:42':
+      address = isUserSignedIn
+        ? userSession.loadUserData().profile.stxAddress.testnet
+        : await showConnectAndGetAddress(blockchain);
+      break;
+    default:
+      throw new Error('Invalid blockchain!');
+  }
 
-    store.dispatch(login(accountInformation));
-  } else {
+  const accountInformation = {
+    walletType: walletType,
+    address: address,
+    blockchain,
+  };
+
+  store.dispatch(login(accountInformation));
+}
+
+async function showConnectAndGetAddress(blockchain) {
+  return new Promise((resolve, reject) => {
     showConnect({
       appDetails: {
         name: 'DLC.Link',
         icon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
       },
       onFinish: () => {
-        store.dispatch(login(accountInformation));
+        switch (blockchain) {
+          case 'stacks:1':
+            resolve(userSession.loadUserData().profile.stxAddress.mainnet);
+            break;
+          case 'stacks:2147483648':
+          case 'stacks:42':
+            resolve(userSession.loadUserData().profile.stxAddress.testnet);
+            break;
+          default:
+            reject(new Error('Invalid blockchain!'));
+        }
       },
       userSession,
     });
-  }
+  });
 }
 
 export async function sendLoanContractToStacks(loanContract) {
-  const { walletType, blockchain } = store.getState().account
-  console.log(walletType)
+  const { walletType, blockchain } = store.getState().account;
 
+  console.log('Loan Contract', loanContract);
   const functionName = 'setup-loan';
   const functionArgs = [
     uintCV(loanContract.BTCDeposit),
@@ -96,7 +120,7 @@ export async function sendLoanContractToStacks(loanContract) {
     uintCV(loanContract.emergencyRefundTime),
   ];
   const senderAddress = undefined;
-  const onFinishStatus = 'created';
+  const onFinishStatus = loanContract;
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
 
@@ -126,6 +150,7 @@ export async function getAllStacksLoansForAddress() {
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
   try {
     const response = await callReadOnlyFunction(txOptions);
+    console.log(response);
     const loanContracts = response.list;
     formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
   } catch (error) {
@@ -136,8 +161,27 @@ export async function getAllStacksLoansForAddress() {
 
 export async function getStacksLoanIDByUUID(UUID) {
   const { address, blockchain } = store.getState().account;
+  console.log('UUID', UUID);
 
   const functionName = 'get-loan-id-by-uuid';
+  const functionArgs = [bufferCV(hexToBytes(UUID))];
+  const senderAddress = address;
+
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+
+  try {
+    const response = await callReadOnlyFunction(txOptions);
+    console.log('Response', response);
+    return cvToValue(response.value);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getStacksLoanByUUID(UUID) {
+  const { address, blockchain } = store.getState().account;
+
+  const functionName = 'get-loan-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   const senderAddress = address;
 
@@ -160,12 +204,12 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'borrow-requested';
-  const { assetContractAddress, assetContractName, assetName } = stacksBlockchains[blockchain];
+  const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
-      stacksBlockchains[blockchain].loanContractAddress,
-      stacksBlockchains[blockchain].loanContractName,
+      StacksNetworks[blockchain].loanContractAddress,
+      StacksNetworks[blockchain].loanContractName,
       FungibleConditionCode.GreaterEqual,
       amount,
       createAssetInfo(assetContractAddress, assetContractName, assetName)
@@ -204,7 +248,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = 'repay-requested';
-  const { assetContractAddress, assetContractName, assetName } = stacksBlockchains[blockchain];
+  const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
@@ -239,7 +283,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
 }
 
 export async function liquidateStacksLoan(UUID) {
-  const { address, walletType, blockchain } = store.getState().account;
+  const { walletType, blockchain } = store.getState().account;
 
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'attempt-liquidate';
@@ -272,7 +316,7 @@ export async function liquidateStacksLoan(UUID) {
 }
 
 export async function closeStacksLoan(UUID) {
-  const { address, walletType, blockchain } = store.getState().account;
+  const { walletType, blockchain } = store.getState().account;
 
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'close-loan';

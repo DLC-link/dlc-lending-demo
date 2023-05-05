@@ -48,3 +48,22 @@ export const lockBTC = async (vaultContract) => {
         console.error(error);
     }
 };
+
+export const fetchBitcoinPrice = async () => {
+    let bitCoinValue = undefined;
+    try {
+        await fetch('https://api.coindesk.com/v1/bpi/currentprice.json', {
+            headers: { Accept: 'application/json' },
+        })
+            .then((response) => response.json())
+            .then(
+                (message) =>
+                    (bitCoinValue = Number(
+                        message.bpi.USD.rate.replace(/[^0-9.-]+/g, '')
+                    ))
+            );
+    } catch (error) {
+        console.error(error);
+    }
+    return bitCoinValue;
+};

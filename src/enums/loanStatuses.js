@@ -19,3 +19,16 @@ export const clarityLoanStatuses = {
   PRELIQUIDATED: 'pre-liquidated',
   LIQUIDATED: 'liquidated',
 };
+
+export const clarityFunctionNames = { 
+  NONE: 'none',
+  NOTREADY: 'setup-loan',
+  READY: 'post-create-dlc',
+  FUNDED: 'set-status-funded',
+  PREREPAID: 'validate-price-data',
+  REPAID: 'repay',
+  PRELIQUIDATED: 'attempt-liquidate',
+  PRECLOSED: 'close-loan',
+  CLOSED: 'post-close-dlc',
+  BORROW: 'borrow',
+};

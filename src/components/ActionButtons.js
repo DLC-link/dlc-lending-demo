@@ -1,51 +1,46 @@
 import React from 'react';
 import { Flex, VStack, Button, Tooltip, HStack } from '@chakra-ui/react';
-import {
-  closeEthereumLoan,
-  liquidateEthereumLoan,
-  repayEthereumLoan,
-  borrowEthereumLoan,
-} from '../blockchainFunctions/ethereumFunctions';
-import {
-  closeStacksLoan,
-  liquidateStacksLoan,
-  repayStacksLoan,
-  borrowStacksLoan,
-} from '../blockchainFunctions/stacksFunctions';
+
+import { useSelector, useDispatch } from 'react-redux';
+
 import { lockBTC } from '../blockchainFunctions/bitcoinFunctions';
-import { useSelector } from 'react-redux';
+import { closeStacksLoan, liquidateStacksLoan } from '../blockchainFunctions/stacksFunctions';
+import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
+
 import { selectLoanByUUID } from '../store/loansSlice';
+import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
 
 export function ActionButtons({ loanUUID, canBeLiquidated }) {
-  const walletType = useSelector((state) => state.account.walletType);
-  const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
+  const dispatch = useDispatch();
 
-  let borrowAction;
-  let repayAction;
+  const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
+  const walletType = useSelector((state) => state.account.walletType);
+
   let closeAction;
   let liquidateAction;
 
   switch (walletType) {
     case 'xverse':
     case 'hiro':
-      borrowAction = () => borrowStacksLoan(loan.uuid);
-      repayAction = () => repayStacksLoan(loan.uuid);
+    case 'walletConnect':
       closeAction = () => closeStacksLoan(loan.uuid);
       liquidateAction = () => liquidateStacksLoan(loan.uuid);
       break;
     case 'metamask':
-      borrowAction = () => borrowEthereumLoan(loan.uuid);
-      repayAction = () => repayEthereumLoan(loan.uuid);
       closeAction = () => closeEthereumLoan(loan.uuid);
       liquidateAction = () => liquidateEthereumLoan(loan.uuid);
   }
 
   function setActionButton() {
+    if(loan.status === solidityLoanStatuses.FUNDED) {
+      console.log(loanUUID)
+      console.log(loan)
+    }
     switch (loan.status) {
       case solidityLoanStatuses.READY:
       case clarityLoanStatuses.READY:
-        console.log('ready');
         return (
           <Flex>
             <VStack>
@@ -59,21 +54,22 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
         );
       case solidityLoanStatuses.FUNDED:
       case clarityLoanStatuses.FUNDED:
+        console.log('loan', loan)
         return (
           <Flex>
-            <HStack>
+            <VStack>
               <VStack>
                 <Button
                   variant='outline'
-                  onClick={() => borrowAction()}>
+                  onClick={() => dispatch(toggleBorrowModalVisibility({ isOpen: true, loan: loan }))}>
                   BORROW
                 </Button>
               </VStack>
-              {loan.raw.loan > 0 ? (
+              {loan.vaultLoan > 0 ? (
                 <VStack>
                   <Button
                     variant='outline'
-                    onClick={() => repayAction()}>
+                    onClick={() => dispatch(toggleRepayModalVisibility({ isOpen: true, loan: loan }))}>
                     REPAY
                   </Button>
                 </VStack>
@@ -102,7 +98,7 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
                   </Tooltip>
                 </VStack>
               )}
-            </HStack>
+            </VStack>
           </Flex>
         );
       case solidityLoanStatuses.NOTREADY:
@@ -123,8 +119,10 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
               }}></Button>
           </Flex>
         );
-      case solidityLoanStatuses.REPAID || clarityLoanStatuses.REPAID:
-      case solidityLoanStatuses.LIQUIDATED || clarityLoanStatuses.LIQUIDATED:
+      case solidityLoanStatuses.REPAID:
+      case clarityLoanStatuses.REPAID:
+      case solidityLoanStatuses.LIQUIDATED:
+      case clarityLoanStatuses.LIQUIDATED:
         break;
       default:
         break;

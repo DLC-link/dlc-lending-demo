@@ -1,14 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import store from './store';
-import { getAllEthereumLoansForAddress } from '../blockchainFunctions/ethereumFunctions';
+import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress } from '../blockchainFunctions/stacksFunctions';
-import { formatAllLoans } from '../utilities/loanFormatter';
 import { customShiftValue } from '../utilities/formatFunctions';
+import { getStacksLoanByUUID, getStacksLoanIDByUUID } from '../blockchainFunctions/stacksFunctions';
+import { formatClarityLoanContract, formatSolidityLoanContract } from '../utilities/loanFormatter';
+import { clarityFunctionNames, solidityLoanStatuses } from '../enums/loanStatuses';
 
 const initialState = {
   loans: [],
   status: 'idle',
   error: null,
+  toastEvent: null,
 };
 
 export const loansSlice = createSlice({
@@ -19,10 +22,16 @@ export const loansSlice = createSlice({
       const temporaryLoan = {
         uuid: '',
         status: 'Initialized',
-        loanCollateral: action.payload.BTCDeposit,
-        formattedCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
+        formattedVaultLoan: 0,
+        formattedVaultCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
       };
       state.loans.unshift(temporaryLoan);
+    },
+    loanEventReceived: (state, action) => {
+      state.toastEvent = {
+        txHash: action.payload.txHash,
+        status: action.payload.status,
+      };
     },
   },
   extraReducers(builder) {
@@ -39,11 +48,52 @@ export const loansSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
+      .addCase(fetchLoan.fulfilled, (state, action) => {
+        let loanIndex;
+        let loanStatuses;
+
+        const { walletType, formattedLoan, loanTXHash } = action.payload;
+
+        switch (walletType) {
+          case 'metamask':
+            loanStatuses = solidityLoanStatuses;
+            break;
+          case 'xverse':
+          case 'hiro':
+          case 'walletconnect':
+            loanStatuses = clarityFunctionNames;
+            break;
+          default:
+            console.error('Unsupported wallet type!');
+            break;
+        }
+
+        if (formattedLoan.status === loanStatuses.NOTREADY) {
+          console.log('NOTREADY');
+          loanIndex = state.loans.findIndex((loan) => loan.status === 'Initialized');
+        } else {
+          loanIndex = state.loans.findIndex((loan) => loan.uuid === formattedLoan.uuid);
+        }
+
+        state.loans[loanIndex] = formattedLoan;
+
+        state.toastEvent = {
+          txHash: loanTXHash,
+          status: formattedLoan.status,
+        };
+
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(fetchLoan.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
       .addCase('account/logout', () => initialState);
   },
 });
 
-export const { loanSetupRequested } = loansSlice.actions;
+export const { loanSetupRequested, loanEventReceived } = loansSlice.actions;
 
 export default loansSlice.reducer;
 
@@ -56,21 +106,18 @@ export const selectLoanByUUID = (state, uuid) => {
 };
 
 export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
-  const { address, walletType, blockchain } = store.getState().account;
+  const { walletType } = store.getState().account;
 
   let loans = [];
-  let responseType = '';
 
   switch (walletType) {
     case 'metamask':
-      loans = await getAllEthereumLoansForAddress(address);
-      responseType = 'solidity';
+      loans = await getAllEthereumLoansForAddress();
       break;
     case 'xverse':
     case 'hiro':
     case 'walletConnect':
-      loans = await getAllStacksLoansForAddress(address, blockchain);
-      responseType = 'clarity';
+      loans = await getAllStacksLoansForAddress();
       break;
     default:
       throw new Error('Unsupported wallet type!');
@@ -78,4 +125,44 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
 
   console.log('Inside fetchLoans, loans: ', loans);
   return loans;
+});
+
+export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
+  const { loanUUID, loanStatus, loanTXHash } = payload;
+  const { walletType } = store.getState().account;
+
+  const loanStatusKey = Object.keys(solidityLoanStatuses)[loanStatus];
+  const loanStatusValue = solidityLoanStatuses[loanStatusKey];
+
+  const { loans } = store.getState().loans;
+
+  const storedLoanUUIDs = loans.map((loan) => loan.uuid);
+
+  let fetchedLoanUUIDs = [];
+
+  if (loanStatusValue === solidityLoanStatuses.NOTREADY) {
+    const fetchedLoans = await getAllEthereumLoansForAddress();
+    fetchedLoanUUIDs = fetchedLoans.map((loan) => loan.uuid);
+  }
+
+  let formattedLoan;
+
+  if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) {
+    return;
+  } else {
+    switch (walletType) {
+      case 'metamask':
+        console.log('Inside fetchLoan, walletType: ', walletType);
+        formattedLoan = formatSolidityLoanContract(await getEthereumLoanByUUID(loanUUID));
+        break;
+      case 'xverse':
+      case 'hiro':
+      case 'walletConnect':
+        break;
+      default:
+        throw new Error('Unsupported wallet type!');
+    }
+  }
+
+  return { formattedLoan, walletType, loanTXHash };
 });

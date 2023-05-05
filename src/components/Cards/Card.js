@@ -1,33 +1,19 @@
 /*global chrome*/
 
-import {
-  Flex,
-  Text,
-  VStack,
-  TableContainer,
-  Tbody,
-  Table,
-  Tr,
-  Td,
-  Image,
-  Box,
-  Spacer,
-  CircularProgress,
-} from '@chakra-ui/react';
-import { easyTruncateAddress } from '../../utilities/formatFunctions';
+import { Flex, Text, VStack, TableContainer, Tbody, Table, Tr, Td, Spacer } from '@chakra-ui/react';
+
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+
 import Status from '../Status';
 import { ActionButtons } from '../ActionButtons';
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import BorrowModal from '../../modals/BorrowModal';
+
 import { selectLoanByUUID } from '../../store/loansSlice';
-import { useDispatch } from 'react-redux';
-import { closeDepositModal, closeRepayModal } from '../../store/componentSlice';
 import { countCollateralToDebtRatio } from '../../utils';
-import { useState } from 'react';
-import eventBus from '../../EventBus';
+import { easyTruncateAddress } from '../../utilities/formatFunctions';
 
 export default function Card({ loanUUID }) {
-  const dispatch = useDispatch();
   const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
   const bitcoinValue = useSelector((state) => state.externalData.bitcoinValue);
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
@@ -38,15 +24,6 @@ export default function Card({ loanUUID }) {
     setCanBeLiquidated(temporaryCanBeLiquidated);
   }, [loan]);
 
-  useEffect(() => {
-    eventBus.on('loan-event', (event) => {
-      if (event.status === 'borrow-requested' || 'repay-requested') {
-        dispatch(closeDepositModal());
-        dispatch(closeRepayModal());
-      }
-    });
-  });
-
   return (
     <>
       {loan && (
@@ -55,7 +32,7 @@ export default function Card({ loanUUID }) {
           marginBottom='25px'
           marginLeft='15px'
           marginRight='15px'
-          height='300px'
+          height='350px'
           width='250px'
           borderRadius='lg'
           shadow='dark-lg'
@@ -82,9 +59,7 @@ export default function Card({ loanUUID }) {
                     <Td>
                       <Text variant='property'>UUID</Text>
                     </Td>
-                    <Td>
-                      <Text>{easyTruncateAddress(loan.formattedUUID)}</Text>
-                    </Td>
+                    <Td>{loan.formattedUUID && <Text>{easyTruncateAddress(loan.formattedUUID)}</Text>}</Td>
                   </Tr>
                   <Tr>
                     <Td>
@@ -105,6 +80,7 @@ export default function Card({ loanUUID }) {
                 </Tbody>
               </Table>
             </TableContainer>
+            <Spacer></Spacer>
             <ActionButtons
               loanUUID={loan.uuid}
               canBeLiquidated={canBeLiquidated}></ActionButtons>

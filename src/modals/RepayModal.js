@@ -15,80 +15,75 @@ import {
   Flex,
   Text,
   Image,
-  Spacer,
+  HStack,
+  VStack,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import {
-  customShiftValue,
-  fixedTwoDecimalShift,
-  fixedTwoDecimalUnshift,
-  countCollateralToDebtRatio,
-  formatCollateralInUSD,
-  formatBitcoinInUSDAmount,
-} from '../utils';
-import { repayStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
-import { repayEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
 
-export default function RepayModal({
-  isOpen,
-  closeModal,
-  walletType,
-  vaultLoanAmount,
-  BTCDeposit,
-  uuid,
-  creator,
-  blockchain,
-  id
-}) {
-  const [additionalRepay, setAdditionalRepay] = useState();
+import { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+
+import { customShiftValue, countCollateralToDebtRatio, formatCollateralInUSD } from '../utils';
+
+import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
+import { repayEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { fetchBitcoinPrice } from '../blockchainFunctions/bitcoinFunctions';
+
+import { toggleRepayModalVisibility } from '../store/componentSlice';
+
+export default function RepayModal() {
+  const dispatch = useDispatch();
+
+  const isRepayModalOpen = useSelector((state) => state.component.isRepayModalOpen);
+  const loan = useSelector((state) => state.component.loanForModal);
+
+  const walletType = useSelector((state) => state.account.walletType);
+
+  const [additionalRepayment, setAdditionalRepayment] = useState();
+
   const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
+
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
-  const [collateralAmount, setCollateralAmount] = useState(customShiftValue(BTCDeposit, 8, true));
+
   const [USDAmount, setUSDAmount] = useState(0);
+
   const [isLoanError, setLoanError] = useState(true);
   const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
-      await fetchBitcoinPrice();
+      await fetchBitcoinPrice().then((bitcoinPrice) => {
+        setBitCoinInUSDAsNumber(bitcoinPrice);
+        setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinPrice));
+      });
     }
     fetchData();
-  }, []);
+  }, [isRepayModalOpen === true]);
 
   useEffect(() => {
-    setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
-    setCollateralToDebtRatio(
-      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, -additionalRepay)
-    );
-    setLoanError(additionalRepay < 1 || additionalRepay === undefined);
-    setCollateralToDebtRatioError(collateralToDebtRatio < 140);
-  }, [additionalRepay, collateralToDebtRatio, isCollateralToDebtRatioError]);
+    if (loan) {
+      const collateralAmount = customShiftValue(loan.vaultCollateral, 8, true);
+      setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
+      setCollateralToDebtRatio(
+        countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, loan.vaultLoan, -additionalRepayment)
+      );
+      setLoanError(additionalRepayment < 1 || additionalRepayment === undefined);
+      setCollateralToDebtRatioError(collateralToDebtRatio < 140);
+    }
+  }, [additionalRepayment, collateralToDebtRatio, isCollateralToDebtRatioError]);
 
-  const handleRepayChange = (additionalRepay) => {
-    setAdditionalRepay(additionalRepay.target.value);
-  };
-
-  const fetchBitcoinPrice = async () => {
-    await fetch('/.netlify/functions/get-bitcoin-price', {
-      headers: { accept: 'Accept: application/json' },
-    })
-      .then((x) => x.json())
-      .then(({ msg }) => {
-        const bitcoinValue = formatBitcoinInUSDAmount(msg);
-        setBitCoinInUSDAsNumber(bitcoinValue);
-        setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
-      });
+  const handleRepayChange = (additionalRepayment) => {
+    setAdditionalRepayment(additionalRepayment.target.value);
   };
 
   const repayLoanContract = async () => {
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        repayStacksLoanContract(creator, uuid, additionalRepay, blockchain, walletType);
+        repayStacksLoan(loan.uuid, additionalRepayment);
         break;
       case 'metamask':
-        repayEthereumLoan(uuid, additionalRepay, blockchain)
+        repayEthereumLoan(loan.uuid, additionalRepayment);
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -97,162 +92,157 @@ export default function RepayModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={closeModal}
-      isCentered>
-      <ModalOverlay />
-      <ModalContent
-        color='white'
-        width={350}>
-        <ModalHeader
-          bgGradient='linear(to-r, primary1, primary2)'
-          bgClip='text'
-          textAlign='center'>
-          Repay USDC
-        </ModalHeader>
-        <ModalCloseButton
-          _focus={{
-            boxShadow: 'none',
-          }}
-        />
-        <ModalBody>
-          <Text
-            bgGradient='linear(to-r, primary1, primary2)'
-            bgClip='text'
-            textAlign='center'
-            fontSize='md'>
-            Collateral Amount
-          </Text>
-          <Flex
-            marginLeft={25}
-            marginRight={25}
-            alignItems='center'
-            paddingBottom={15}>
-            <Text
-              bgGradient='linear(to-r, primary1, primary2)'
-              bgClip='text'
-              fontSize='md'>
-              {customShiftValue(BTCDeposit, 8, true)}
-            </Text>
-            <Spacer></Spacer>
-            <Image
-              src='/btc_logo.png'
-              alt='Bitcoin Logo'
-              width={25}
-              height={25}></Image>
-          </Flex>
-          <Text
-            fontSize='x-small'
-            color='gray'
-            textAlign='center'>
-            ${USDAmount} at 1 BTC = ${bitCoinInUSDAsString}
-          </Text>
-          <FormControl isInvalid={isLoanError}>
-            <FormLabel textAlign='center'>Repay Amount</FormLabel>
-            {!isLoanError ? (
-              <FormHelperText
-                fontSize='x-small'
-                paddingBottom={15}
-                textAlign='center'>
-                Enter the amount of USDC you would like to repay.
-              </FormHelperText>
-            ) : (
-              <FormErrorMessage
-                fontSize='x-small'
-                paddingBottom={15}
-                justifyContent='center'>
-                Enter a valid amount of USDC
-              </FormErrorMessage>
-            )}
-            <Flex
-              direction='row'
-              marginLeft={25}
-              marginRight={25}
-              alignItems='center'
-              paddingBottom={15}>
-              <NumberInput>
-                <NumberInputField
-                  bgGradient='linear(to-r, primary1, primary2)'
-                  bgClip='text'
-                  value={additionalRepay}
-                  width={200}
-                  onChange={handleRepayChange}
-                />
-              </NumberInput>
-              <Spacer></Spacer>
-              <Image
-                src='/usdc_logo.png'
-                alt='USD Coin Logo'
-                width={25}
-                height={25}></Image>
-            </Flex>
-          </FormControl>
-          <Flex
-            direction='row'
-            marginLeft={25}
-            marginRight={25}
-            alignItems='center'
-            paddingBottom={15}>
-            <Text
-              fontSize='sm'
-              color='gray'>
-              Collateral to debt ratio:
-            </Text>
-            <Spacer></Spacer>
-            {!isCollateralToDebtRatioError ? (
-              <Text
-                fontSize='sm'
-                color='green'>
-                {collateralToDebtRatio}%
-              </Text>
-            ) : (
-              <Text
-                fontSize='sm'
-                color='red'>
-                {collateralToDebtRatio}%
-              </Text>
-            )}
-          </Flex>
-          <Flex
-            direction='row'
-            marginLeft={25}
-            marginRight={25}
-            alignItems='center'
-            paddingBottom={15}>
-            <Text
-              fontSize='sm'
-              color='gray'>
-              Already borrowed:
-            </Text>
-            <Spacer></Spacer>
-            <Text
-              fontSize='sm'
-              color='gray'>
-              {'$ ' + customShiftValue(vaultLoanAmount, 6, true)}
-            </Text>
-          </Flex>
-          <Flex justifyContent='center'>
-            <Button
-              _hover={{
-                color: 'white',
-                bg: 'accent',
-              }}
-              background='white'
-              bgGradient='linear(to-r, primary1, primary2)'
-              bgClip='text'
-              width='150px'
-              shadow='2xl'
-              variant='outline'
-              fontSize='sm'
-              fontWeight='bold'
-              type='submit'
-              onClick={repayLoanContract}>
-              Repay USDC
-            </Button>
-          </Flex>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+    <>
+      {loan && (
+        <Modal
+          isOpen={isRepayModalOpen}
+          onClose={() => dispatch(toggleRepayModalVisibility({ isOpen: false }))}
+          isCentered>
+          <ModalOverlay />
+          <ModalContent
+            width='350px'
+            border='1px'
+            bg='background2'
+            color='accent'>
+            <VStack>
+              <ModalHeader color='white'>Repay USDC</ModalHeader>
+              <ModalCloseButton
+                _focus={{
+                  boxShadow: 'none',
+                }}
+              />
+              <ModalBody>
+                <Text
+                  marginTop='15px'
+                  marginBottom='15px'
+                  marginLeft='40px'
+                  color='white'
+                  fontSize='md'>
+                  Collateral Amount
+                </Text>
+                <HStack
+                  marginLeft='40px'
+                  spacing={45}>
+                  <Text
+                    width='200px'
+                    color='white'
+                    fontSize='md'>
+                    {customShiftValue(loan.vaultCollateral, 8, true)}
+                  </Text>
+                  <Image
+                    src='/btc_logo.png'
+                    alt='Bitcoin Logo'
+                    width='25px'
+                    height='25px'></Image>
+                </HStack>
+                <Text
+                  marginTop='15px'
+                  marginLeft='40px'
+                  fontSize='x-small'
+                  color='white'>
+                  ${USDAmount} at 1 BTC = ${bitCoinInUSDAsString}
+                </Text>
+                <FormControl isInvalid={isLoanError}>
+                  <FormLabel
+                    marginTop='15px'
+                    marginBottom='15px'
+                    marginLeft='40px'
+                    color='white'>
+                    Repay Amount
+                  </FormLabel>
+                  {!isLoanError ? (
+                    <FormHelperText
+                      marginTop='15px'
+                      marginBottom='15px'
+                      marginLeft='40px'
+                      fontSize='x-small'
+                      color='accent'>
+                      Enter the amount of USDC you would like to repay.
+                    </FormHelperText>
+                  ) : (
+                    <FormErrorMessage
+                      marginTop='15px'
+                      marginBottom='15px'
+                      marginLeft='40px'
+                      fontSize='x-small'>
+                      Enter a valid amount of USDC.
+                    </FormErrorMessage>
+                  )}
+                 <HStack
+                    marginLeft='40px'
+                    marginRight='50px'
+                    spacing={45}>
+                    <NumberInput focusBorderColor='accent'>
+                      <NumberInputField
+                        padding='15px'
+                        width='200px'
+                        color='white'
+                        value={additionalRepayment}
+                        onChange={handleRepayChange}
+                      />
+                    </NumberInput>
+                    <Image
+                      src='/usdc_logo.png'
+                      alt='USD Coin Logo'
+                      width='25px'
+                      height='25px'></Image>
+                  </HStack>
+                </FormControl>
+                <HStack
+                  marginTop='15px'
+                  marginBottom='15px'
+                  marginLeft='40px'
+                  spacing={45}>
+                  <Text
+                    width='185px'
+                    fontSize='sm'
+                    color='gray'>
+                    Collateral to debt ratio:
+                  </Text>
+                  {!isCollateralToDebtRatioError ? (
+                    <Text
+                      fontSize='sm'
+                      color='green'>
+                      {collateralToDebtRatio}%
+                    </Text>
+                  ) : (
+                    <Text
+                      fontSize='sm'
+                      color='red'>
+                      {collateralToDebtRatio}%
+                    </Text>
+                  )}
+                </HStack>
+                <HStack
+                  marginTop='15px'
+                  marginBottom='15px'
+                  marginLeft='40px'
+                  spacing={45}>
+                  <Text
+                    width='185px'
+                    fontSize='sm'
+                    color='gray'>
+                    Already borrowed:
+                  </Text>
+                  <Text
+                    fontSize='sm'
+                    color='gray'>
+                    {'$ ' + customShiftValue(loan.vaultLoan, 6, true)}
+                  </Text>
+                </HStack>
+                <Flex justifyContent='center'>
+                  <Button
+                    variant='outline'
+                    type='submit'
+                    onClick={() => repayLoanContract()}>
+                    REPAY USDC
+                  </Button>
+                </Flex>
+              </ModalBody>
+            </VStack>
+          </ModalContent>
+        </Modal>
+      )}
+    </>
   );
 }

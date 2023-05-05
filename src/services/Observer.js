@@ -5,54 +5,16 @@ import { abi as dlcManagerABI } from '../abis/dlcManagerABI';
 import { io as ioClient } from 'socket.io-client';
 import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
 
-import eventBus from '../EventBus';
-import { EthereumNetworks } from '../networks/ethereumNetworks';
-import { StacksNetworks } from '../networks/stacksNetworks';
+import { EthereumNetworks, StacksNetworks } from '../networks/networks';
+
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
-import { selectAllLoans } from '../store/loansSlice';
+import { fetchLoan, fetchLoans, loanEventReceived } from '../store/loansSlice';
+
+import store from '../store/store';
 
 const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
 const ioclient_uri = `wss://dev-oracle.dlc.link`;
-
-function logStatus(loanUUID, loanStatus, loanOwner) {
-  switch (loanStatus) {
-    case solidityLoanStatuses.NONE:
-    case clarityLoanStatuses.NONE:
-      break;
-    case solidityLoanStatuses.NOTREADY:
-    case clarityLoanStatuses.NOTREADY:
-      console.log(`%cVault setup for %c${loanOwner} %c!`, 'color: white', 'color: turquoise', 'color: white');
-      break;
-    case solidityLoanStatuses.READY:
-    case clarityLoanStatuses.READY:
-      console.log(`%cLoan %c${loanUUID} %cis ready!`, 'color: white', 'color: turquoise', 'color: white');
-      break;
-    case solidityLoanStatuses.FUNDED:
-    case clarityLoanStatuses.FUNDED:
-      console.log(`%cLoan %c${loanUUID} %cis funded!`, 'color: white', 'color: turquoise', 'color: white');
-      break;
-    case solidityLoanStatuses.PREREPAID:
-    case clarityLoanStatuses.PREREPAID:
-      console.log(`%cClosing loan %c${loanUUID} %c!`, 'color: white', 'color: turquoise', 'color: white');
-      break;
-    case solidityLoanStatuses.REPAID:
-    case clarityLoanStatuses.REPAID:
-      console.log(`%cLoan %c${loanUUID} %cis closed!`, 'color: white', 'color: turquoise', 'color: white');
-      break;
-    case solidityLoanStatuses.PRELIQUIDATED:
-    case clarityLoanStatuses.PRELIQUIDATED:
-      console.log(`%cLiquidating loan %c${loanUUID} %c!`, 'color: white', 'color: turquoise', 'color: white');
-    case solidityLoanStatuses.LIQUIDATED:
-    case clarityLoanStatuses.LIQUIDATED:
-      console.log(`%cLoan %c${loanUUID} %cis liquidated!`, 'color: white', 'color: turquoise', 'color: white');
-      break;
-    default:
-      console.log('Unknow status!');
-      break;
-  }
-}
 
 async function fetchTXInfo(txId) {
   console.log(`[Stacks] Fetching tx_info... ${txId}`);
@@ -68,22 +30,25 @@ async function fetchTXInfo(txId) {
 function handleTx(txInfo) {
   if (txInfo.tx_type !== 'contract_call') return;
 
-  const txMap = {
-    'setup-loan': 'setup',
-    'post-create-dlc': 'ready',
-    'set-status-funded': 'funded',
-    'attempt-liquidate': 'attempting-liquidation',
-    'validate-price-data': 'liquidating',
-    'close-loan': 'closing',
-    'post-close-dlc': 'closed',
-    borrow: 'borrowed',
-    repay: 'repaid',
+  const clarityFunctionsMap = {
+    'setup-loan': 'NotReady',
+    'post-create-dlc': 'Ready',
+    'set-status-funded': 'Funded',
+    'attempt-liquidate': 'AttemptingLiquidation',
+    'validate-price-data': 'PreLiquidated',
+    'close-loan': 'Closing',
+    'post-close-dlc': 'Closed',
+    borrow: 'Borrowed',
+    repay: 'Repaid',
   };
-  eventBus.dispatch('loan-event', {
-    status: txMap[txInfo.contract_call.function_name],
-    txId: txInfo.tx_id,
-    chain: 'stacks',
-  });
+
+  store.dispatch(
+    loanEventReceived({
+      status: clarityFunctionsMap[txInfo.contract_call.function_name],
+      txHash: txInfo.tx_id,
+    })
+  );
+  store.dispatch(fetchLoans());
 }
 
 export default function Observer() {
@@ -91,19 +56,10 @@ export default function Observer() {
   const walletType = useSelector((state) => state.account.walletType);
   const blockchain = useSelector((state) => state.account.blockchain);
 
-  const loans = useSelector(selectAllLoans);
-  let loanUUIDs = [];
-
   let ethereumProvider;
   let protocolContractETH;
   let dlcManagerETH;
   let usdcETH;
-
-  useEffect(() => {
-    if (loans.length !== 0) {
-      loanUUIDs = loans.map((loan) => loan.uuid);
-    }
-  }, [loans]);
 
   useEffect(() => {
     if (address && walletType && blockchain) {
@@ -112,7 +68,7 @@ export default function Observer() {
           startEthereumObserver();
           break;
         case 'hiro':
-        case 'metamask':
+        case 'xverse':
           startStacksObserver();
           break;
         default:
@@ -123,10 +79,8 @@ export default function Observer() {
 
   function startEthereumObserver() {
     try {
-
       const { protocolContractAddress, usdcAddress, dlcManagerAddress } = EthereumNetworks[blockchain];
       const { ethereum } = window;
-      console.log( EthereumNetworks[blockchain])
 
       ethereumProvider = new ethers.providers.Web3Provider(ethereum);
 
@@ -134,43 +88,31 @@ export default function Observer() {
       dlcManagerETH = new ethers.Contract(dlcManagerAddress, dlcManagerABI, ethereumProvider);
       usdcETH = new ethers.Contract(usdcAddress, usdcABI, ethereumProvider);
 
-      console.log('Starting Ethereum observer...');
+      protocolContractETH.on('StatusUpdate', (...args) => {
+        const loantUUID = args[1];
+        const loanStatus = args[2];
+        const loanTXHash = args[args.length - 1].transactionHash;
 
-      protocolContractETH.on('SetupLoan', (...args) => {
-        if (loanUUIDs.includes(args[0])) {
-          eventBus.dispatch('loan-event', {
-            status: 'setup',
-            txId: args[args.length - 1].transactionHash,
-          });
-        }
+        store.dispatch(
+          fetchLoan({
+            loanUUID: loantUUID,
+            loanStatus: loanStatus,
+            loanTXHash: loanTXHash,
+          })
+        );
       });
 
-      dlcManagerETH.on('CreateDLC', (...args) =>
-        eventBus.dispatch('loan-event', {
-          status: 'ready',
-          txId: args[args.length - 1].transactionHash,
-        })
-      );
-
-      dlcManagerETH.on('SetStatusFunded', (...args) =>
-        eventBus.dispatch('loan-event', {
-          status: 'funded',
-          txId: args[args.length - 1].transactionHash,
-        })
-      );
-
-      dlcManagerETH.on('CloseDLC', (...args) =>
-        eventBus.dispatch('loan-event', {
-          status: 'closed',
-          txId: args[args.length - 1].transactionHash,
-        })
-      );
-
       usdcETH.on('Approval', (...args) => {
-        eventBus.dispatch('loan-event', {
-          status: 'approved',
-          txId: args[args.length - 1].transactionHash,
-        });
+        console.log(args)
+        const loanStatus = 'Approved';
+        const loanTXHash = args[args.length - 1].transactionHash;
+
+        store.dispatch(
+          fetchLoan({
+            loanStatus: loanStatus,
+            loanTXHash: loanTXHash,
+          })
+        );
       });
     } catch (error) {
       console.error(error);
@@ -210,9 +152,9 @@ export default function Observer() {
     stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
       console.log(`TX happened on ${address}`);
       const _tx = txWithTransfers.tx;
-      if (_tx.tx_status !== 'success') {
-        eventBus.dispatch({ status: 'failed', txId: _tx.tx_id });
-      }
+      // if (_tx.tx_status !== 'success') {
+      //   eventBus.dispatch({ status: 'failed', txId: _tx.tx_id });
+      // }
       const txInfo = await fetchTXInfo(_tx.tx_id);
       handleTx(txInfo);
     });

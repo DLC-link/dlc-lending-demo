@@ -1,5 +1,5 @@
 import { Flex, Text, VStack } from '@chakra-ui/react';
-import { openDepositModal } from '../../store/componentSlice';
+import { toggleDepositModalVisibility } from '../../store/componentSlice';
 import { useDispatch } from 'react-redux';
 
 export default function SetupLoanCard() {
@@ -12,7 +12,7 @@ export default function SetupLoanCard() {
                 marginRight="15px"
                 marginTop="25px"
                 marginBottom="25px"
-                height="300px"
+                height="350px"
                 width="250px"
                 borderRadius="lg"
                 shadow="dark-lg"
@@ -27,7 +27,7 @@ export default function SetupLoanCard() {
                     transition: '0.5s',
                     transform: 'translateY(-35px)',
                 }}
-                onClick={() => dispatch(openDepositModal())}
+                onClick={() => dispatch(toggleDepositModalVisibility(true))}
             >
                 <VStack margin="15px" justifyContent="center">
                     <Text fontSize="9xl">+</Text>

@@ -46,7 +46,7 @@ export const appTheme = extendTheme({
         },
         Button: {
             baseStyle: {
-                margin: '15px',
+                margin: '5px',
                 width: '200px',
                 shadow: '2xl',
                 fontSize: 'sm',

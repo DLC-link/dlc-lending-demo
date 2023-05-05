@@ -5,7 +5,7 @@ import { easyTruncateAddress } from '../utilities/formatFunctions';
 import { useDispatch } from 'react-redux';
 import { logout } from '../store/accountSlice';
 import { useSelector } from 'react-redux';
-import { openSelectWalletModal } from '../store/componentSlice';
+import { toggleSelectWalletModalVisibility } from '../store/componentSlice';
 
 export default function Account() {
   const [walletLogo, setWalletLogo] = useState(undefined);
@@ -14,9 +14,10 @@ export default function Account() {
   const dispatch = useDispatch();
 
   const walletLogos = {
-    hiro: { src: '/h_logo.png', alt: 'Hiro Wallet Logo', boxSize: [2, 4] },
-    walletconnect: { src: '/wc_logo.png', alt: 'Wallet Connect Logo', boxSize: [2, 4] },
-    metamask: { src: '/mm_logo.png', alt: 'Metamask Logo', boxSize: [3, 6] },
+    hiro: { src: '/h_logo.png', alt: 'Hiro Wallet Logo', boxSize: '15px' },
+    xverse: { src: '/xverse_logo.png', alt: 'Xverse Wallet Logo', boxSize: '15px' },
+    walletconnect: { src: '/wc_logo.png', alt: 'Wallet Connect Logo', boxSize: '15px' },
+    metamask: { src: '/mm_logo.png', alt: 'Metamask Logo', boxSize: '15px' },
   };
 
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function Account() {
           width='250px'
           borderRadius='lg'
           shadow='dark-lg'
-          onClick={() => dispatch(openSelectWalletModal())}>
+          onClick={() => dispatch(toggleSelectWalletModalVisibility(true))}>
           <HStack>
             <WarningIcon
               boxSize='15px'

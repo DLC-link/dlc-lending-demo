@@ -17,7 +17,7 @@ import { Image } from '@chakra-ui/react';
 import { requestAndDispatchMetaMaskAccountInformation } from '../blockchainFunctions/ethereumFunctions';
 import { requestAndDispatchStacksAccountInformation } from '../blockchainFunctions/stacksFunctions';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeSelectWalletModal } from '../store/componentSlice';
+import { toggleSelectWalletModalVisibility } from '../store/componentSlice';
 
 export default function SelectWalletModal() {
   const isSelectWalletModalOpen = useSelector((state) => state.component.isSelectWalletModalOpen);
@@ -38,7 +38,7 @@ export default function SelectWalletModal() {
   return (
     <Modal
       isOpen={isSelectWalletModalOpen}
-      onClose={() => dispatch(closeSelectWalletModal())}
+      onClose={() => dispatch(toggleSelectWalletModalVisibility(false))}
       isCentered>
       <ModalOverlay />
       <ModalContent
@@ -83,7 +83,7 @@ export default function SelectWalletModal() {
                           key={`chain-${idx}`}
                           onClick={() => {
                             requestAndDispatchMetaMaskAccountInformation(blockchain.id);
-                            dispatch(closeSelectWalletModal());
+                            dispatch(toggleSelectWalletModalVisibility(false));
                           }}>
                           <Text variant='selector'>{blockchain.name}</Text>
                         </MenuItem>
@@ -118,7 +118,7 @@ export default function SelectWalletModal() {
                           key={`chain-${idx}`}
                           onClick={async () => {
                             await requestAndDispatchStacksAccountInformation('hiro', blockchain.id);
-                            dispatch(closeSelectWalletModal());
+                            dispatch(toggleSelectWalletModalVisibility(false));
                           }}>
                           <Text variant='selector'>{blockchain.name}</Text>
                         </MenuItem>
@@ -153,7 +153,7 @@ export default function SelectWalletModal() {
                           key={`chain-${idx}`}
                           onClick={async () => {
                             await requestAndDispatchStacksAccountInformation('xverse', blockchain.id);
-                            dispatch(closeSelectWalletModal());
+                            dispatch(toggleSelectWalletModalVisibility(false));
                           }}>
                           <Text variant='selector'>{blockchain.name}</Text>
                         </MenuItem>

@@ -1,44 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Text, Collapse, VStack, IconButton, HStack } from '@chakra-ui/react';
+import { Text, Collapse, VStack, IconButton, HStack, Button } from '@chakra-ui/react';
 import LoansGrid from './LoansGrid';
 import Balance from '../components/Balance';
-import eventBus from '../EventBus';
 import { RefreshOutlined } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchLoans, selectAllLoans } from '../store/loansSlice';
 import { fetchBitcoinValue } from '../store/externalDataSlice';
+import { toggleBorrowModalVisibility } from '../store/componentSlice';
 
 export default function LoansScreen() {
   const dispatch = useDispatch();
-  const initialLoans = [];
   const loans = useSelector(selectAllLoans);
   const loansStoreStatus = useSelector((state) => state.loans.status);
   const isLoading = useSelector((state) => state.loans.status === 'loading');
   const address = useSelector((state) => state.account.address);
-
-  const handleLoanEvent = (event) => {
-    switch (event.status) {
-      case 'NotReady':
-        initialLoans.shift();
-        break;
-      case 'Initialized':
-        initialLoans.push(event.loanContract);
-        break;
-      default:
-        refreshLoansTable(false);
-        break;
-    }
-  };
 
   useEffect(() => {
     if (loansStoreStatus === 'idle' && loans.length === 0 && address) {
       refreshLoansTable(false);
     }
   }, [address, loansStoreStatus, loans.length]);
-
-  useEffect(() => {
-    eventBus.on('loan-event', handleLoanEvent);
-  }, [address]);
 
   const refreshLoansTable = async (isManual) => {
     dispatch(fetchLoans(address));
@@ -69,14 +50,12 @@ export default function LoansScreen() {
             <Text
               fontSize='3xl'
               fontWeight='extrabold'>
-              BITCOIN VAULTS
+              BITCOIN LOANS
             </Text>
           </HStack>
           <Balance></Balance>
         </VStack>
-        <LoansGrid
-          isLoading={isLoading}
-          initialLoans={initialLoans}></LoansGrid>
+        <LoansGrid isLoading={isLoading}></LoansGrid>
       </Collapse>
     </>
   );
