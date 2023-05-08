@@ -20,7 +20,7 @@ export const clarityLoanStatuses = {
   LIQUIDATED: 'liquidated',
 };
 
-export const clarityFunctionNames = { 
+export const clarityFunctionNames = {
   NONE: 'none',
   NOTREADY: 'setup-loan',
   READY: 'post-create-dlc',
@@ -31,4 +31,13 @@ export const clarityFunctionNames = {
   PRECLOSED: 'close-loan',
   CLOSED: 'post-close-dlc',
   BORROW: 'borrow',
+};
+
+export const requestStatuses = {
+  SETUPREQUESTED: 'SetupRequested',
+  BORROWREQUESTED: 'BorrowRequested',
+  REPAYREQUESTED: 'RepayRequested',
+  CLOSEREQUESTED: 'CloseRequested',
+  LIQUIDATIONREQUESTED: 'LiquidationRequested',
+  APPROVEREQUESTED: 'ApproveRequested',
 };

@@ -21,14 +21,10 @@ import { StacksNetworks } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
+import { requestStatuses } from '../enums/loanStatuses';
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
-  console.log('blockchain', blockchain);
   const { loanContractAddress, loanContractName, network } = StacksNetworks[blockchain];
-
-  console.log('loanContractAddress', loanContractAddress);
-  console.log('loanContractName', loanContractName);
-  console.log('network', network);
 
   return {
     contractAddress: loanContractAddress,
@@ -111,7 +107,6 @@ async function showConnectAndGetAddress(blockchain) {
 export async function sendLoanContractToStacks(loanContract) {
   const { walletType, blockchain } = store.getState().account;
 
-  console.log('Loan Contract', loanContract);
   const functionName = 'setup-loan';
   const functionArgs = [
     uintCV(loanContract.BTCDeposit),
@@ -120,7 +115,7 @@ export async function sendLoanContractToStacks(loanContract) {
     uintCV(loanContract.emergencyRefundTime),
   ];
   const senderAddress = undefined;
-  const onFinishStatus = loanContract;
+  const onFinishStatus = loanContract.BTCDeposit;
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
 
@@ -150,7 +145,6 @@ export async function getAllStacksLoansForAddress() {
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
   try {
     const response = await callReadOnlyFunction(txOptions);
-    console.log(response);
     const loanContracts = response.list;
     formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
   } catch (error) {
@@ -161,7 +155,6 @@ export async function getAllStacksLoansForAddress() {
 
 export async function getStacksLoanIDByUUID(UUID) {
   const { address, blockchain } = store.getState().account;
-  console.log('UUID', UUID);
 
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
@@ -171,7 +164,6 @@ export async function getStacksLoanIDByUUID(UUID) {
 
   try {
     const response = await callReadOnlyFunction(txOptions);
-    console.log('Response', response);
     return cvToValue(response.value);
   } catch (error) {
     console.error(error);
@@ -203,7 +195,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
-  const onFinishStatus = 'borrow-requested';
+  const onFinishStatus = requestStatuses.BORROWREQUESTED;
   const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const contractFungiblePostConditionForBorrow = [
@@ -247,7 +239,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
-  const onFinishStatus = 'repay-requested';
+  const onFinishStatus = requestStatuses.REPAYREQUESTED;
   const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const standardFungiblePostConditionForRepay = [
@@ -290,7 +282,7 @@ export async function liquidateStacksLoan(UUID) {
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
-  const onFinishStatus = 'liquidation-requested';
+  const onFinishStatus = requestStatuses.LIQUIDATIONREQUESTED;
 
   const txOptions = populateTxOptions(
     functionName,
@@ -323,7 +315,7 @@ export async function closeStacksLoan(UUID) {
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
-  const onFinishStatus = 'closing-requested';
+  const onFinishStatus = requestStatuses.CLOSEREQUESTED;
 
   const txOptions = populateTxOptions(
     functionName,

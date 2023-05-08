@@ -19,10 +19,12 @@ import {
   VStack,
 } from '@chakra-ui/react';
 
+import store from '../store/store';
+
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { customShiftValue, countCollateralToDebtRatio, formatCollateralInUSD } from '../utils';
+import { customShiftValue, formatCollateralInUSD, calculateCollateralCoveragePercentageForBorrow } from '../utils';
 
 import { borrowStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
@@ -40,7 +42,7 @@ export default function BorrowModal() {
 
   const [additionalLoan, setAdditionalLoan] = useState();
 
-  const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
+  const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
 
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
@@ -48,7 +50,7 @@ export default function BorrowModal() {
   const [USDAmount, setUSDAmount] = useState(0);
 
   const [isLoanError, setLoanError] = useState(true);
-  const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] = useState(false);
+  const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -58,25 +60,49 @@ export default function BorrowModal() {
       });
     }
     fetchData();
-  }, [isBorrowModalOpen === true]);
+  }, []);
 
   useEffect(() => {
     if (loan) {
-      const collateralAmount = customShiftValue(loan.vaultCollateral, 8, true);
-      setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
-      setCollateralToDebtRatio(
-        countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, loan.vaultLoan, additionalLoan)
-      );
-      setLoanError(additionalLoan < 1 || additionalLoan === undefined);
-      setCollateralToDebtRatioError(collateralToDebtRatio < 140);
+      setUSDAmount(formatCollateralInUSD(customShiftValue(loan.vaultCollateral, 8, true), bitCoinInUSDAsNumber));
+      updateCollateralToDebtPercentage();
+      updateLoanError();
     }
-  }, [additionalLoan, collateralToDebtRatio, isCollateralToDebtRatioError]);
+  }, [additionalLoan, collateralToDebtPercentage, isCollateralToDebtPercentageError]);
 
   const handleLoanChange = (additionalLoan) => {
     setAdditionalLoan(additionalLoan.target.value);
   };
 
+  const updateCollateralToDebtPercentage = () => {
+    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForBorrow(
+      Number(customShiftValue(loan.vaultCollateral, 8, true)),
+      Number(bitCoinInUSDAsNumber),
+      Number(loan.vaultLoan),
+      Number(additionalLoan)
+    );
+    if (isNaN(collateralCoveragePercentage)) {
+      setCollateralToDebtPercentage('-');
+    } else {
+      setCollateralToDebtPercentage(collateralCoveragePercentage);
+    }
+
+    const isBelowMinimumRatio = collateralCoveragePercentage < 140;
+
+    if (isBelowMinimumRatio) {
+      setCollateralToDebtPercentageError(true);
+    } else {
+      setCollateralToDebtPercentageError(false);
+    }
+  };
+
+  const updateLoanError = () => {
+    const shouldDisplayLoanError = additionalLoan < 1 || additionalLoan === undefined;
+    setLoanError(shouldDisplayLoanError);
+  };
+
   const borrowLoanContract = async () => {
+    store.dispatch(toggleBorrowModalVisibility({ isOpen: false }));
     switch (walletType) {
       case 'hiro':
       case 'xverse':
@@ -197,19 +223,19 @@ export default function BorrowModal() {
                     width='185px'
                     fontSize='sm'
                     color='gray'>
-                    Collateral to debt ratio:
+                    Collateral to debt ratio percentage:
                   </Text>
-                  {!isCollateralToDebtRatioError ? (
+                  {!isCollateralToDebtPercentageError ? (
                     <Text
                       fontSize='sm'
                       color='green'>
-                      {collateralToDebtRatio}%
+                      {collateralToDebtPercentage}%
                     </Text>
                   ) : (
                     <Text
                       fontSize='sm'
                       color='red'>
-                      {collateralToDebtRatio}%
+                      {collateralToDebtPercentage}%
                     </Text>
                   )}
                 </HStack>
@@ -232,6 +258,7 @@ export default function BorrowModal() {
                 </HStack>
                 <Flex justifyContent='center'>
                   <Button
+                    disabled={isLoanError}
                     variant='outline'
                     type='submit'
                     onClick={() => borrowLoanContract()}>

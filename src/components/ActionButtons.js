@@ -1,4 +1,4 @@
-import React from 'react';
+import React  from 'react';
 import { Flex, VStack, Button, Tooltip, HStack } from '@chakra-ui/react';
 
 import { useSelector, useDispatch } from 'react-redux';
@@ -34,10 +34,6 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
   }
 
   function setActionButton() {
-    if(loan.status === solidityLoanStatuses.FUNDED) {
-      console.log(loanUUID)
-      console.log(loan)
-    }
     switch (loan.status) {
       case solidityLoanStatuses.READY:
       case clarityLoanStatuses.READY:
@@ -54,7 +50,6 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
         );
       case solidityLoanStatuses.FUNDED:
       case clarityLoanStatuses.FUNDED:
-        console.log('loan', loan)
         return (
           <Flex>
             <VStack>
@@ -85,7 +80,7 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
               {canBeLiquidated && (
                 <VStack>
                   <Tooltip
-                    label='Liquidate the vault and redeem the collateral value for WBTC. The NFT will be burned.'
+                    label='Liquidate the loan and redeem the collateral value for BTC.'
                     fontSize={'sm'}
                     padding={2}
                     textAlign={'justify'}
@@ -93,7 +88,7 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
                     <Button
                       variant='outline'
                       onClick={() => liquidateAction()}>
-                      REDEEM WBTC
+                      LIQUIDATE
                     </Button>
                   </Tooltip>
                 </VStack>

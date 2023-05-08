@@ -19,10 +19,12 @@ import {
   VStack,
 } from '@chakra-ui/react';
 
+import store from '../store/store';
+
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { customShiftValue, countCollateralToDebtRatio, formatCollateralInUSD } from '../utils';
+import { customShiftValue, formatCollateralInUSD, calculateCollateralCoveragePercentageForRepay } from '../utils';
 
 import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { repayEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
@@ -40,7 +42,7 @@ export default function RepayModal() {
 
   const [additionalRepayment, setAdditionalRepayment] = useState();
 
-  const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
+  const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
 
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
@@ -48,7 +50,7 @@ export default function RepayModal() {
   const [USDAmount, setUSDAmount] = useState(0);
 
   const [isLoanError, setLoanError] = useState(true);
-  const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] = useState(false);
+  const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -62,21 +64,45 @@ export default function RepayModal() {
 
   useEffect(() => {
     if (loan) {
-      const collateralAmount = customShiftValue(loan.vaultCollateral, 8, true);
-      setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
-      setCollateralToDebtRatio(
-        countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, loan.vaultLoan, -additionalRepayment)
-      );
-      setLoanError(additionalRepayment < 1 || additionalRepayment === undefined);
-      setCollateralToDebtRatioError(collateralToDebtRatio < 140);
+      setUSDAmount(formatCollateralInUSD(customShiftValue(loan.vaultCollateral, 8, true), bitCoinInUSDAsNumber));
+      updateCollateralToDebtPercentage();
+      updateLoanError();
     }
-  }, [additionalRepayment, collateralToDebtRatio, isCollateralToDebtRatioError]);
+  }, [additionalRepayment, collateralToDebtPercentage, isCollateralToDebtPercentageError]);
 
-  const handleRepayChange = (additionalRepayment) => {
+  const handleRepaymentChange = (additionalRepayment) => {
     setAdditionalRepayment(additionalRepayment.target.value);
   };
 
+  const updateCollateralToDebtPercentage = () => {
+    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForRepay(
+      Number(customShiftValue(loan.vaultCollateral, 8, true)),
+      Number(bitCoinInUSDAsNumber),
+      Number(loan.vaultLoan),
+      Number(additionalRepayment)
+    );
+    if (isNaN(collateralCoveragePercentage)) {
+      setCollateralToDebtPercentage('-');
+    } else {
+      setCollateralToDebtPercentage(collateralCoveragePercentage);
+    }
+
+    const isBelowMinimumRatio = collateralCoveragePercentage < 140;
+
+    if (isBelowMinimumRatio) {
+      setCollateralToDebtPercentageError(true);
+    } else {
+      setCollateralToDebtPercentageError(false);
+    }
+  };
+
+  const updateLoanError = () => {
+    const shouldDisplayLoanError = additionalRepayment < 1 || additionalRepayment === undefined;
+    setLoanError(shouldDisplayLoanError);
+  };
+
   const repayLoanContract = async () => {
+    store.dispatch(toggleRepayModalVisibility({ isOpen: false }));
     switch (walletType) {
       case 'hiro':
       case 'xverse':
@@ -168,7 +194,7 @@ export default function RepayModal() {
                       Enter a valid amount of USDC.
                     </FormErrorMessage>
                   )}
-                 <HStack
+                  <HStack
                     marginLeft='40px'
                     marginRight='50px'
                     spacing={45}>
@@ -178,7 +204,7 @@ export default function RepayModal() {
                         width='200px'
                         color='white'
                         value={additionalRepayment}
-                        onChange={handleRepayChange}
+                        onChange={handleRepaymentChange}
                       />
                     </NumberInput>
                     <Image
@@ -197,19 +223,19 @@ export default function RepayModal() {
                     width='185px'
                     fontSize='sm'
                     color='gray'>
-                    Collateral to debt ratio:
+                    Collateral to debt ratio percentage:
                   </Text>
-                  {!isCollateralToDebtRatioError ? (
+                  {!isCollateralToDebtPercentageError ? (
                     <Text
                       fontSize='sm'
                       color='green'>
-                      {collateralToDebtRatio}%
+                      {collateralToDebtPercentage}%
                     </Text>
                   ) : (
                     <Text
                       fontSize='sm'
                       color='red'>
-                      {collateralToDebtRatio}%
+                      {collateralToDebtPercentage}%
                     </Text>
                   )}
                 </HStack>
@@ -232,6 +258,7 @@ export default function RepayModal() {
                 </HStack>
                 <Flex justifyContent='center'>
                   <Button
+                    disabled={isLoanError}
                     variant='outline'
                     type='submit'
                     onClick={() => repayLoanContract()}>

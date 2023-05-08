@@ -27,13 +27,13 @@ const sendOfferForSigning = async (offer) => {
 
 export const lockBTC = async (vaultContract) => {
     const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
-    console.log(vaultContract)
+
     try {
         const response = await fetch(URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                uuid: vaultContract.uuid,
+                uuid: vaultContract.formattedUUID,
                 acceptCollateral: parseInt(vaultContract.vaultCollateral),
                 offerCollateral: 0,
                 totalOutcomes: 100,

@@ -4,26 +4,27 @@ import { useSelector } from 'react-redux';
 
 export default function CustomToast({ txHash, blockchain, status }) {
   const { walletType } = useSelector((state) => state.account);
+
   const eventMap = {
-    Initialized: 'Vault initialized!',
-    NotReady: 'Vault established!',
-    Ready: 'Vault is ready!',
-    Funded: 'Vault is funded!',
-    CloseRequested: 'Requested closing!',
-    PreRepaid: 'Processing closing!',
-    Repaid: 'Vault closed!',
-    ApproveRequested: 'Approve requested!',
-    Approved: 'Approved!',
-    Cancelled: 'Transaction cancelled!',
-    Failed: 'Transaction failed!',
-    LiquidationRequested: 'Requested liquidation!',
-    AttemptingLiquidation: 'Attempting liquidation!',
-    PreLiquidated: 'Processing liquidation!',
-    Liquidated: 'Vault liquidated!',
-    Borrowed: 'Borrowed USDC!',
-    Repaid: 'Loan repaid!',
-    Closing: 'Attempting closing!',
-    Closed: 'Vault closed!',
+    SetupRequested: 'Vault setup request initiated',
+    NotReady: 'Vault established',
+    Ready: 'Vault ready',
+    Funded: 'Vault funded',
+    ApproveRequested: 'USDC spend allowance request initiated',
+    Approved: 'USDC spending approved',
+    BorrowRequested: 'Borrow request initiated',
+    Borrowed: 'USDC borrowed',
+    RepayRequested: 'Repayment request initiated',
+    PreRepaid: 'Processing loan closure',
+    Repaid: 'Loan repaid',
+    CloseRequested: 'Vault closure request initiated',
+    PreClosed: 'Processing vault closure',
+    Closed: 'Vault closed',
+    LiquidationRequested: 'Liquidation request initiated',
+    PreLiquidated: 'Processing liquidation',
+    Liquidated: 'Vault liquidated',
+    Cancelled: 'Transaction cancelled',
+    Failed: 'Transaction failed',
   };
 
   const ethereumExplorerURLs = {
@@ -37,8 +38,6 @@ export default function CustomToast({ txHash, blockchain, status }) {
     'stacks:42': `https://explorer.stacks.co/txid/${txHash}`,
   };
 
-  const nftExplorerURL = 'https://testnets.opensea.io/account';
-
   const success = !(status === ('Cancelled' || 'Failed'));
   const message = eventMap[status];
   const explorerAddress = walletType === 'metamask' ? ethereumExplorerURLs[blockchain] : stacksExplorerURLs[blockchain];
@@ -46,14 +45,14 @@ export default function CustomToast({ txHash, blockchain, status }) {
   return (
     <Flex>
       <Link
-        href={status === 'Initialized' ? '' : explorerAddress}
+        href={status === 'SetupRequested' ? '' : explorerAddress}
         isExternal
         _hover={{
           textDecoration: 'none',
         }}>
         <Flex
           height='45px'
-          width='350px'
+          width='450px'
           borderRadius='lg'
           bgColor='rgba(4, 186, 178, 0.8)'
           color='white'
@@ -74,7 +73,7 @@ export default function CustomToast({ txHash, blockchain, status }) {
               fontWeight='extrabold'>
               {message}
             </Text>
-            {success && status !== 'Initialized' && (
+            {success && status !== 'SetupRequested' && (
               <Text
                 fontSize='8px'
                 fontWeight='bold'>

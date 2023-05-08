@@ -41,7 +41,7 @@ export default function App() {
     if (toastEvent !== null) {
       handleToast(toastEvent);
     }
-  }, [toastEvent]);
+  }, [toastEvent, handleToast]);
 
   return (
     <>
@@ -50,6 +50,7 @@ export default function App() {
         padding={0}>
         <Header isConnected={address}></Header>
         <DepositModal />
+        <RepayModal />
         <BorrowModal />
       {/* <RepayModal/> */}
         <SelectWalletModal />

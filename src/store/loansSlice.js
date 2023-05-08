@@ -3,9 +3,13 @@ import store from './store';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress } from '../blockchainFunctions/stacksFunctions';
 import { customShiftValue } from '../utilities/formatFunctions';
-import { getStacksLoanByUUID, getStacksLoanIDByUUID } from '../blockchainFunctions/stacksFunctions';
-import { formatClarityLoanContract, formatSolidityLoanContract } from '../utilities/loanFormatter';
-import { clarityFunctionNames, solidityLoanStatuses } from '../enums/loanStatuses';
+import { formatSolidityLoanContract } from '../utilities/loanFormatter';
+import {
+  clarityFunctionNames,
+  clarityLoanStatuses,
+  solidityLoanStatuses,
+} from '../enums/loanStatuses';
+import { createSelector } from '@reduxjs/toolkit';
 
 const initialState = {
   loans: [],
@@ -19,13 +23,17 @@ export const loansSlice = createSlice({
   initialState: initialState,
   reducers: {
     loanSetupRequested: (state, action) => {
-      const temporaryLoan = {
+      const initialLoan = {
         uuid: '',
         status: 'Initialized',
         formattedVaultLoan: 0,
         formattedVaultCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
       };
-      state.loans.unshift(temporaryLoan);
+      state.loans.unshift(initialLoan);
+      state.toastEvent = {
+        txHash: '',
+        status: 'SetupRequested',
+      };
     },
     loanEventReceived: (state, action) => {
       state.toastEvent = {
@@ -69,7 +77,6 @@ export const loansSlice = createSlice({
         }
 
         if (formattedLoan.status === loanStatuses.NOTREADY) {
-          console.log('NOTREADY');
           loanIndex = state.loans.findIndex((loan) => loan.status === 'Initialized');
         } else {
           loanIndex = state.loans.findIndex((loan) => loan.uuid === formattedLoan.uuid);
@@ -105,6 +112,18 @@ export const selectLoanByUUID = (state, uuid) => {
   return state.loans.loans.find((loan) => loan.uuid === uuid);
 };
 
+export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans, (loans) => {
+  const fundedLoans = loans.filter((loan) =>
+    [clarityLoanStatuses.FUNDED, solidityLoanStatuses.FUNDED].includes(loan.status)
+  );
+  const fundedCollateralSum = fundedLoans.reduce((acc, loan) => acc + customShiftValue(loan.vaultCollateral, 8, true), 0);
+  const fundedLoanSum = fundedLoans.reduce((acc, loan) => acc + customShiftValue(loan.vaultLoan, 6, true), 0);
+  return {
+    fundedCollateralSum,
+    fundedLoanSum,
+  };
+});
+
 export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   const { walletType } = store.getState().account;
 
@@ -123,7 +142,6 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
       throw new Error('Unsupported wallet type!');
   }
 
-  console.log('Inside fetchLoans, loans: ', loans);
   return loans;
 });
 
@@ -152,7 +170,6 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
   } else {
     switch (walletType) {
       case 'metamask':
-        console.log('Inside fetchLoan, walletType: ', walletType);
         formattedLoan = formatSolidityLoanContract(await getEthereumLoanByUUID(loanUUID));
         break;
       case 'xverse':

@@ -13,6 +13,7 @@ import { loanSetupRequested, loanEventReceived } from '../store/loansSlice';
 
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { fixedTwoDecimalShift } from '../utils';
+import { requestStatuses } from '../enums/loanStatuses';
 
 let protocolContractETH;
 let usdcETH;
@@ -70,7 +71,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
       address: accounts[0],
       blockchain,
     };
-    
+
     currentEthereumNetwork = blockchain;
 
     await setEthereumProvider();
@@ -91,12 +92,12 @@ export async function isAllowedInMetamask(vaultLoan) {
   if (fixedTwoDecimalShift(vaultLoan) > parseInt(allowedAmount)) {
     try {
       await usdcETH.approve(protocolContractAddress, desiredAmount).then((response) =>
-         store.dispatch(
-            loanEventReceived({
-              txHash: response.hash,
-              status: 'ApproveRequested',
-            })
-          )
+        store.dispatch(
+          loanEventReceived({
+            txHash: response.hash,
+            status: requestStatuses.APPROVEREQUESTED,
+          })
+        )
       );
       return false;
     } catch (error) {
@@ -116,7 +117,11 @@ export async function sendLoanContractToEthereum(loanContract) {
         loanContract.liquidationFee,
         loanContract.emergencyRefundTime
       )
-      .then((response) => store.dispatch(loanSetupRequested(loanContract)));
+      .then((response) =>
+        store.dispatch(
+          loanEventReceived({ status: requestStatuses.SETUPREQUESTED, btcDeposit: loanContract.BTCDeposit })
+        )
+      );
   } catch (error) {
     console.error(error);
   }
@@ -124,12 +129,9 @@ export async function sendLoanContractToEthereum(loanContract) {
 
 export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
-  console.log(address)
   let formattedLoans = [];
   try {
-    console.log(protocolContractETH)
     const loanContracts = await protocolContractETH.getAllLoansForAddress(address);
-    console.log(loanContracts)
     formattedLoans = formatAllLoanContracts(loanContracts, 'solidity');
   } catch (error) {
     console.error(error);
@@ -167,7 +169,7 @@ export async function borrowEthereumLoan(UUID, additionalLoan) {
           store.dispatch(
             loanEventReceived({
               txHash: response.hash,
-              status: 'BorrowRequested',
+              status: requestStatuses.BORROWREQUESTED,
             })
           )
         );
@@ -186,7 +188,7 @@ export async function repayEthereumLoan(UUID, additionalRepayment) {
         store.dispatch(
           loanEventReceived({
             txHash: response.hash,
-            status: 'RepayRequested',
+            status: requestStatuses.REPAYREQUESTED,
           })
         )
       );
@@ -201,7 +203,7 @@ export async function liquidateEthereumLoan(UUID) {
     protocolContractETH.attemptLiquidate(parseInt(loan.id._hex)).then((response) =>
       loanEventReceived({
         txHash: response.hash,
-        status: 'LiquidationRequested',
+        status: requestStatuses.LIQUIDATIONREQUESTED,
       })
     );
   } catch (error) {
@@ -215,7 +217,7 @@ export async function closeEthereumLoan(UUID) {
     protocolContractETH.closeLoan(parseInt(loan.id._hex)).then((response) =>
       loanEventReceived({
         txHash: response.hash,
-        status: 'CloseRequested',
+        status: requestStatuses.CLOSEREQUESTED,
       })
     );
   } catch (error) {

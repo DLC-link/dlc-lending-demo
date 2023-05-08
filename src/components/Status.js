@@ -114,7 +114,9 @@ export default function Status({ status, canBeLiquidated }) {
   return (
     <HStack>
       {statusComponent}
-      {liquidationIndicator}
+      {status !== clarityLoanStatuses.LIQUIDATED && status !== solidityLoanStatuses.LIQUIDATED && (
+        <>{liquidationIndicator}</>
+      )}
     </HStack>
   );
 }

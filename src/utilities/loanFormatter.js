@@ -1,7 +1,7 @@
 import { customShiftValue, fixedTwoDecimalShift } from '../utils';
 import { addressToString } from '@stacks/transactions';
 import { bytesToHex } from 'micro-stacks/common';
-import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
+import { solidityLoanStatuses } from '../enums/loanStatuses';
 
 export function formatClarityLoanContract(loanContract) {
   const loanContractData = loanContract.value.data;
@@ -15,7 +15,7 @@ export function formatClarityLoanContract(loanContract) {
   const vaultCollateral = loanContractData['vault-collateral'].value.toString();
   const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true) + ' BTC';
   const vaultLoan = loanContractData['vault-loan'].value.toString();
-  const formattedVaultLoan = vaultLoan;
+  const formattedVaultLoan = customShiftValue(vaultLoan, 6, true) + ' USDC';
   const liquidationFee = loanContractData['liquidation-fee'].value.toString();
   const formattedLiquidationFee = parseInt(liquidationFee._hex);
   const liquidationRatio = loanContractData['liquidation-ratio'].value.toString();

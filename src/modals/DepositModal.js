@@ -166,6 +166,9 @@ const handleCollateralChange = (collateralAmount) =>
             </FormControl>
             <Flex justifyContent='center'>
               <Button
+              sx={{
+                margin: '15px',
+              }}
                 variant='outline'
                 type='submit'
                 onClick={createAndSendLoanContract}>

@@ -34,8 +34,8 @@ function handleTx(txInfo) {
     'setup-loan': 'NotReady',
     'post-create-dlc': 'Ready',
     'set-status-funded': 'Funded',
-    'attempt-liquidate': 'AttemptingLiquidation',
-    'validate-price-data': 'PreLiquidated',
+    'attempt-liquidate': 'PreLiquidated',
+    'validate-price-data': 'PreRepaid',
     'close-loan': 'Closing',
     'post-close-dlc': 'Closed',
     borrow: 'Borrowed',
@@ -103,7 +103,6 @@ export default function Observer() {
       });
 
       usdcETH.on('Approval', (...args) => {
-        console.log(args)
         const loanStatus = 'Approved';
         const loanTXHash = args[args.length - 1].transactionHash;
 
@@ -152,9 +151,9 @@ export default function Observer() {
     stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
       console.log(`TX happened on ${address}`);
       const _tx = txWithTransfers.tx;
-      // if (_tx.tx_status !== 'success') {
-      //   eventBus.dispatch({ status: 'failed', txId: _tx.tx_id });
-      // }
+      if (_tx.tx_status !== 'success') {
+        store.dispatch(loanEventReceived({ status: 'Failed', txHash: _tx.tx_id }));
+      }
       const txInfo = await fetchTXInfo(_tx.tx_id);
       handleTx(txInfo);
     });

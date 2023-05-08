@@ -7,10 +7,9 @@ import { useSelector } from 'react-redux';
 
 import Status from '../Status';
 import { ActionButtons } from '../ActionButtons';
-import BorrowModal from '../../modals/BorrowModal';
 
 import { selectLoanByUUID } from '../../store/loansSlice';
-import { countCollateralToDebtRatio } from '../../utils';
+import { calculateCollateralCoveragePercentageForLiquidation, customShiftValue } from '../../utils';
 import { easyTruncateAddress } from '../../utilities/formatFunctions';
 
 export default function Card({ loanUUID }) {
@@ -19,9 +18,13 @@ export default function Card({ loanUUID }) {
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
 
   useEffect(() => {
-    const temporaryCanBeLiquidated =
-      countCollateralToDebtRatio(bitcoinValue, loan.vaultCollateral, loan.vaultLoan) < 140;
-    setCanBeLiquidated(temporaryCanBeLiquidated);
+    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
+      customShiftValue(loan.vaultCollateral, 8, true),
+      bitcoinValue,
+      loan.vaultLoan
+    );
+    const isLiquidable = collateralCoveragePercentage < 140;
+    setCanBeLiquidated(isLiquidable);
   }, [loan]);
 
   return (
