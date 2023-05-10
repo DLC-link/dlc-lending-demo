@@ -14,10 +14,15 @@ import {
   Menu,
 } from '@chakra-ui/react';
 import { Image } from '@chakra-ui/react';
-import { requestAndDispatchHiroOrXverseAccountInformation } from '../blockchainFunctions/stacksFunctions';
 import { requestAndDispatchMetaMaskAccountInformation } from '../blockchainFunctions/ethereumFunctions';
+import { requestAndDispatchStacksAccountInformation } from '../blockchainFunctions/stacksFunctions';
+import { useDispatch, useSelector } from 'react-redux';
+import { toggleSelectWalletModalVisibility } from '../store/componentSlice';
 
-export default function SelectWalletModal({ isOpen, closeModal }) {
+export default function SelectWalletModal() {
+  const isSelectWalletModalOpen = useSelector((state) => state.component.isSelectWalletModalOpen);
+  const dispatch = useDispatch();
+
   const stacksBlockchains = [
     { id: 'stacks:1', name: 'Mainnet' },
     { id: 'stacks:2147483648', name: 'Testnet' },
@@ -25,49 +30,52 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
   ];
 
   const ethereumBlockchains = [
-    { id: 'ethereum:1', name: 'Mainnet' },
+    { id: 'ethereum:11155111', name: 'Sepolia Testnet' },
     { id: 'ethereum:5', name: 'Goerli Testnet' },
+    { id: 'ethereum:31337', name: 'Localhost' },
   ];
 
   return (
     <Modal
-      isOpen={isOpen}
-      onClose={closeModal}
+      isOpen={isSelectWalletModalOpen}
+      onClose={() => dispatch(toggleSelectWalletModalVisibility(false))}
       isCentered>
       <ModalOverlay />
-      <ModalContent w='300px'>
+      <ModalContent
+        width='300px'
+        border='1px'
+        bg='background2'
+        color='accent'>
         <ModalHeader
-          bgGradient='linear(to-r, primary1, primary2)'
-          bgClip='text'>
+          color='white'
+          textAlign='center'>
           Select Wallet
         </ModalHeader>
         <ModalCloseButton
-          color='white'
           _focus={{
             boxShadow: 'none',
           }}
-          bgGradient='linear(to-r, primary1, primary2)'
         />
         <ModalBody padding='25px'>
           <VStack>
             <Menu>
               {({ isOpen }) => (
                 <>
-                    <MenuButton
-                      width='100%'
-                      variant='outline'>
-                      <HStack
-                        w='100%'
-                        justifyContent='center'>
-                        <Image
-                          src='/mm_logo.png'
-                          alt='Metamask Logo'
-                          width={25}
-                          height={25}
-                        />
-                        <Text variant='selector'>{isOpen ? 'Choose Network' : 'Metamask'}</Text>
-                      </HStack>
-                    </MenuButton>
+                  <MenuButton
+                    width='100%'
+                    variant='outline'>
+                    <HStack
+                      w='100%'
+                      justifyContent='center'>
+                      <Image
+                        src='/mm_logo.png'
+                        alt='Metamask Logo'
+                        width={25}
+                        height={25}
+                      />
+                      <Text variant='selector'>{isOpen ? 'Choose Network' : 'Metamask'}</Text>
+                    </HStack>
+                  </MenuButton>
                   <MenuList>
                     {ethereumBlockchains.map((blockchain, idx) => {
                       return (
@@ -75,7 +83,7 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                           key={`chain-${idx}`}
                           onClick={() => {
                             requestAndDispatchMetaMaskAccountInformation(blockchain.id);
-                            closeModal();
+                            dispatch(toggleSelectWalletModalVisibility(false));
                           }}>
                           <Text variant='selector'>{blockchain.name}</Text>
                         </MenuItem>
@@ -109,8 +117,8 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                         <MenuItem
                           key={`chain-${idx}`}
                           onClick={async () => {
-                            await requestAndDispatchHiroOrXverseAccountInformation(blockchain.id, 'hiro');
-                            closeModal();
+                            await requestAndDispatchStacksAccountInformation('hiro', blockchain.id);
+                            dispatch(toggleSelectWalletModalVisibility(false));
                           }}>
                           <Text variant='selector'>{blockchain.name}</Text>
                         </MenuItem>
@@ -144,8 +152,8 @@ export default function SelectWalletModal({ isOpen, closeModal }) {
                         <MenuItem
                           key={`chain-${idx}`}
                           onClick={async () => {
-                            await requestAndDispatchHiroOrXverseAccountInformation(blockchain.id, 'xverse');
-                            closeModal();
+                            await requestAndDispatchStacksAccountInformation('xverse', blockchain.id);
+                            dispatch(toggleSelectWalletModalVisibility(false));
                           }}>
                           <Text variant='selector'>{blockchain.name}</Text>
                         </MenuItem>

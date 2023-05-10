@@ -1,62 +1,66 @@
-import { Link, Flex, HStack, Text, Box } from '@chakra-ui/react';
+import { Link, Flex, HStack, Text } from '@chakra-ui/react';
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
+import { useSelector } from 'react-redux';
 
-export default function CustomToast({ data }) {
+export default function CustomToast({ txHash, blockchain, status }) {
+  const { walletType } = useSelector((state) => state.account);
+
   const eventMap = {
-    initialized: 'Vault initialized!',
-    created: 'Vault created!',
-    setup: 'Vault established!',
-    ready: 'Loan is ready!',
-    funded: 'Loan funded!',
-    'repay-requested': 'Requested repayment!',
-    repaying: 'Processing repayment!',
-    repaid: 'USDC repaid!',
-    'liquidation-requested': 'Requested liquidation!',
-    'attempting-liquidation': 'Attempting liquidation!',
-    liquidating: 'Processing liquidation!',
-    liquidated: 'Loan liquidated!',
-    'borrow-requested': 'Requested borrow!',
-    borrowed: 'USDC borrowed!',
-    'closing-requested': 'Requested closing!',
-    closing: 'Processing closing!',
-    closed: 'Loan closed!',
-    'approve-requested': 'Approve requested!',
-    approved: 'Approved!',
-    cancelled: 'Transaction cancelled!',
-    failed: 'Transaction failed!',
+    SetupRequested: 'Vault setup request initiated',
+    NotReady: 'Vault established',
+    Ready: 'Vault ready',
+    Funded: 'Vault funded',
+    ApproveRequested: 'USDC spend allowance request initiated',
+    Approved: 'USDC spending approved',
+    BorrowRequested: 'Borrow request initiated',
+    Borrowed: 'USDC borrowed',
+    RepayRequested: 'Repayment request initiated',
+    PreRepaid: 'Processing loan closure',
+    Repaid: 'Loan repaid',
+    CloseRequested: 'Vault closure request initiated',
+    PreClosed: 'Processing vault closure',
+    Closed: 'Vault closed',
+    LiquidationRequested: 'Liquidation request initiated',
+    PreLiquidated: 'Processing liquidation',
+    Liquidated: 'Vault liquidated',
+    Cancelled: 'Transaction cancelled',
+    Failed: 'Transaction failed',
   };
 
-  const explorerAddressMap = {
-    stacks: `https://explorer.stacks.co/txid/${data.txId}`,
-    ethereum: `https://goerli.etherscan.io/tx/${data.txId}`
-  }
-  
-  const success = !(data.status === ('cancelled' || 'failed'));
-  const message = eventMap[data.status];
-  const explorerAddress = explorerAddressMap[data.chain];
+  const ethereumExplorerURLs = {
+    'ethereum:5': `https://goerli.etherscan.io/tx/${txHash}`,
+    'ethereum:11155111': `https://sepolia.etherscan.io/tx/${txHash}`,
+  };
+
+  const stacksExplorerURLs = {
+    'stacks:2147483648': `https://explorer.stacks.co/txid/${txHash}`,
+    'stacks:1': `https://explorer.stacks.co/txid/${txHash}`,
+    'stacks:42': `https://explorer.stacks.co/txid/${txHash}`,
+  };
+
+  const success = !(status === ('Cancelled' || 'Failed'));
+  const message = eventMap[status];
+  const explorerAddress = walletType === 'metamask' ? ethereumExplorerURLs[blockchain] : stacksExplorerURLs[blockchain];
 
   return (
-    <Link
-      href={explorerAddress}
-      isExternal
-      _hover={{
-        textDecoration: 'none',
-      }}>
-      <Box
-        marginTop={150}
-        paddingRight={15}>
+    <Flex>
+      <Link
+        href={status === 'SetupRequested' ? '' : explorerAddress}
+        isExternal
+        _hover={{
+          textDecoration: 'none',
+        }}>
         <Flex
-          color='white'
+          height='45px'
+          width='450px'
+          borderRadius='lg'
           bgColor='rgba(4, 186, 178, 0.8)'
-          borderRadius='sm'
-          boxShadow='dark-lg'
-          height={45}
-          width={350}
+          color='white'
           justifyContent='center'
           alignItems='center'
           _hover={{
             opacity: '100%',
-            bg: 'accent',
+            bg: 'secondary1',
           }}>
           <HStack spacing={3.5}>
             {success === true ? (
@@ -65,20 +69,20 @@ export default function CustomToast({ data }) {
               <WarningIcon color='red'></WarningIcon>
             )}
             <Text
-              fontSize={12}
+              fontSize='12px'
               fontWeight='extrabold'>
               {message}
             </Text>
-            {success && data.status !== 'initialized' && (
+            {success && status !== 'SetupRequested' && (
               <Text
-                fontSize={8}
+                fontSize='8px'
                 fontWeight='bold'>
                 Click to show transaction in the explorer!
               </Text>
             )}
           </HStack>
         </Flex>
-      </Box>
-    </Link>
+      </Link>
+    </Flex>
   );
 }

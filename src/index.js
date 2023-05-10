@@ -1,19 +1,22 @@
 import { createRoot } from 'react-dom/client';
 import { ChakraProvider } from '@chakra-ui/react';
-import { theme } from './styles/theme';
-
+import { appTheme } from './styles/appTheme';
+import store from './store/store';
+import { Provider } from 'react-redux';
+import Observer from './services/Observer';
 import '@fontsource/poppins';
 import App from './App';
-import startObserver from './observer';
-
-startObserver();
 
 const container = document.getElementById('root');
 const root = createRoot(container);
+
 root.render(
-  <ChakraProvider
-    resetCSS
-    theme={theme}>
-    <App />
-  </ChakraProvider>
+  <Provider store={store}>
+    <Observer />
+      <ChakraProvider
+        resetCSS
+        theme={appTheme}>
+        <App />
+      </ChakraProvider>
+  </Provider>
 );

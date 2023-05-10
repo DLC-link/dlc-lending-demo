@@ -15,79 +15,101 @@ import {
   Flex,
   Text,
   Image,
-  Spacer,
+  HStack,
+  VStack,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import {
-  customShiftValue,
-  fixedTwoDecimalShift,
-  countCollateralToDebtRatio,
-  formatCollateralInUSD,
-  formatBitcoinInUSDAmount,
-} from '../utils';
-import { borrowStacksLoanContract } from '../blockchainFunctions/stacksFunctions';
-import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
 
-export default function BorrowModal({
-  isOpen,
-  closeModal,
-  walletType,
-  vaultLoanAmount,
-  BTCDeposit,
-  uuid,
-  creator,
-  blockchain,
-  id
-}) {
+import store from '../store/store';
+
+import { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+
+import { customShiftValue, formatCollateralInUSD, calculateCollateralCoveragePercentageForBorrow } from '../utils';
+
+import { borrowStacksLoan } from '../blockchainFunctions/stacksFunctions';
+import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { fetchBitcoinPrice } from '../blockchainFunctions/bitcoinFunctions';
+
+import { toggleBorrowModalVisibility } from '../store/componentSlice';
+
+export default function BorrowModal() {
+  const dispatch = useDispatch();
+
+  const isBorrowModalOpen = useSelector((state) => state.component.isBorrowModalOpen);
+  const loan = useSelector((state) => state.component.loanForModal);
+
+  const walletType = useSelector((state) => state.account.walletType);
+
   const [additionalLoan, setAdditionalLoan] = useState();
-  const [collateralToDebtRatio, setCollateralToDebtRatio] = useState();
+
+  const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
+
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
-  const [collateralAmount, setCollateralAmount] = useState(customShiftValue(BTCDeposit, 8, true));
+
   const [USDAmount, setUSDAmount] = useState(0);
+
   const [isLoanError, setLoanError] = useState(true);
-  const [isCollateralToDebtRatioError, setCollateralToDebtRatioError] = useState(false);
+  const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
-      await fetchBitcoinPrice();
+      await fetchBitcoinPrice().then((bitcoinPrice) => {
+        setBitCoinInUSDAsNumber(bitcoinPrice);
+        setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinPrice));
+      });
     }
     fetchData();
   }, []);
 
   useEffect(() => {
-    setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
-    setCollateralToDebtRatio(
-      countCollateralToDebtRatio(collateralAmount, bitCoinInUSDAsNumber, vaultLoanAmount, additionalLoan)
-    );
-    setLoanError(additionalLoan < 1 || additionalLoan === undefined);
-    setCollateralToDebtRatioError(collateralToDebtRatio < 140);
-  }, [additionalLoan, collateralToDebtRatio, isCollateralToDebtRatioError]);
+    if (loan) {
+      setUSDAmount(formatCollateralInUSD(customShiftValue(loan.vaultCollateral, 8, true), bitCoinInUSDAsNumber));
+      updateCollateralToDebtPercentage();
+      updateLoanError();
+    }
+  }, [additionalLoan, collateralToDebtPercentage, isCollateralToDebtPercentageError]);
 
   const handleLoanChange = (additionalLoan) => {
     setAdditionalLoan(additionalLoan.target.value);
   };
 
-  const fetchBitcoinPrice = async () => {
-    await fetch('/.netlify/functions/get-bitcoin-price', {
-      headers: { accept: 'Accept: application/json' },
-    })
-      .then((x) => x.json())
-      .then(({ msg }) => {
-        const bitcoinValue = formatBitcoinInUSDAmount(msg);
-        setBitCoinInUSDAsNumber(bitcoinValue);
-        setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinValue));
-      });
+  const updateCollateralToDebtPercentage = () => {
+    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForBorrow(
+      Number(customShiftValue(loan.vaultCollateral, 8, true)),
+      Number(bitCoinInUSDAsNumber),
+      Number(loan.vaultLoan),
+      Number(additionalLoan)
+    );
+    if (isNaN(collateralCoveragePercentage)) {
+      setCollateralToDebtPercentage('-');
+    } else {
+      setCollateralToDebtPercentage(collateralCoveragePercentage);
+    }
+
+    const isBelowMinimumRatio = collateralCoveragePercentage < 140;
+
+    if (isBelowMinimumRatio) {
+      setCollateralToDebtPercentageError(true);
+    } else {
+      setCollateralToDebtPercentageError(false);
+    }
+  };
+
+  const updateLoanError = () => {
+    const shouldDisplayLoanError = additionalLoan < 1 || additionalLoan === undefined;
+    setLoanError(shouldDisplayLoanError);
   };
 
   const borrowLoanContract = async () => {
+    store.dispatch(toggleBorrowModalVisibility({ isOpen: false }));
     switch (walletType) {
       case 'hiro':
       case 'xverse':
-        borrowStacksLoanContract(creator, uuid, additionalLoan, blockchain, walletType);
+        borrowStacksLoan(loan.uuid, additionalLoan);
         break;
       case 'metamask':
-        borrowEthereumLoan(creator, uuid, additionalLoan, blockchain)
+        borrowEthereumLoan(loan.uuid, additionalLoan);
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -96,162 +118,158 @@ export default function BorrowModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={closeModal}
-      isCentered>
-      <ModalOverlay />
-      <ModalContent
-        color='white'
-        width={350}>
-        <ModalHeader
-          bgGradient='linear(to-r, primary1, primary2)'
-          bgClip='text'
-          textAlign='center'>
-          Borrow USDC
-        </ModalHeader>
-        <ModalCloseButton
-          _focus={{
-            boxShadow: 'none',
-          }}
-        />
-        <ModalBody>
-          <Text
-            bgGradient='linear(to-r, primary1, primary2)'
-            bgClip='text'
-            textAlign='center'
-            fontSize='md'>
-            Collateral Amount
-          </Text>
-          <Flex
-            marginLeft={25}
-            marginRight={25}
-            alignItems='center'
-            paddingBottom={15}>
-            <Text
-              bgGradient='linear(to-r, primary1, primary2)'
-              bgClip='text'
-              fontSize='md'>
-              {customShiftValue(BTCDeposit, 8, true)}
-            </Text>
-            <Spacer></Spacer>
-            <Image
-              src='/btc_logo.png'
-              alt='Bitcoin Logo'
-              width={25}
-              height={25}></Image>
-          </Flex>
-          <Text
-            fontSize='x-small'
-            color='gray'
-            textAlign='center'>
-            ${USDAmount} at 1 BTC = ${bitCoinInUSDAsString}
-          </Text>
-          <FormControl isInvalid={isLoanError}>
-            <FormLabel textAlign='center'>Borrow Amount</FormLabel>
-            {!isLoanError ? (
-              <FormHelperText
-                fontSize='x-small'
-                paddingBottom={15}
-                textAlign='center'>
-                Enter the amount of USDC you would like to loan.
-              </FormHelperText>
-            ) : (
-              <FormErrorMessage
-                fontSize='x-small'
-                paddingBottom={15}
-                justifyContent='center'>
-                Enter a valid amount of USDC
-              </FormErrorMessage>
-            )}
-            <Flex
-              direction='row'
-              marginLeft={25}
-              marginRight={25}
-              alignItems='center'
-              paddingBottom={15}>
-              <NumberInput>
-                <NumberInputField
-                  bgGradient='linear(to-r, primary1, primary2)'
-                  bgClip='text'
-                  value={additionalLoan}
-                  width={200}
-                  onChange={handleLoanChange}
-                />
-              </NumberInput>
-              <Spacer></Spacer>
-              <Image
-                src='/usdc_logo.png'
-                alt='USD Coin Logo'
-                width={25}
-                height={25}></Image>
-            </Flex>
-          </FormControl>
-          <Flex
-            direction='row'
-            marginLeft={25}
-            marginRight={25}
-            alignItems='center'
-            paddingBottom={15}>
-            <Text
-              fontSize='sm'
-              color='gray'>
-              Collateral to debt ratio:
-            </Text>
-            <Spacer></Spacer>
-            {!isCollateralToDebtRatioError ? (
-              <Text
-                fontSize='sm'
-                color='green'>
-                {collateralToDebtRatio}%
-              </Text>
-            ) : (
-              <Text
-                fontSize='sm'
-                color='red'>
-                {collateralToDebtRatio}%
-              </Text>
-            )}
-          </Flex>
-          <Flex
-            direction='row'
-            marginLeft={25}
-            marginRight={25}
-            alignItems='center'
-            paddingBottom={15}>
-            <Text
-              fontSize='sm'
-              color='gray'>
-              Already borrowed:
-            </Text>
-            <Spacer></Spacer>
-            <Text
-              fontSize='sm'
-              color='gray'>
-              {'$ ' + customShiftValue(vaultLoanAmount, 6, true)}
-            </Text>
-          </Flex>
-          <Flex justifyContent='center'>
-            <Button
-              _hover={{
-                color: 'white',
-                bg: 'accent',
-              }}
-              background='white'
-              bgGradient='linear(to-r, primary1, primary2)'
-              bgClip='text'
-              width='150px'
-              shadow='2xl'
-              variant='outline'
-              fontSize='sm'
-              fontWeight='bold'
-              type='submit'
-              onClick={borrowLoanContract}>
-              Borrow USDC
-            </Button>
-          </Flex>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+    <>
+      {loan && (
+        <Modal
+          isOpen={isBorrowModalOpen}
+          onClose={() => dispatch(toggleBorrowModalVisibility({ isOpen: false }))}
+          isCentered>
+          <ModalOverlay />
+          <ModalContent
+            width='350px'
+            border='1px'
+            bg='background2'
+            color='accent'>
+            <VStack>
+              <ModalHeader color='white'>Borrow USDC</ModalHeader>
+              <ModalCloseButton
+                _focus={{
+                  boxShadow: 'none',
+                }}
+              />
+              <ModalBody>
+                <Text
+                  marginTop='15px'
+                  marginBottom='15px'
+                  marginLeft='40px'
+                  color='white'
+                  fontSize='md'>
+                  Collateral Amount
+                </Text>
+                <HStack
+                  marginLeft='40px'
+                  spacing={45}>
+                  <Text
+                    width='200px'
+                    color='white'
+                    fontSize='md'>
+                    {customShiftValue(loan.vaultCollateral, 8, true)}
+                  </Text>
+                  <Image
+                    src='/btc_logo.png'
+                    alt='Bitcoin Logo'
+                    width='25px'
+                    height='25px'></Image>
+                </HStack>
+                <Text
+                  marginTop='15px'
+                  marginLeft='40px'
+                  fontSize='x-small'
+                  color='white'>
+                  ${USDAmount} at 1 BTC = ${bitCoinInUSDAsString}
+                </Text>
+                <FormControl isInvalid={isLoanError}>
+                  <FormLabel
+                    marginTop='15px'
+                    marginBottom='15px'
+                    marginLeft='40px'
+                    color='white'>
+                    Borrow Amount
+                  </FormLabel>
+                  {!isLoanError ? (
+                    <FormHelperText
+                      marginTop='15px'
+                      marginBottom='15px'
+                      marginLeft='40px'
+                      fontSize='x-small'
+                      color='accent'>
+                      Enter the amount of USDC you would like to borrow.
+                    </FormHelperText>
+                  ) : (
+                    <FormErrorMessage
+                      marginTop='15px'
+                      marginBottom='15px'
+                      marginLeft='40px'
+                      fontSize='x-small'>
+                      Enter a valid amount of USDC.
+                    </FormErrorMessage>
+                  )}
+                  <HStack
+                    marginLeft='40px'
+                    marginRight='50px'
+                    spacing={45}>
+                    <NumberInput focusBorderColor='accent'>
+                      <NumberInputField
+                        padding='15px'
+                        width='200px'
+                        color='white'
+                        value={additionalLoan}
+                        onChange={handleLoanChange}
+                      />
+                    </NumberInput>
+                    <Image
+                      src='/usdc_logo.png'
+                      alt='USD Coin Logo'
+                      width='25px'
+                      height='25px'></Image>
+                  </HStack>
+                </FormControl>
+                <HStack
+                  marginTop='15px'
+                  marginBottom='15px'
+                  marginLeft='40px'
+                  spacing={45}>
+                  <Text
+                    width='185px'
+                    fontSize='sm'
+                    color='gray'>
+                    Collateral to debt ratio percentage:
+                  </Text>
+                  {!isCollateralToDebtPercentageError ? (
+                    <Text
+                      fontSize='sm'
+                      color='green'>
+                      {collateralToDebtPercentage}%
+                    </Text>
+                  ) : (
+                    <Text
+                      fontSize='sm'
+                      color='red'>
+                      {collateralToDebtPercentage}%
+                    </Text>
+                  )}
+                </HStack>
+                <HStack
+                  marginTop='15px'
+                  marginBottom='15px'
+                  marginLeft='40px'
+                  spacing={45}>
+                  <Text
+                    width='185px'
+                    fontSize='sm'
+                    color='gray'>
+                    Already borrowed:
+                  </Text>
+                  <Text
+                    fontSize='sm'
+                    color='gray'>
+                    {'$ ' + customShiftValue(loan.vaultLoan, 6, true)}
+                  </Text>
+                </HStack>
+                <Flex justifyContent='center'>
+                  <Button
+                    disabled={isLoanError}
+                    variant='outline'
+                    type='submit'
+                    onClick={() => borrowLoanContract()}>
+                    BORROW USDC
+                  </Button>
+                </Flex>
+              </ModalBody>
+            </VStack>
+          </ModalContent>
+        </Modal>
+      )}
+    </>
   );
 }

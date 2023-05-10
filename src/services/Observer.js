@@ -1,0 +1,161 @@
+import { ethers } from 'ethers';
+import { abi as protocolContractABI } from '../abis/protocolContractABI';
+import { abi as usdcABI } from '../abis/usdcABI';
+import { abi as dlcManagerABI } from '../abis/dlcManagerABI';
+import { io as ioClient } from 'socket.io-client';
+import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
+
+import { EthereumNetworks, StacksNetworks } from '../networks/networks';
+
+import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { fetchLoan, fetchLoans, loanEventReceived } from '../store/loansSlice';
+
+import store from '../store/store';
+
+const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
+const ioclient_uri = `wss://dev-oracle.dlc.link`;
+
+async function fetchTXInfo(txId) {
+  console.log(`[Stacks] Fetching tx_info... ${txId}`);
+  try {
+    const response = await fetch(api_base + '/tx/' + txId);
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function handleTx(txInfo) {
+  if (txInfo.tx_type !== 'contract_call') return;
+
+  const clarityFunctionsMap = {
+    'setup-loan': 'NotReady',
+    'post-create-dlc': 'Ready',
+    'set-status-funded': 'Funded',
+    'attempt-liquidate': 'PreLiquidated',
+    'validate-price-data': 'PreRepaid',
+    'close-loan': 'Closing',
+    'post-close-dlc': 'Closed',
+    borrow: 'Borrowed',
+    repay: 'Repaid',
+  };
+
+  store.dispatch(
+    loanEventReceived({
+      status: clarityFunctionsMap[txInfo.contract_call.function_name],
+      txHash: txInfo.tx_id,
+    })
+  );
+  store.dispatch(fetchLoans());
+}
+
+export default function Observer() {
+  const address = useSelector((state) => state.account.address);
+  const walletType = useSelector((state) => state.account.walletType);
+  const blockchain = useSelector((state) => state.account.blockchain);
+
+  let ethereumProvider;
+  let protocolContractETH;
+  let dlcManagerETH;
+  let usdcETH;
+
+  useEffect(() => {
+    if (address && walletType && blockchain) {
+      switch (walletType) {
+        case 'metamask':
+          startEthereumObserver();
+          break;
+        case 'hiro':
+        case 'xverse':
+          startStacksObserver();
+          break;
+        default:
+          throw new Error('Unknown wallet type!');
+      }
+    }
+  }, [address, walletType, blockchain]);
+
+  function startEthereumObserver() {
+    try {
+      const { protocolContractAddress, usdcAddress, dlcManagerAddress } = EthereumNetworks[blockchain];
+      const { ethereum } = window;
+
+      ethereumProvider = new ethers.providers.Web3Provider(ethereum);
+
+      protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, ethereumProvider);
+      dlcManagerETH = new ethers.Contract(dlcManagerAddress, dlcManagerABI, ethereumProvider);
+      usdcETH = new ethers.Contract(usdcAddress, usdcABI, ethereumProvider);
+
+      protocolContractETH.on('StatusUpdate', (...args) => {
+        const loantUUID = args[1];
+        const loanStatus = args[2];
+        const loanTXHash = args[args.length - 1].transactionHash;
+
+        store.dispatch(
+          fetchLoan({
+            loanUUID: loantUUID,
+            loanStatus: loanStatus,
+            loanTXHash: loanTXHash,
+          })
+        );
+      });
+
+      usdcETH.on('Approval', (...args) => {
+        const loanStatus = 'Approved';
+        const loanTXHash = args[args.length - 1].transactionHash;
+
+        store.dispatch(
+          fetchLoan({
+            loanStatus: loanStatus,
+            loanTXHash: loanTXHash,
+          })
+        );
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  function startStacksObserver() {
+    const { loanContractAddress, loanContractName, managerContractAddress, managerContractName } =
+      StacksNetworks[blockchain];
+    const loanContractFullName = loanContractAddress + '.' + loanContractName;
+    const managerContractFullName = managerContractAddress + '.' + managerContractName;
+
+    const socket = ioClient(ioclient_uri, {
+      transports: ['websocket'],
+    });
+    const stacksSocket = new StacksApiSocketClient(socket);
+
+    stacksSocket.socket.on('connect', async () => {
+      console.log('[Stacks] (Re)connected stacksSocket');
+    });
+
+    stacksSocket.socket.on('disconnect', async (reason) => {
+      console.log(`[Stacks] Disconnecting, reason: ${reason}`);
+      stacksSocket.socket.connect();
+    });
+
+    setInterval(() => {
+      if (stacksSocket.socket.disconnected) {
+        console.log(`[Stacks] Attempting to connect stacksSocket to ${ioclient_uri}...`);
+        stacksSocket.socket.connect();
+      }
+    }, 2000);
+
+    stacksSocket.subscribeAddressTransactions(managerContractFullName);
+    stacksSocket.subscribeAddressTransactions(loanContractFullName);
+
+    stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
+      console.log(`TX happened on ${address}`);
+      const _tx = txWithTransfers.tx;
+      if (_tx.tx_status !== 'success') {
+        store.dispatch(loanEventReceived({ status: 'Failed', txHash: _tx.tx_id }));
+      }
+      const txInfo = await fetchTXInfo(_tx.tx_id);
+      handleTx(txInfo);
+    });
+  }
+}
