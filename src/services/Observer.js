@@ -58,7 +58,6 @@ export default function Observer() {
 
   let ethereumProvider;
   let protocolContractETH;
-  let dlcManagerETH;
   let usdcETH;
 
   useEffect(() => {
@@ -85,7 +84,6 @@ export default function Observer() {
       ethereumProvider = new ethers.providers.Web3Provider(ethereum);
 
       protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, ethereumProvider);
-      dlcManagerETH = new ethers.Contract(dlcManagerAddress, dlcManagerABI, ethereumProvider);
       usdcETH = new ethers.Contract(usdcAddress, usdcABI, ethereumProvider);
 
       protocolContractETH.on('StatusUpdate', (...args) => {
@@ -98,18 +96,53 @@ export default function Observer() {
             loanUUID: loantUUID,
             loanStatus: loanStatus,
             loanTXHash: loanTXHash,
+            loanEvent: 'StatusUpdate',
+          })
+        );
+      });
+
+      protocolContractETH.on('BorrowEvent', (...args) => {
+        const loantUUID = args[1];
+        const loanStatus = args[4];
+        const loanTXHash = args[args.length - 1].transactionHash;
+
+        store.dispatch(
+          fetchLoan({
+            loanUUID: loantUUID,
+            loanStatus: loanStatus,
+            loanTXHash: loanTXHash,
+            loanEvent: 'BorrowEvent',
+          })
+        );
+      });
+
+      protocolContractETH.on('RepayEvent', (...args) => {
+        const loantUUID = args[1];
+        const loanStatus = args[4];
+        const loanTXHash = args[args.length - 1].transactionHash;
+
+        store.dispatch(
+          fetchLoan({
+            loanUUID: loantUUID,
+            loanStatus: loanStatus,
+            loanTXHash: loanTXHash,
+            loanEvent: 'RepayEvent',
           })
         );
       });
 
       usdcETH.on('Approval', (...args) => {
-        const loanStatus = 'Approved';
+        const loanOwner = args[0];
         const loanTXHash = args[args.length - 1].transactionHash;
 
+        const address = store.getState().account.address;
+
+        if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
+
         store.dispatch(
-          fetchLoan({
-            loanStatus: loanStatus,
-            loanTXHash: loanTXHash,
+          loanEventReceived({
+            status: 'Approved',
+            txHash: loanTXHash,
           })
         );
       });

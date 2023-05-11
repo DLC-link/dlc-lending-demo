@@ -1,3 +1,5 @@
+/* global BigInt */
+
 import { ethers } from 'ethers';
 
 import store from '../store/store';
@@ -86,7 +88,7 @@ export async function isAllowedInMetamask(vaultLoan) {
   const { protocolContractAddress } = EthereumNetworks[currentEthereumNetwork];
   const address = store.getState().account.address;
 
-  const desiredAmount = 1000000n * 10n ** 18n;
+  const desiredAmount = BigInt('1000000000000000000000000');
   const allowedAmount = await usdcETH.allowance(address, protocolContractAddress);
 
   if (fixedTwoDecimalShift(vaultLoan) > parseInt(allowedAmount)) {
@@ -117,11 +119,7 @@ export async function sendLoanContractToEthereum(loanContract) {
         loanContract.liquidationFee,
         loanContract.emergencyRefundTime
       )
-      .then((response) =>
-        store.dispatch(
-          loanEventReceived({ status: requestStatuses.SETUPREQUESTED, btcDeposit: loanContract.BTCDeposit })
-        )
-      );
+      .then((response) => store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit })));
   } catch (error) {
     console.error(error);
   }
@@ -200,12 +198,14 @@ export async function repayEthereumLoan(UUID, additionalRepayment) {
 export async function liquidateEthereumLoan(UUID) {
   const loan = await getEthereumLoanByUUID(UUID);
   try {
-    protocolContractETH.attemptLiquidate(parseInt(loan.id._hex)).then((response) =>
-      loanEventReceived({
-        txHash: response.hash,
-        status: requestStatuses.LIQUIDATIONREQUESTED,
-      })
-    );
+    protocolContractETH.attemptLiquidate(parseInt(loan.id._hex)).then((response) => {
+      store.dispatch(
+        loanEventReceived({
+          txHash: response.hash,
+          status: requestStatuses.LIQUIDATIONREQUESTED,
+        })
+      );
+    });
   } catch (error) {
     console.error(error);
   }
@@ -215,10 +215,12 @@ export async function closeEthereumLoan(UUID) {
   const loan = await getEthereumLoanByUUID(UUID);
   try {
     protocolContractETH.closeLoan(parseInt(loan.id._hex)).then((response) =>
-      loanEventReceived({
-        txHash: response.hash,
-        status: requestStatuses.CLOSEREQUESTED,
-      })
+      store.dispatch(
+        loanEventReceived({
+          txHash: response.hash,
+          status: requestStatuses.CLOSEREQUESTED,
+        })
+      )
     );
   } catch (error) {
     console.error(error);

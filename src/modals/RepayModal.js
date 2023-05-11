@@ -24,7 +24,12 @@ import store from '../store/store';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { customShiftValue, formatCollateralInUSD, calculateCollateralCoveragePercentageForRepay } from '../utils';
+import {
+  customShiftValue,
+  formatCollateralInUSD,
+  calculateCollateralCoveragePercentageForRepay,
+  chooseShiftValue,
+} from '../utils';
 
 import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { repayEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
@@ -47,9 +52,11 @@ export default function RepayModal() {
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
 
+  const [shiftValue, setShiftValue] = useState();
+
   const [USDAmount, setUSDAmount] = useState(0);
 
-  const [isLoanError, setLoanError] = useState(true);
+  const [isLoanError, setLoanError] = useState(false);
   const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
 
   useEffect(() => {
@@ -59,8 +66,12 @@ export default function RepayModal() {
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinPrice));
       });
     }
-    fetchData();
-  }, [isRepayModalOpen === true]);
+    if (loan) {
+      fetchData();
+      const chosenShiftValue = chooseShiftValue(walletType);
+      setShiftValue(chosenShiftValue);
+    }
+  }, [loan]);
 
   useEffect(() => {
     if (loan) {
@@ -78,7 +89,7 @@ export default function RepayModal() {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForRepay(
       Number(customShiftValue(loan.vaultCollateral, 8, true)),
       Number(bitCoinInUSDAsNumber),
-      Number(loan.vaultLoan),
+      Number(customShiftValue(loan.vaultLoan, shiftValue, true)),
       Number(additionalRepayment)
     );
     if (isNaN(collateralCoveragePercentage)) {
@@ -97,7 +108,10 @@ export default function RepayModal() {
   };
 
   const updateLoanError = () => {
-    const shouldDisplayLoanError = additionalRepayment < 1 || additionalRepayment === undefined;
+    const shouldDisplayLoanError =
+      additionalRepayment < 1 ||
+      additionalRepayment === undefined ||
+      additionalRepayment > customShiftValue(loan.vaultLoan, shiftValue, true);
     setLoanError(shouldDisplayLoanError);
   };
 
@@ -200,6 +214,7 @@ export default function RepayModal() {
                     spacing={45}>
                     <NumberInput focusBorderColor='accent'>
                       <NumberInputField
+                        max={customShiftValue(loan.vaultLoan, shiftValue, true)}
                         padding='15px'
                         width='200px'
                         color='white'
@@ -253,7 +268,7 @@ export default function RepayModal() {
                   <Text
                     fontSize='sm'
                     color='gray'>
-                    {'$ ' + customShiftValue(loan.vaultLoan, 6, true)}
+                    {loan.formattedVaultLoan}
                   </Text>
                 </HStack>
                 <Flex justifyContent='center'>

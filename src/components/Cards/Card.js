@@ -9,22 +9,27 @@ import Status from '../Status';
 import { ActionButtons } from '../ActionButtons';
 
 import { selectLoanByUUID } from '../../store/loansSlice';
-import { calculateCollateralCoveragePercentageForLiquidation, customShiftValue } from '../../utils';
+import { calculateCollateralCoveragePercentageForLiquidation, customShiftValue, chooseShiftValue } from '../../utils';
 import { easyTruncateAddress } from '../../utilities/formatFunctions';
 
 export default function Card({ loanUUID }) {
   const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
+  const { walletType } = useSelector((state) => state.account);
+
   const bitcoinValue = useSelector((state) => state.externalData.bitcoinValue);
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
 
   useEffect(() => {
-    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
-      customShiftValue(loan.vaultCollateral, 8, true),
-      bitcoinValue,
-      loan.vaultLoan
-    );
-    const isLiquidable = collateralCoveragePercentage < 140;
-    setCanBeLiquidated(isLiquidable);
+    if (loan) {
+      const chosenShiftValue = chooseShiftValue(walletType);
+      const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
+        customShiftValue(loan.vaultCollateral, 8, true),
+        bitcoinValue,
+        customShiftValue(loan.vaultLoan, chosenShiftValue, true)
+      );
+      const isLiquidable = collateralCoveragePercentage < 140;
+      setCanBeLiquidated(isLiquidable);
+    }
   }, [loan]);
 
   return (

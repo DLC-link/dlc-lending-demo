@@ -15,11 +15,11 @@ export function formatClarityLoanContract(loanContract) {
   const vaultCollateral = loanContractData['vault-collateral'].value.toString();
   const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true) + ' BTC';
   const vaultLoan = loanContractData['vault-loan'].value.toString();
-  const formattedVaultLoan = customShiftValue(vaultLoan, 6, true) + ' USDC';
+  const formattedVaultLoan = '$ ' + customShiftValue(vaultLoan, 6, true);
   const liquidationFee = loanContractData['liquidation-fee'].value.toString();
-  const formattedLiquidationFee = parseInt(liquidationFee._hex);
+  const formattedLiquidationFee = parseInt(liquidationFee._hex) + ' %';
   const liquidationRatio = loanContractData['liquidation-ratio'].value.toString();
-  const formattedLiquidationRatio = parseInt(liquidationRatio._hex);
+  const formattedLiquidationRatio = parseInt(liquidationRatio._hex) + ' %';
   return {
     ...(uuid && {
       uuid,

@@ -1,5 +1,8 @@
 export const abi = [
   "constructor(address _dlcManagerAddress, address _usdcAddress)",
+  "event BorrowEvent(uint256 loanid, bytes32 dlcUUID, uint256 amount, uint256 vaultLoan, uint8 status)",
+  "event DoesNotNeedLiquidation(uint256 loanid, bytes32 dlcUUID, uint8 status)",
+  "event RepayEvent(uint256 loanid, bytes32 dlcUUID, uint256 amount, uint256 vaultLoan, uint8 status)",
   "event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)",
   "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
   "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)",
@@ -33,5 +36,5 @@ export const abi = [
   "function revokeRole(bytes32 role, address account)",
   "function setStatusFunded(bytes32 _uuid)",
   "function setupLoan(uint256 btcDeposit, uint256 liquidationRatio, uint256 liquidationFee, uint256 emergencyRefundTime) returns (uint256)",
-  "function supportsInterface(bytes4 interfaceId) view returns (bool)",
-];
+  "function supportsInterface(bytes4 interfaceId) view returns (bool)"
+]

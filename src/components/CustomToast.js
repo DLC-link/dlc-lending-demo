@@ -23,6 +23,7 @@ export default function CustomToast({ txHash, blockchain, status }) {
     LiquidationRequested: 'Liquidation request initiated',
     PreLiquidated: 'Processing liquidation',
     Liquidated: 'Vault liquidated',
+    InvalidLiquidation: 'No liquidation required',
     Cancelled: 'Transaction cancelled',
     Failed: 'Transaction failed',
   };
