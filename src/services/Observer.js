@@ -1,7 +1,6 @@
 import { ethers } from 'ethers';
 import { abi as protocolContractABI } from '../abis/protocolContractABI';
 import { abi as usdcABI } from '../abis/usdcABI';
-import { abi as dlcManagerABI } from '../abis/dlcManagerABI';
 import { io as ioClient } from 'socket.io-client';
 import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
 
@@ -13,11 +12,24 @@ import { fetchLoan, fetchLoans, loanEventReceived } from '../store/loansSlice';
 
 import store from '../store/store';
 
-const api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
-const ioclient_uri = `wss://dev-oracle.dlc.link`;
-
-async function fetchTXInfo(txId) {
+async function fetchTXInfo(blockchain, txId) {
   console.log(`[Stacks] Fetching tx_info... ${txId}`);
+  let api_base; 
+
+  switch (blockchain) {
+    case 'stacks:1': 
+      api_base = `https://api.mainnet.hiro.so/extended/v1/`;
+      break;
+      case 'stacks:2147483648':
+      api_base = `https://api.testnet.hiro.so/extended/v1/`;
+      break;
+    case 'stacks:42':
+      api_base = `https://dev-oracle.dlc.link/btc1/extended/v1`;
+      break;
+    default:
+      throw new Error('Unsupported network!');
+  }
+
   try {
     const response = await fetch(api_base + '/tx/' + txId);
     return response.json();
@@ -157,6 +169,22 @@ export default function Observer() {
     const loanContractFullName = loanContractAddress + '.' + loanContractName;
     const managerContractFullName = managerContractAddress + '.' + managerContractName;
 
+    let ioclient_uri;
+
+    switch (blockchain) {
+      case 'stacks:1':
+        ioclient_uri = `wss://api.mainnet.hiro.so/`;
+        break;
+      case 'stacks:2147483648':
+        ioclient_uri = `wss://api.testnet.hiro.so/`;
+        break;
+      case 'stacks:42':
+        ioclient_uri = `wss://dev-oracle.dlc.link`;
+        break;
+      default:
+        throw new Error('Unknown blockchain!');
+    }
+
     const socket = ioClient(ioclient_uri, {
       transports: ['websocket'],
     });
@@ -187,7 +215,7 @@ export default function Observer() {
       if (_tx.tx_status !== 'success') {
         store.dispatch(loanEventReceived({ status: 'Failed', txHash: _tx.tx_id }));
       }
-      const txInfo = await fetchTXInfo(_tx.tx_id);
+      const txInfo = await fetchTXInfo(blockchain ,_tx.tx_id);
       handleTx(txInfo);
     });
   }
