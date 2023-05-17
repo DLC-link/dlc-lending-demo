@@ -24,7 +24,12 @@ import store from '../store/store';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { customShiftValue, formatCollateralInUSD, calculateCollateralCoveragePercentageForBorrow } from '../utils';
+import {
+  customShiftValue,
+  formatCollateralInUSD,
+  calculateCollateralCoveragePercentageForBorrow,
+  chooseShiftValue,
+} from '../utils';
 
 import { borrowStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
@@ -47,9 +52,11 @@ export default function BorrowModal() {
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
 
+  const [shiftValue, setShiftValue] = useState();
+
   const [USDAmount, setUSDAmount] = useState(0);
 
-  const [isLoanError, setLoanError] = useState(true);
+  const [isLoanError, setLoanError] = useState(false);
   const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
 
   useEffect(() => {
@@ -59,8 +66,12 @@ export default function BorrowModal() {
         setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinPrice));
       });
     }
-    fetchData();
-  }, []);
+    if (loan) {
+      fetchData();
+      const chosenShiftValue = chooseShiftValue(walletType);
+      setShiftValue(chosenShiftValue);
+    }
+  }, [loan]);
 
   useEffect(() => {
     if (loan) {
@@ -78,7 +89,7 @@ export default function BorrowModal() {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForBorrow(
       Number(customShiftValue(loan.vaultCollateral, 8, true)),
       Number(bitCoinInUSDAsNumber),
-      Number(loan.vaultLoan),
+      Number(customShiftValue(loan.vaultLoan, shiftValue, true)),
       Number(additionalLoan)
     );
     if (isNaN(collateralCoveragePercentage)) {
@@ -253,7 +264,7 @@ export default function BorrowModal() {
                   <Text
                     fontSize='sm'
                     color='gray'>
-                    {'$ ' + customShiftValue(loan.vaultLoan, 6, true)}
+                    {loan.formattedVaultLoan}
                   </Text>
                 </HStack>
                 <Flex justifyContent='center'>

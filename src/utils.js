@@ -25,9 +25,28 @@ export function hexToBytes(hex) {
   return hexToBytesMS(hex.substring(0, 2) === '0x' ? hex.substring(2) : hex);
 }
 
-export function calculateCollateralCoveragePercentageForBorrow(collateralAmount, bitcoinValue, existingDebt, additionalLoan) {
+export const chooseShiftValue = (walletType) => {
+  switch (walletType) {
+    case 'metamask':
+      return 18;
+    case 'hiro':
+    case 'xverse':
+    case 'walletConnect':
+      return 6;
+    default:
+      console.error('Unknown wallet type');
+      break;
+  }
+};
+
+export function calculateCollateralCoveragePercentageForBorrow(
+  collateralAmount,
+  bitcoinValue,
+  existingDebt,
+  additionalLoan
+) {
   const collateralValueInUSD = Math.round(collateralAmount * bitcoinValue);
-  const totalDebt = customShiftValue(existingDebt, 6, true) + additionalLoan;
+  const totalDebt = existingDebt + additionalLoan;
 
   if (isNaN(collateralValueInUSD) || isNaN(totalDebt) || totalDebt <= 0) {
     return NaN;
@@ -47,7 +66,7 @@ export function calculateCollateralCoveragePercentageForRepay(
   additionalRepayment
 ) {
   const collateralValueInUSD = Math.round(collateralAmount * bitcoinValue);
-  const totalDebt = customShiftValue(existingDebt, 6, true) - additionalRepayment;
+  const totalDebt = existingDebt - additionalRepayment;
 
   if (isNaN(collateralValueInUSD) || isNaN(totalDebt) || totalDebt <= 0) {
     return NaN;
@@ -66,7 +85,7 @@ export function calculateCollateralCoveragePercentageForLiquidation(collateralAm
     return NaN;
   }
 
-  const collateralToDebtRatio = collateralValueInUSD / customShiftValue(totalDebt, 6, true);
+  const collateralToDebtRatio = collateralValueInUSD / totalDebt;
   const ratioPercentage = Math.round(collateralToDebtRatio * 100);
 
   return ratioPercentage;

@@ -27,7 +27,7 @@ export default function LoansGrid() {
               <SetupLoanCard></SetupLoanCard>
               {loans?.map((loan, i) => (
                 <motion.div
-                  key={`${loan.uuid ? loan.uuid : i}${loan.status}`}
+                  key={`${loan.uuid ? loan.uuid : i}${loan.status}${loan.vaultLoan}`}
                   whileHover={{
                     scale: 1.025,
                     transition: { duration: 0.5 },

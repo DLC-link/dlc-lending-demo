@@ -6,6 +6,24 @@ import { selectTotalFundedCollateralAndLoan } from '../store/loansSlice';
 
 export default function Balance() {
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
+  const { walletType } = useSelector((state) => state.account);
+
+  let shiftValue;
+
+  switch (walletType) {
+    case 'metamask':
+      shiftValue = 18;
+      break;
+    case 'hiro':
+    case 'xverse':
+    case 'walletConnect':
+      shiftValue = 6;
+      break;
+    default:
+      console.error('Unknown wallet type');
+      break;
+  }
+
   return (
     <>
       <>
@@ -24,7 +42,7 @@ export default function Balance() {
               color='accent'>
               Total Redeemable:{' '}
             </Text>
-            <Text>{fundedCollateralSum + ' BTC'}</Text>
+            <Text>{customShiftValue(fundedCollateralSum, 8, true) + ' BTC'}</Text>
             <Spacer width={'15px'}></Spacer>
             <Text
               fontSize='small'
@@ -32,7 +50,7 @@ export default function Balance() {
               color='accent'>
               Borrowed USDC amount:{' '}
             </Text>
-            <Text>{fundedLoanSum + ' USDC'}</Text>
+            <Text>{customShiftValue(fundedLoanSum, shiftValue, true) + ' USDC'}</Text>
           </HStack>
         </Flex>
       </>

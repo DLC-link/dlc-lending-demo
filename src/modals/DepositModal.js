@@ -87,7 +87,7 @@ const handleCollateralChange = (collateralAmount) =>
         sendLoanContractToEthereum(loanContract).then(() => dispatch(toggleDepositModalVisibility(false)));
         break;
       default:
-        console.log('Unsupported wallet type!');
+        console.error('Unsupported wallet type!');
         break;
     }
   };

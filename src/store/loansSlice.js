@@ -1,15 +1,10 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import store from './store';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress } from '../blockchainFunctions/stacksFunctions';
 import { customShiftValue } from '../utilities/formatFunctions';
 import { formatSolidityLoanContract } from '../utilities/loanFormatter';
-import {
-  clarityFunctionNames,
-  clarityLoanStatuses,
-  solidityLoanStatuses,
-} from '../enums/loanStatuses';
-import { createSelector } from '@reduxjs/toolkit';
+import { clarityFunctionNames, clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 
 const initialState = {
   loans: [],
@@ -60,7 +55,7 @@ export const loansSlice = createSlice({
         let loanIndex;
         let loanStatuses;
 
-        const { walletType, formattedLoan, loanTXHash } = action.payload;
+        const { walletType, formattedLoan, loanTXHash, loanEvent } = action.payload;
 
         switch (walletType) {
           case 'metamask':
@@ -84,9 +79,26 @@ export const loansSlice = createSlice({
 
         state.loans[loanIndex] = formattedLoan;
 
+        let toastStatus;
+
+        switch (loanEvent) {
+          case 'StatusUpdate':
+            toastStatus = formattedLoan.status;
+            break;
+          case 'BorrowEvent':
+            toastStatus = 'Borrowed';
+            break;
+          case 'RepayEvent':
+            toastStatus = 'Repaid';
+            break;
+          case 'InvalidLiquidationEvent':
+            toastStatus = 'InvalidLiquidation';
+            break;
+        }
+
         state.toastEvent = {
           txHash: loanTXHash,
-          status: formattedLoan.status,
+          status: toastStatus,
         };
 
         state.status = 'succeeded';
@@ -116,8 +128,8 @@ export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans,
   const fundedLoans = loans.filter((loan) =>
     [clarityLoanStatuses.FUNDED, solidityLoanStatuses.FUNDED].includes(loan.status)
   );
-  const fundedCollateralSum = fundedLoans.reduce((acc, loan) => acc + customShiftValue(loan.vaultCollateral, 8, true), 0);
-  const fundedLoanSum = fundedLoans.reduce((acc, loan) => acc + customShiftValue(loan.vaultLoan, 6, true), 0);
+  const fundedCollateralSum = fundedLoans.reduce((acc, loan) => acc + loan.vaultCollateral, 0);
+  const fundedLoanSum = fundedLoans.reduce((acc, loan) => acc + loan.vaultLoan, 0);
   return {
     fundedCollateralSum,
     fundedLoanSum,
@@ -146,7 +158,8 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
 });
 
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
-  const { loanUUID, loanStatus, loanTXHash } = payload;
+  const { loanUUID, loanStatus, loanTXHash, loanEvent, loanOwner } = payload;
+
   const { walletType } = store.getState().account;
 
   const loanStatusKey = Object.keys(solidityLoanStatuses)[loanStatus];
@@ -181,5 +194,5 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
     }
   }
 
-  return { formattedLoan, walletType, loanTXHash };
+  return { formattedLoan, walletType, loanTXHash, loanEvent };
 });
