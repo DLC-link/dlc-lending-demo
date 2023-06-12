@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@btckit/types": "^0.0.18",
     "@chakra-ui/icon": "^3.0.11",
     "@chakra-ui/icons": "^2.0.11",
     "@chakra-ui/react": "^2.3.7",

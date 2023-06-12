@@ -10,6 +10,7 @@ export default function CustomToast({ txHash, blockchain, status }) {
     NotReady: 'Vault established',
     Ready: 'Vault ready',
     Funded: 'Vault funded',
+    Broadcasted: 'Locked Bitcoin',
     ApproveRequested: 'USDC spend allowance request initiated',
     Approved: 'USDC spending approved',
     BorrowRequested: 'Borrow request initiated',
@@ -25,8 +26,12 @@ export default function CustomToast({ txHash, blockchain, status }) {
     Liquidated: 'Vault liquidated',
     InvalidLiquidation: 'No liquidation required',
     Cancelled: 'Transaction cancelled',
+    Rejected: 'Rejected Bitcoin Contract Offer',
     Failed: 'Transaction failed',
+    FundError: 'The counterparty does not have enough funds to complete the offer',
   };
+
+  const noLinkStatuses = ['SetupRequested', 'InvalidLiquidation', 'Cancelled', 'Failed', 'FundError', 'Rejected'];
 
   const ethereumExplorerURLs = {
     'ethereum:5': `https://goerli.etherscan.io/tx/${txHash}`,
@@ -39,18 +44,68 @@ export default function CustomToast({ txHash, blockchain, status }) {
     'stacks:42': `https://explorer.stacks.co/txid/${txHash}`,
   };
 
-  const success = !(status === ('Cancelled' || 'Failed'));
+  const success = ['Cancelled', 'Failed', 'FundError'].includes(status) ? false : true;
   const message = eventMap[status];
-  const explorerAddress = walletType === 'metamask' ? ethereumExplorerURLs[blockchain] : stacksExplorerURLs[blockchain];
+
+  let explorerAddress;
+  if (status === 'Broadcasted') {
+    explorerAddress = `https://blockstream.info/testnet/tx/${txHash}`;
+  } else {
+    switch (walletType) {
+      case 'metamask':
+        explorerAddress = ethereumExplorerURLs[blockchain];
+        break;
+      case 'hiro':
+      case 'xverse':
+      case 'walletConnect':
+        explorerAddress = stacksExplorerURLs[blockchain];
+        break;
+    }
+  }
 
   return (
     <Flex>
-      <Link
-        href={status === 'SetupRequested' ? '' : explorerAddress}
-        isExternal
-        _hover={{
-          textDecoration: 'none',
-        }}>
+      {!noLinkStatuses.includes(status) ? (
+        <Link
+          href={explorerAddress}
+          isExternal
+          _hover={{
+            textDecoration: 'none',
+          }}>
+          <Flex
+            height='45px'
+            width='450px'
+            borderRadius='lg'
+            bgColor='rgba(4, 186, 178, 0.8)'
+            color='white'
+            justifyContent='center'
+            alignItems='center'
+            _hover={{
+              opacity: '100%',
+              bg: 'secondary1',
+            }}>
+            <HStack spacing={3.5}>
+              {success === true ? (
+                <CheckCircleIcon color='green'></CheckCircleIcon>
+              ) : (
+                <WarningIcon color='red'></WarningIcon>
+              )}
+              <Text
+                fontSize='12px'
+                fontWeight='extrabold'>
+                {message}
+              </Text>
+              {success && (
+                <Text
+                  fontSize='8px'
+                  fontWeight='bold'>
+                  Click to show transaction in the explorer!
+                </Text>
+              )}
+            </HStack>
+          </Flex>
+        </Link>
+      ) : (
         <Flex
           height='45px'
           width='450px'
@@ -74,16 +129,9 @@ export default function CustomToast({ txHash, blockchain, status }) {
               fontWeight='extrabold'>
               {message}
             </Text>
-            {success && status !== 'SetupRequested' && (
-              <Text
-                fontSize='8px'
-                fontWeight='bold'>
-                Click to show transaction in the explorer!
-              </Text>
-            )}
           </HStack>
         </Flex>
-      </Link>
+      )}
     </Flex>
   );
 }
