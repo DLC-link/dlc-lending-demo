@@ -72,9 +72,9 @@ const handleCollateralChange = (collateralAmount) =>
 
   const createLoanContract = () => ({
     BTCDeposit: parseInt(customShiftValue(collateralAmount, 8, false)),
-    emergencyRefundTime: 5,
     liquidationRatio: parseInt(fixedTwoDecimalUnshift(140)),
     liquidationFee: parseInt(fixedTwoDecimalUnshift(10)),
+    attestorCount: 3,
   });
 
   const sendLoanContract = (loanContract) => {

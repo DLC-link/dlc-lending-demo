@@ -53,6 +53,7 @@ export function formatSolidityLoanContract(loanContract) {
   const formattedLiquidationFee = fixedTwoDecimalShift(liquidationFee) + ' %';
   const liquidationRatio = parseInt(loanContract.liquidationRatio._hex);
   const formattedLiquidationRatio = fixedTwoDecimalShift(liquidationRatio) + ' %';
+  const attestorList = loanContract.attestorList;
   return {
     uuid,
     formattedUUID,
@@ -66,6 +67,7 @@ export function formatSolidityLoanContract(loanContract) {
     formattedLiquidationFee,
     liquidationRatio,
     formattedLiquidationRatio,
+    attestorList
   };
 }
 

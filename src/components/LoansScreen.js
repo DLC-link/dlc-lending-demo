@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Text, Collapse, VStack, IconButton, HStack, Button } from '@chakra-ui/react';
+import React, { useEffect } from 'react';
+import { Text, Collapse, VStack, IconButton, HStack } from '@chakra-ui/react';
 import LoansGrid from './LoansGrid';
 import Balance from '../components/Balance';
 import { RefreshOutlined } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchLoans, selectAllLoans } from '../store/loansSlice';
 import { fetchBitcoinValue } from '../store/externalDataSlice';
-import { toggleBorrowModalVisibility } from '../store/componentSlice';
 
 export default function LoansScreen() {
   const dispatch = useDispatch();

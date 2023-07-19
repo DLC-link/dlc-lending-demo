@@ -117,7 +117,7 @@ export async function sendLoanContractToEthereum(loanContract) {
         loanContract.BTCDeposit,
         loanContract.liquidationRatio,
         loanContract.liquidationFee,
-        loanContract.emergencyRefundTime
+        loanContract.attestorCount
       )
       .then((response) => store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit })));
   } catch (error) {

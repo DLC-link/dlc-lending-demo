@@ -3,7 +3,7 @@ import { Flex, VStack, Button, Tooltip, HStack } from '@chakra-ui/react';
 
 import { useSelector, useDispatch } from 'react-redux';
 
-import { lockBTC } from '../blockchainFunctions/bitcoinFunctions';
+import { fetchBitcoinContractOfferAndSendToUserWallet } from '../blockchainFunctions/bitcoinFunctions';
 import { closeStacksLoan, liquidateStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
 
@@ -42,7 +42,7 @@ export function ActionButtons({ loanUUID, canBeLiquidated }) {
             <VStack>
               <Button
                 variant='outline'
-                onClick={() => lockBTC(loan)}>
+                onClick={() => fetchBitcoinContractOfferAndSendToUserWallet(loan)}>
                 LOCK BTC
               </Button>
             </VStack>

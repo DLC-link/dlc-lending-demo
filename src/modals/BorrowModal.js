@@ -33,8 +33,6 @@ import {
 
 import { borrowStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
-import { fetchBitcoinPrice } from '../blockchainFunctions/bitcoinFunctions';
-
 import { toggleBorrowModalVisibility } from '../store/componentSlice';
 
 export default function BorrowModal() {

@@ -25,6 +25,7 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "constants-browserify": "^1.0.0",
+    "eslint": "^8.45.0",
     "ethers": "^5.7.2",
     "graceful-fs": "^4.2.10",
     "https-browserify": "^1.0.0",

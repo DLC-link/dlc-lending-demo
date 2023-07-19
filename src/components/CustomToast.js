@@ -26,6 +26,7 @@ export default function CustomToast({ txHash, blockchain, status }) {
     InvalidLiquidation: 'No liquidation required',
     Cancelled: 'Transaction cancelled',
     Failed: 'Transaction failed',
+    FetchFailed: 'Failed to fetch offer',
   };
 
   const ethereumExplorerURLs = {
