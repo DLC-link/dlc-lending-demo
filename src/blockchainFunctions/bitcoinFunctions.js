@@ -12,7 +12,7 @@ const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   const urlParams = {
     bitcoinContractOffer: JSON.stringify(bitcoinContractOffer),
     attestorURLs: JSON.stringify(attestorURLs),
-    counterPartyWalletDetails,
+    counterpartyWalletDetails: JSON.stringify(counterPartyWalletDetails),
   };
 
   return urlParams;

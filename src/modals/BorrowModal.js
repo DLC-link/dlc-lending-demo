@@ -30,6 +30,7 @@ import {
   calculateCollateralCoveragePercentageForBorrow,
   chooseShiftValue,
 } from '../utils';
+import { fetchBitcoinPrice } from '../blockchainFunctions/bitcoinFunctions';
 
 import { borrowStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
