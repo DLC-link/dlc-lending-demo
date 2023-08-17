@@ -25,18 +25,11 @@ export function hexToBytes(hex) {
   return hexToBytesMS(hex.substring(0, 2) === '0x' ? hex.substring(2) : hex);
 }
 
-export const chooseShiftValue = (walletType) => {
-  switch (walletType) {
-    case 'metamask':
-      return 18;
-    case 'hiro':
-    case 'xverse':
-    case 'walletConnect':
-      return 6;
-    default:
-      console.error('Unknown wallet type');
-      break;
-  }
+export const loanDecimalShiftMap = {
+  metamask: 18,
+  hiro: 6,
+  xverse: 6,
+  walletConnect: 6,
 };
 
 export function calculateCollateralCoveragePercentageForBorrow(

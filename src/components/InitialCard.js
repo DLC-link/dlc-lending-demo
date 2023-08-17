@@ -3,12 +3,11 @@ import { easyTruncateAddress, customShiftValue, fixedTwoDecimalShift } from '../
 import Status from './Status';
 
 export default function InitialCard(props) {
-  const initialLoan = {
-    formatttedLiquidationFee: fixedTwoDecimalShift(props.loan.liquidationFee) + ' %',
-    formattedLiquidationRatio: fixedTwoDecimalShift(props.loan.liquidationRatio) + ' %',
-    formattedVaultCollateral: customShiftValue(props.loan.BTCDeposit, 8, true) + ' BTC',
-    formattedVaultLoan: '$ ' + fixedTwoDecimalShift(props.loan.vaultLoanAmount),
-  };
+  const initialCardInfo = [
+    { label: 'UUID', value: '' },
+    { label: 'Total Collateral', value: `${customShiftValue(props.loan.BTCDeposit, 8, true)} BTC` },
+    { label: 'Borrowed Amount', value: `$ ${fixedTwoDecimalShift(props.loan.vaultLoanAmount)}` },
+  ];
 
   return (
     <Flex
@@ -16,66 +15,27 @@ export default function InitialCard(props) {
       borderRadius='lg'
       justifyContent='center'
       shadow='dark-lg'
-      width={250}
-      marginLeft={15}
-      marginRight={15}
-      marginTop={25}
-      marginBottom={25}>
-      <VStack margin={15}>
+      width='250px'
+      margin='25px 15px'>
+      <VStack margin='15px'>
         <Flex>
-          <Status status={'not-ready'}></Status>
+          <Status status={'not-ready'} />
         </Flex>
-        <TableContainer width={250}>
+        <TableContainer width='250px'>
           <Table
-            size='sm'
-            variant='unstyled'>
+            variant='unstyled'
+            size='sm'>
             <Tbody>
-              <Tr>
-                <Td>
-                  <Text variant='property'>UUID</Text>
-                </Td>
-                <Td></Td>
-              </Tr>
-              <Tr>
-                <Td>
-                  <Text variant='property'>Owner</Text>
-                </Td>
-                <Td>
-                  <Text>{easyTruncateAddress(props.creator)}</Text>
-                </Td>
-              </Tr>
-              <Tr>
-                <Td>
-                  <Text variant='property'>Vault Collateral</Text>
-                </Td>
-                <Td>
-                  <Text>{initialLoan.formattedVaultCollateral}</Text>
-                </Td>
-              </Tr>
-              <Tr>
-                <Td>
-                  <Text variant='property'>Vault Loan</Text>
-                </Td>
-                <Td>
-                  <Text>{initialLoan.formattedVaultLoan}</Text>
-                </Td>
-              </Tr>
-              <Tr>
-                <Td>
-                  <Text variant='property'>Liquidation Fee</Text>
-                </Td>
-                <Td>
-                  <Text>{initialLoan.formattedLiquidationFee}</Text>
-                </Td>
-              </Tr>
-              <Tr>
-                <Td>
-                  <Text variant='property'>Liquidation Ratio</Text>
-                </Td>
-                <Td>
-                  <Text>{initialLoan.formattedLiquidationRatio}</Text>
-                </Td>
-              </Tr>
+              {initialCardInfo.map((row, index) => (
+                <Tr key={index}>
+                  <Td>
+                    <Text variant='property'>{row.label}</Text>
+                  </Td>
+                  <Td>
+                    <Text>{row.value}</Text>
+                  </Td>
+                </Tr>
+              ))}
             </Tbody>
           </Table>
         </TableContainer>

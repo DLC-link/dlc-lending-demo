@@ -2,8 +2,10 @@
 
 import store from '../store/store';
 import { loanEventReceived } from '../store/loansSlice';
+import { ToastEvent } from '../components/CustomToast';
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
+  console.log(bitcoinContractOffer);
   const counterPartyWalletDetails = {
     counterpartyWalletURL: process.env.REACT_APP_WALLET_DOMAIN,
     counterpartyWalletName: 'DLC.Link',
@@ -19,50 +21,56 @@ const createURLParams = (bitcoinContractOffer, attestorURLs) => {
 };
 
 const sendOfferForSigning = async (urlParams) => {
-  const responseStatuses = {
-    accept: 'Broadcasted',
-    reject: 'Rejected',
-    default: 'Failed',
-    4001: 'Cancelled',
-    '-32600': 'FundError',
-  };
-
   window.btc
     .request('acceptBitcoinContractOffer', urlParams)
     .then((response) => {
-      const status = responseStatuses[response.result.action] || responseStatuses.default;
-      store.dispatch(loanEventReceived({ status, txHash: response.result.txId, blockchain: 'BTC' }));
+      store.dispatch(
+        loanEventReceived({
+          status: ToastEvent.ACCEPTSUCCEEDED,
+          txHash: response.result.txId,
+        })
+      );
     })
     .catch((error) => {
-      console.error(error);
-      const status = responseStatuses[error.error.code] || responseStatuses.default;
-      store.dispatch(loanEventReceived({ status }));
+      store.dispatch(
+        loanEventReceived({
+          status: ToastEvent.ACCEPTFAILED,
+        })
+      );
     });
 };
 
-export const fetchBitcoinContractOfferFromCounterpartyWallet = async (vaultContract) => {
+export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContract) => {
   const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
-
+  const attestorListJSON = JSON.stringify(loanContract.attestorList);
   try {
     const response = await fetch(URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        uuid: vaultContract.formattedUUID,
-        acceptCollateral: parseInt(vaultContract.vaultCollateral),
+        uuid: loanContract.uuid,
+        acceptCollateral: parseInt(loanContract.vaultCollateral),
         offerCollateral: 0,
         totalOutcomes: 100,
-        attestorList: JSON.stringify(vaultContract.attestorList),
+        attestorList: attestorListJSON,
       }),
     });
     const responseStream = await response.json();
     if (!response.ok) {
-      store.dispatch(loanEventReceived({ status: 'FundError', txHash: '', blockchain: 'BTC' }));
+      store.dispatch(
+        loanEventReceived({
+          status: ToastEvent.FETCHFAILED,
+        })
+      );
       return;
     }
     return responseStream;
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.FETCHFAILED,
+      })
+    );
   }
 };
 
@@ -80,8 +88,9 @@ export const fetchBitcoinPrice = async () => {
   return bitCoinValue;
 };
 
-export const fetchBitcoinContractOfferAndSendToUserWallet = async (vaultContract) => {
-  const bitcoinContractOffer = await fetchBitcoinContractOfferFromCounterpartyWallet(vaultContract);
-  const urlParams = createURLParams(bitcoinContractOffer, vaultContract.attestorList);
-  sendOfferForSigning(urlParams);
+export const fetchBitcoinContractOfferAndSendToUserWallet = async (loanContract) => {
+  const bitcoinContractOffer = await fetchBitcoinContractOfferFromCounterpartyWallet(loanContract);
+  if (!bitcoinContractOffer) return;
+  const urlParams = createURLParams(bitcoinContractOffer, loanContract.attestorList);
+  await sendOfferForSigning(urlParams);
 };

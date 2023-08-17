@@ -21,7 +21,28 @@ import { StacksNetworks } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
-import { requestStatuses } from '../enums/loanStatuses';
+import { ToastEvent } from '../components/CustomToast';
+import { BufferReader } from 'micro-stacks/common';
+
+const getAllAttestors = async () => {
+  const { blockchain } = store.getState().account;
+  const { managerContractAddress, managerContractName, apiBase } = StacksNetworks[blockchain];
+  const attestorNFT = 'dlc-attestors';
+
+  const getAllAttestorsURL = `https://${apiBase}/extended/v1/tokens/nft/holdings?asset_identifiers=${managerContractAddress}.${managerContractName}::${attestorNFT}&principal=${managerContractAddress}.${managerContractName}`;
+  const response = await fetch(getAllAttestorsURL);
+  const result = await response.json();
+  const attestorIDs = result.results.map((attestor) =>
+    parseInt(attestor.value.repr.slice(1, attestor.value.repr.length))
+  );
+  return attestorIDs;
+};
+
+const selectRandomAttestors = async (attestorList, attestorCount) => {
+  const shuffledAttestorList = [...attestorList].sort(() => 0.5 - Math.random());
+  const selectedAttestors = shuffledAttestorList.slice(0, attestorCount);
+  return Buffer.from(selectedAttestors);
+};
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
   const { loanContractAddress, loanContractName, network } = StacksNetworks[blockchain];
@@ -107,12 +128,16 @@ async function showConnectAndGetAddress(blockchain) {
 export async function sendLoanContractToStacks(loanContract) {
   const { walletType, blockchain } = store.getState().account;
 
+  const allAttestors = await getAllAttestors();
+  const selectedAttestors = await selectRandomAttestors(allAttestors, loanContract.attestorCount);
+
   const functionName = 'setup-loan';
   const functionArgs = [
     uintCV(loanContract.BTCDeposit),
     uintCV(loanContract.liquidationRatio),
     uintCV(loanContract.liquidationFee),
-    uintCV(loanContract.emergencyRefundTime),
+    uintCV(5), //TODO: Remove this hardcoded value
+    bufferCV(selectedAttestors),
   ];
   const senderAddress = undefined;
   const onFinishStatus = loanContract.BTCDeposit;
@@ -195,7 +220,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.BORROWREQUESTED;
+  const onFinishStatus = ToastEvent.BORROWREQUESTED;
   const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const contractFungiblePostConditionForBorrow = [
@@ -239,7 +264,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.REPAYREQUESTED;
+  const onFinishStatus = ToastEvent.REPAYREQUESTED;
   const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const standardFungiblePostConditionForRepay = [
@@ -282,7 +307,7 @@ export async function liquidateStacksLoan(UUID) {
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.LIQUIDATIONREQUESTED;
+  const onFinishStatus = ToastEvent.LIQUIDATIONREQUESTED;
 
   const txOptions = populateTxOptions(
     functionName,
@@ -315,7 +340,7 @@ export async function closeStacksLoan(UUID) {
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.CLOSEREQUESTED;
+  const onFinishStatus = ToastEvent.CLOSEREQUESTED;
 
   const txOptions = populateTxOptions(
     functionName,

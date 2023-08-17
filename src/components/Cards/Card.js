@@ -9,23 +9,31 @@ import Status from '../Status';
 import { ActionButtons } from '../ActionButtons';
 
 import { selectLoanByUUID } from '../../store/loansSlice';
-import { calculateCollateralCoveragePercentageForLiquidation, customShiftValue, chooseShiftValue } from '../../utils';
+import {
+  calculateCollateralCoveragePercentageForLiquidation,
+  customShiftValue,
+  loanDecimalShiftMap,
+} from '../../utils';
 import { easyTruncateAddress } from '../../utilities/formatFunctions';
 
 export default function Card({ loanUUID }) {
-  const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
   const { walletType } = useSelector((state) => state.account);
-
+  const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
   const bitcoinValue = useSelector((state) => state.externalData.bitcoinValue);
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
 
+  const cardInfo = [
+    { label: 'UUID', value: loan.uuid && easyTruncateAddress(loan.uuid) },
+    { label: 'Total Collateral', value: loan.formattedVaultCollateral },
+    { label: 'Borrowed Amount', value: loan.formattedVaultLoan },
+  ];
+
   useEffect(() => {
     if (loan) {
-      const chosenShiftValue = chooseShiftValue(walletType);
       const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
-        customShiftValue(loan.vaultCollateral, 8, true),
+        loan.vaultCollateral,
         bitcoinValue,
-        customShiftValue(loan.vaultLoan, chosenShiftValue, true)
+        loan.vaultLoan
       );
       const isLiquidable = collateralCoveragePercentage < 140;
       setCanBeLiquidated(isLiquidable);
@@ -36,10 +44,7 @@ export default function Card({ loanUUID }) {
     <>
       {loan && (
         <Flex
-          marginTop='25px'
-          marginBottom='25px'
-          marginLeft='15px'
-          marginRight='15px'
+          margin='25px 15px'
           height='350px'
           width='250px'
           borderRadius='lg'
@@ -56,42 +61,32 @@ export default function Card({ loanUUID }) {
             <Flex>
               <Status
                 status={loan.status}
-                canBeLiquidated={canBeLiquidated}></Status>
+                canBeLiquidated={canBeLiquidated}
+              />
             </Flex>
             <TableContainer>
               <Table
                 variant='unstyled'
                 size='sm'>
                 <Tbody>
-                  <Tr>
-                    <Td>
-                      <Text variant='property'>UUID</Text>
-                    </Td>
-                    <Td>{loan.formattedUUID && <Text>{easyTruncateAddress(loan.formattedUUID)}</Text>}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>
-                      <Text variant='property'>Total Collateral</Text>
-                    </Td>
-                    <Td>
-                      <Text>{loan.formattedVaultCollateral}</Text>
-                    </Td>
-                  </Tr>
-                  <Tr>
-                    <Td>
-                      <Text variant='property'>Borrowed Amount</Text>
-                    </Td>
-                    <Td>
-                      <Text>{loan.formattedVaultLoan}</Text>
-                    </Td>
-                  </Tr>
+                  {cardInfo.map((row, index) => (
+                    <Tr key={index}>
+                      <Td>
+                        <Text variant='property'>{row.label}</Text>
+                      </Td>
+                      <Td>
+                        <Text>{row.value}</Text>
+                      </Td>
+                    </Tr>
+                  ))}
                 </Tbody>
               </Table>
             </TableContainer>
-            <Spacer></Spacer>
+            <Spacer />
             <ActionButtons
               loanUUID={loan.uuid}
-              canBeLiquidated={canBeLiquidated}></ActionButtons>
+              canBeLiquidated={canBeLiquidated}
+            />
           </VStack>
         </Flex>
       )}

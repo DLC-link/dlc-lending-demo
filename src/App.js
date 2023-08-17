@@ -3,7 +3,7 @@ import Header from './components/Header';
 import Intro from './components/Intro';
 import React, { useEffect } from 'react';
 import DepositModal from './modals/DepositModal';
-import { Box, useToast } from '@chakra-ui/react';
+import { Box, Collapse, useToast } from '@chakra-ui/react';
 import CustomToast from './components/CustomToast';
 import { useSelector } from 'react-redux';
 import LoansScreen from './components/LoansScreen';
@@ -31,7 +31,8 @@ export default function App() {
           <CustomToast
             txHash={toastEvent.txHash}
             blockchain={blockchain}
-            status={toastEvent.status}></CustomToast>
+            status={toastEvent.status}
+          />
         ),
       });
     }
@@ -45,21 +46,17 @@ export default function App() {
 
   return (
     <>
-      <Box
-        height='auto'
-        padding={0}>
-        <Header isConnected={address}></Header>
+      <Box>
+        <Header isConnected={address} />
         <DepositModal />
         <RepayModal />
         <BorrowModal />
-      {/* <RepayModal/> */}
+        {/* <RepayModal/> */}
         <SelectWalletModal />
-        <Intro isConnected={address}></Intro>
-        {address && (
-          <>
-            <LoansScreen isConnected={address}></LoansScreen>
-          </>
-        )}
+        <Collapse in={!address}>
+          <Intro />
+        </Collapse>
+        {address && <LoansScreen isConnected={address} />}
       </Box>
     </>
   );

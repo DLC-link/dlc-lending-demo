@@ -28,7 +28,7 @@ import {
   customShiftValue,
   formatCollateralInUSD,
   calculateCollateralCoveragePercentageForRepay,
-  chooseShiftValue,
+  loanDecimalShiftMap,
 } from '../utils';
 
 import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
@@ -68,7 +68,7 @@ export default function RepayModal() {
     }
     if (loan) {
       fetchData();
-      const chosenShiftValue = chooseShiftValue(walletType);
+      const chosenShiftValue = loanDecimalShiftMap[walletType];
       setShiftValue(chosenShiftValue);
     }
   }, [loan]);

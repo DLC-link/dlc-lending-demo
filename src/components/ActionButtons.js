@@ -1,5 +1,5 @@
-import React  from 'react';
-import { Flex, VStack, Button, Tooltip, HStack } from '@chakra-ui/react';
+import React from 'react';
+import { Flex, VStack, Button, Tooltip } from '@chakra-ui/react';
 
 import { useSelector, useDispatch } from 'react-redux';
 

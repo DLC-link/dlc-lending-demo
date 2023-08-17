@@ -28,7 +28,7 @@ import {
   customShiftValue,
   formatCollateralInUSD,
   calculateCollateralCoveragePercentageForBorrow,
-  chooseShiftValue,
+  loanDecimalShiftMap,
 } from '../utils';
 import { fetchBitcoinPrice } from '../blockchainFunctions/bitcoinFunctions';
 
@@ -51,8 +51,6 @@ export default function BorrowModal() {
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
   const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
 
-  const [shiftValue, setShiftValue] = useState();
-
   const [USDAmount, setUSDAmount] = useState(0);
 
   const [isLoanError, setLoanError] = useState(false);
@@ -67,14 +65,12 @@ export default function BorrowModal() {
     }
     if (loan) {
       fetchData();
-      const chosenShiftValue = chooseShiftValue(walletType);
-      setShiftValue(chosenShiftValue);
     }
   }, [loan]);
 
   useEffect(() => {
     if (loan) {
-      setUSDAmount(formatCollateralInUSD(customShiftValue(loan.vaultCollateral, 8, true), bitCoinInUSDAsNumber));
+      setUSDAmount(formatCollateralInUSD(loan.vaultCollateral, bitCoinInUSDAsNumber));
       updateCollateralToDebtPercentage();
       updateLoanError();
     }
@@ -86,9 +82,9 @@ export default function BorrowModal() {
 
   const updateCollateralToDebtPercentage = () => {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForBorrow(
-      Number(customShiftValue(loan.vaultCollateral, 8, true)),
+      Number(loan.vaultCollateral),
       Number(bitCoinInUSDAsNumber),
-      Number(customShiftValue(loan.vaultLoan, shiftValue, true)),
+      Number(loan.vaultLoan),
       Number(additionalLoan)
     );
     if (isNaN(collateralCoveragePercentage)) {

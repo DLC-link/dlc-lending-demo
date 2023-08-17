@@ -15,7 +15,7 @@ import { loanSetupRequested, loanEventReceived } from '../store/loansSlice';
 
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { fixedTwoDecimalShift } from '../utils';
-import { requestStatuses } from '../enums/loanStatuses';
+import { ToastEvent } from '../components/CustomToast';
 
 let protocolContractETH;
 let usdcETH;
@@ -97,7 +97,7 @@ export async function isAllowedInMetamask(vaultLoan) {
         store.dispatch(
           loanEventReceived({
             txHash: response.hash,
-            status: requestStatuses.APPROVEREQUESTED,
+            status: ToastEvent.APPROVEREQUESTED,
           })
         )
       );
@@ -117,7 +117,8 @@ export async function sendLoanContractToEthereum(loanContract) {
         loanContract.BTCDeposit,
         loanContract.liquidationRatio,
         loanContract.liquidationFee,
-        loanContract.attestorCount
+        loanContract.attestorCount,
+        { gasLimit: 900000 }
       )
       .then((response) => store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit })));
   } catch (error) {
@@ -167,7 +168,7 @@ export async function borrowEthereumLoan(UUID, additionalLoan) {
           store.dispatch(
             loanEventReceived({
               txHash: response.hash,
-              status: requestStatuses.BORROWREQUESTED,
+              status: ToastEvent.BORROWREQUESTED,
             })
           )
         );
@@ -186,7 +187,7 @@ export async function repayEthereumLoan(UUID, additionalRepayment) {
         store.dispatch(
           loanEventReceived({
             txHash: response.hash,
-            status: requestStatuses.REPAYREQUESTED,
+            status: ToastEvent.REPAYREQUESTED,
           })
         )
       );
@@ -202,7 +203,7 @@ export async function liquidateEthereumLoan(UUID) {
       store.dispatch(
         loanEventReceived({
           txHash: response.hash,
-          status: requestStatuses.LIQUIDATIONREQUESTED,
+          status: ToastEvent.LIQUIDATIONREQUESTED,
         })
       );
     });
@@ -218,7 +219,7 @@ export async function closeEthereumLoan(UUID) {
       store.dispatch(
         loanEventReceived({
           txHash: response.hash,
-          status: requestStatuses.CLOSEREQUESTED,
+          status: ToastEvent.CLOSEREQUESTED,
         })
       )
     );

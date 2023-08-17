@@ -3,26 +3,13 @@ import { Text, HStack, Flex, Spacer } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import { customShiftValue } from '../utilities/formatFunctions';
 import { selectTotalFundedCollateralAndLoan } from '../store/loansSlice';
+import { loanDecimalShiftMap } from '../utils';
 
 export default function Balance() {
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
   const { walletType } = useSelector((state) => state.account);
 
-  let shiftValue;
-
-  switch (walletType) {
-    case 'metamask':
-      shiftValue = 18;
-      break;
-    case 'hiro':
-    case 'xverse':
-    case 'walletConnect':
-      shiftValue = 6;
-      break;
-    default:
-      console.error('Unknown wallet type');
-      break;
-  }
+  let shiftValue = loanDecimalShiftMap[walletType];
 
   return (
     <>
@@ -43,7 +30,7 @@ export default function Balance() {
               Total Redeemable:{' '}
             </Text>
             <Text>{customShiftValue(fundedCollateralSum, 8, true) + ' BTC'}</Text>
-            <Spacer width={'15px'}></Spacer>
+            <Spacer width={'15px'} />
             <Text
               fontSize='small'
               fontWeight='extrabold'
