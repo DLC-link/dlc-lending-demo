@@ -9,13 +9,11 @@ import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions
 
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 
-import { selectLoanByUUID } from '../store/loansSlice';
 import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
 
-export function ActionButtons({ loanUUID, canBeLiquidated }) {
+export function ActionButtons({ loan, canBeLiquidated }) {
   const dispatch = useDispatch();
 
-  const loan = useSelector((state) => selectLoanByUUID(state, loanUUID));
   const walletType = useSelector((state) => state.account.walletType);
 
   let closeAction;

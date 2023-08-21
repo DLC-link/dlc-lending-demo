@@ -1,48 +1,38 @@
 /*global chrome*/
 
 import React from 'react';
-import { VStack, HStack, Collapse, SimpleGrid, ScaleFade } from '@chakra-ui/react';
-import Card from './Cards/Card';
-import SetupLoanCard from './Cards/SetupLoanCard';
+import { Flex, Collapse, SimpleGrid, ScaleFade } from '@chakra-ui/react';
+import Card from './Card';
 import { useSelector } from 'react-redux';
-import { selectAllLoans } from '../store/loansSlice';
-import { motion } from 'framer-motion';
+import SetupLoanButton from './SetupLoanButton';
+import { useLoans } from '../hooks/useLoans';
 
 export default function LoansGrid() {
-  const loans = useSelector(selectAllLoans);
+  const loans = useLoans();
   const address = useSelector((state) => state.account.address);
   const isLoading = useSelector((state) => state.loans.status === 'loading');
 
   return (
     <>
       <Collapse in={address}>
-        <VStack
+        <Flex
           justifyContent='center'
           alignContent='center'>
-          <HStack></HStack>
           <ScaleFade in={!isLoading}>
             <SimpleGrid
-              columns={[1, 4]}
-              spacing={[0, 15]}>
-              <SetupLoanCard></SetupLoanCard>
-              {loans?.map((loan, i) => (
-                <motion.div
-                  key={`${loan.uuid ? loan.uuid : i}${loan.status}${loan.vaultLoan}`}
-                  whileHover={{
-                    scale: 1.025,
-                    transition: { duration: 0.5 },
-                  }}
-                  initial={{ x: -300, border: '5px dashed rgba(255,255,255, 0.1)', borderRadius: '25px' }}
-                  animate={{ x: 0, border: '0px' }}
-                  exit={{ x: 300 }}>
-                  <Card
-                    key={i}
-                    loanUUID={loan.uuid}></Card>
-                </motion.div>
+              columns={[1, 2, 3, 4, 5]}
+              spacing={50}
+              padding={50}>
+              <SetupLoanButton />
+              {loans?.map((loan) => (
+                <Card
+                  key={`${loan.uuid}${loan.status}${loan.vaultLoan}`}
+                  loan={loan}
+                />
               ))}
             </SimpleGrid>
           </ScaleFade>
-        </VStack>
+        </Flex>
       </Collapse>
     </>
   );

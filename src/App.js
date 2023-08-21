@@ -53,9 +53,7 @@ export default function App() {
         <BorrowModal />
         {/* <RepayModal/> */}
         <SelectWalletModal />
-        <Collapse in={!address}>
-          <Intro />
-        </Collapse>
+        <Intro />
         {address && <LoansScreen isConnected={address} />}
       </Box>
     </>

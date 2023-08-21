@@ -15,6 +15,8 @@ import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV
 import { openContractCall } from '@stacks/connect';
 import { customShiftValue, hexToBytes } from '../utils';
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
+import { NonFungibleConditionCode } from '@stacks/transactions';
+import { makeContractNonFungiblePostCondition } from '@stacks/transactions';
 import store from '../store/store';
 
 import { StacksNetworks } from '../networks/networks';
@@ -22,7 +24,6 @@ import { StacksNetworks } from '../networks/networks';
 import { login } from '../store/accountSlice';
 import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
-import { BufferReader } from 'micro-stacks/common';
 
 const getAllAttestors = async () => {
   const { blockchain } = store.getState().account;
@@ -66,13 +67,14 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
       }
     },
     onCancel: () => {
-      store.dispatch(loanEventReceived({ status: onFinishStatus }));
+      store.dispatch(loanEventReceived({ status: ToastEvent.TRANSACTIONCANCELLED }));
     },
   };
 };
 
 export async function requestAndDispatchStacksAccountInformation(walletType, blockchain) {
   const isUserSignedIn = userSession.isUserSignedIn();
+  console.log(isUserSignedIn);
 
   let address;
   switch (blockchain) {
@@ -154,7 +156,11 @@ export async function sendLoanContractToStacks(loanContract) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -173,7 +179,11 @@ export async function getAllStacksLoansForAddress() {
     const loanContracts = response.list;
     formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.RETRIEVALFAILED,
+      })
+    );
   }
   return formattedLoans;
 }
@@ -191,7 +201,11 @@ export async function getStacksLoanIDByUUID(UUID) {
     const response = await callReadOnlyFunction(txOptions);
     return cvToValue(response.value);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -208,7 +222,32 @@ export async function getStacksLoanByUUID(UUID) {
     const response = await callReadOnlyFunction(txOptions);
     return cvToValue(response.value);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
+  }
+}
+
+export async function getStacksLoanByID(ID) {
+  const { address, blockchain } = store.getState().account;
+
+  const functionName = 'get-loan';
+  const functionArgs = [uintCV(ID)];
+  const senderAddress = address;
+
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+
+  try {
+    const response = await callReadOnlyFunction(txOptions);
+    return cvToValue(response.value);
+  } catch (error) {
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -252,7 +291,11 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -295,7 +338,11 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -328,7 +375,11 @@ export async function liquidateStacksLoan(UUID) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -338,14 +389,25 @@ export async function closeStacksLoan(UUID) {
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
-  const contractFungiblePostCondition = [];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.CLOSEREQUESTED;
+  const openDLCNFT = 'open-dlc';
+  const { managerContractAddress, managerContractName } = StacksNetworks[blockchain];
+
+  const contractNonFungiblePostConditionForClose = [
+    makeContractNonFungiblePostCondition(
+      managerContractAddress,
+      managerContractName,
+      NonFungibleConditionCode.Sends,
+      createAssetInfo(managerContractAddress, managerContractName, openDLCNFT),
+      bufferCV(hexToBytes(UUID))
+    ),
+  ];
 
   const txOptions = populateTxOptions(
     functionName,
     functionArgs,
-    contractFungiblePostCondition,
+    contractNonFungiblePostConditionForClose,
     senderAddress,
     onFinishStatus,
     blockchain
@@ -361,6 +423,10 @@ export async function closeStacksLoan(UUID) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }

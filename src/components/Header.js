@@ -1,31 +1,14 @@
 import React from 'react';
-import { Button, HStack, Image, Spacer } from '@chakra-ui/react';
+import { HStack } from '@chakra-ui/react';
 import Account from './Account';
+import CompanyWebsiteButton from './CompanyWebsiteButton';
 
 export default function Header() {
-  const CompanyIcon = () => {
-    return (
-      <Button
-        variant='ghost'
-        as='a'
-        boxSize={['65px', '97.5px']}
-        borderRadius='lg'
-        href='https://www.dlc.link/'
-        _hover={{
-          background: 'secondary1',
-        }}>
-        <Image
-          src='/dlc.link_logo.svg'
-          alt='DLC.Link Logo'
-        />
-      </Button>
-    );
-  };
-
   return (
-    <HStack margin={['15px', '30px']}>
-      <CompanyIcon />
-      <Spacer />
+    <HStack
+      margin='30px'
+      justifyContent='space-between'>
+      <CompanyWebsiteButton />
       <Account />
     </HStack>
   );

@@ -3,9 +3,9 @@
 import store from '../store/store';
 import { loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
+import { customShiftValue } from '../utils';
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
-  console.log(bitcoinContractOffer);
   const counterPartyWalletDetails = {
     counterpartyWalletURL: process.env.REACT_APP_WALLET_DOMAIN,
     counterpartyWalletName: 'DLC.Link',
@@ -43,13 +43,15 @@ const sendOfferForSigning = async (urlParams) => {
 export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContract) => {
   const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
   const attestorListJSON = JSON.stringify(loanContract.attestorList);
+  console.log(attestorListJSON);
+  console.log(loanContract.uuid);
   try {
     const response = await fetch(URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         uuid: loanContract.uuid,
-        acceptCollateral: parseInt(loanContract.vaultCollateral),
+        acceptCollateral: customShiftValue(loanContract.vaultCollateral, 8, false),
         offerCollateral: 0,
         totalOutcomes: 100,
         attestorList: attestorListJSON,

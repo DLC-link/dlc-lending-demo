@@ -29,7 +29,7 @@ export default function Balance() {
               color='accent'>
               Total Redeemable:{' '}
             </Text>
-            <Text>{customShiftValue(fundedCollateralSum, 8, true) + ' BTC'}</Text>
+            <Text>{fundedCollateralSum + ' BTC'}</Text>
             <Spacer width={'15px'} />
             <Text
               fontSize='small'

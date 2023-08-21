@@ -49,10 +49,7 @@ export default function RepayModal() {
 
   const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
 
-  const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
-  const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
-
-  const [shiftValue, setShiftValue] = useState();
+  const [bitcoinUSDValue, setBitcoinUSDValue] = useState();
 
   const [USDAmount, setUSDAmount] = useState(0);
 
@@ -62,20 +59,17 @@ export default function RepayModal() {
   useEffect(() => {
     async function fetchData() {
       await fetchBitcoinPrice().then((bitcoinPrice) => {
-        setBitCoinInUSDAsNumber(bitcoinPrice);
-        setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinPrice));
+        setBitcoinUSDValue(bitcoinPrice);
       });
     }
     if (loan) {
       fetchData();
-      const chosenShiftValue = loanDecimalShiftMap[walletType];
-      setShiftValue(chosenShiftValue);
     }
   }, [loan]);
 
   useEffect(() => {
     if (loan) {
-      setUSDAmount(formatCollateralInUSD(customShiftValue(loan.vaultCollateral, 8, true), bitCoinInUSDAsNumber));
+      setUSDAmount(formatCollateralInUSD(loan.vaultCollateral, bitcoinUSDValue));
       updateCollateralToDebtPercentage();
       updateLoanError();
     }
@@ -87,9 +81,9 @@ export default function RepayModal() {
 
   const updateCollateralToDebtPercentage = () => {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForRepay(
-      Number(customShiftValue(loan.vaultCollateral, 8, true)),
-      Number(bitCoinInUSDAsNumber),
-      Number(customShiftValue(loan.vaultLoan, shiftValue, true)),
+      Number(loan.vaultCollateral),
+      Number(bitcoinUSDValue),
+      Number(loan.vaultLoan),
       Number(additionalRepayment)
     );
     if (isNaN(collateralCoveragePercentage)) {
@@ -109,9 +103,7 @@ export default function RepayModal() {
 
   const updateLoanError = () => {
     const shouldDisplayLoanError =
-      additionalRepayment < 1 ||
-      additionalRepayment === undefined ||
-      additionalRepayment > customShiftValue(loan.vaultLoan, shiftValue, true);
+      additionalRepayment < 1 || additionalRepayment === undefined || additionalRepayment > loan.vaultLoan;
     setLoanError(shouldDisplayLoanError);
   };
 
@@ -167,7 +159,7 @@ export default function RepayModal() {
                     width='200px'
                     color='white'
                     fontSize='md'>
-                    {customShiftValue(loan.vaultCollateral, 8, true)}
+                    {loan.vaultCollateral}
                   </Text>
                   <Image
                     src='/btc_logo.png'
@@ -180,7 +172,7 @@ export default function RepayModal() {
                   marginLeft='40px'
                   fontSize='x-small'
                   color='white'>
-                  ${USDAmount} at 1 BTC = ${bitCoinInUSDAsString}
+                  ${USDAmount} at 1 BTC = ${new Intl.NumberFormat().format(bitcoinUSDValue)}
                 </Text>
                 <FormControl isInvalid={isLoanError}>
                   <FormLabel
@@ -214,7 +206,7 @@ export default function RepayModal() {
                     spacing={45}>
                     <NumberInput focusBorderColor='accent'>
                       <NumberInputField
-                        max={customShiftValue(loan.vaultLoan, shiftValue, true)}
+                        max={loan.vaultLoan}
                         padding='15px'
                         width='200px'
                         color='white'

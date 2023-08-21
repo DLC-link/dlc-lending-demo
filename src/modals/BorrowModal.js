@@ -112,6 +112,7 @@ export default function BorrowModal() {
     switch (walletType) {
       case 'hiro':
       case 'xverse':
+        console.log('borrowing loan');
         borrowStacksLoan(loan.uuid, additionalLoan);
         break;
       case 'metamask':
@@ -159,7 +160,7 @@ export default function BorrowModal() {
                     width='200px'
                     color='white'
                     fontSize='md'>
-                    {customShiftValue(loan.vaultCollateral, 8, true)}
+                    {loan.vaultCollateral}
                   </Text>
                   <Image
                     src='/btc_logo.png'

@@ -31,9 +31,15 @@ const WalletInteractionEvent = {
   ACCEPTSUCCEEDED: 'Locked Bitcoin!',
 };
 
+const BlockchainInteractionEvent = {
+  CONNECTIONFAILED: "Couldn't connect to blockchain!",
+  RETRIEVALFAILED: "Couldn't get vaults!",
+};
+
 export const ToastEvent = {
   ...VaultBlockchainEvent,
   ...WalletInteractionEvent,
+  ...BlockchainInteractionEvent,
 };
 
 export default function CustomToast({ txHash, status }) {
@@ -67,6 +73,7 @@ export default function CustomToast({ txHash, status }) {
     ToastEvent.FETCHFAILED,
     ToastEvent.TRANSACTIONFAILED,
     ToastEvent.TRANSACTIONCANCELLED,
+    ToastEvent.RETRIEVALFAILED,
   ].includes(status);
 
   const eventExplorerAddress =

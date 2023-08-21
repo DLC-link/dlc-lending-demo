@@ -18,6 +18,7 @@ export default function LoansScreen() {
   });
 
   const refreshLoansTable = () => {
+    console.log('refreshing loans table');
     dispatch(fetchLoans(address));
     dispatch(fetchBitcoinValue());
   };

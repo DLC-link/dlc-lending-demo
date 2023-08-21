@@ -4,6 +4,7 @@ import { StacksNetworks } from '../networks/networks';
 import store from '../store/store';
 import { loanEventReceived, fetchLoan } from '../store/loansSlice';
 import { cvToValue, deserializeCV } from '@stacks/transactions';
+import { getStacksLoanByID, getStacksLoanByUUID, getStacksLoanIDByUUID } from '../blockchainFunctions/stacksFunctions';
 
 export function startStacksObserver(blockchain) {
   const { loanContractAddress, loanContractName, managerContractAddress, managerContractName, apiBase } =
@@ -48,29 +49,56 @@ export function startStacksObserver(blockchain) {
     } catch (error) {
       console.error(error);
     }
-
     if (txInfo.tx_type !== 'contract_call') return;
 
     const loanTXHash = txInfo.tx_id;
 
-    const event = txInfo.events.find(
-      (e) => e.event_type === 'smart_contract_log' && e.contract_log.contract_id === loanContractFullName
-    );
+    if (txInfo.contract_call.function_name === 'borrow') {
+      const loanID = parseInt(deserializeCV(txInfo.contract_call.function_args[0].hex).value);
+      const loanStatus = 'Funded';
+      const loan = await getStacksLoanByID(loanID);
+      const loanUUID = loan.dlc_uuid.value.value;
+      store.dispatch(
+        fetchLoan({
+          loanUUID: loanUUID,
+          loanStatus: loanStatus,
+          loanTXHash: loanTXHash,
+          loanEvent: 'BorrowEvent',
+        })
+      );
+    } else if (txInfo.contract_call.function_name === 'repay') {
+      const loanID = parseInt(deserializeCV(txInfo.contract_call.function_args[0].hex).value);
+      const loanStatus = 'Funded';
+      const loan = await getStacksLoanByID(loanID);
+      const loanUUID = loan.dlc_uuid.value.value;
+      store.dispatch(
+        fetchLoan({
+          loanUUID: loanUUID,
+          loanStatus: loanStatus,
+          loanTXHash: loanTXHash,
+          loanEvent: 'RepayEvent',
+        })
+      );
+    } else {
+      const event = txInfo.events.find(
+        (e) => e.event_type === 'smart_contract_log' && e.contract_log.contract_id === loanContractFullName
+      );
 
-    if (!event) return;
+      if (!event) return;
 
-    const { uuid, status } = cvToValue(deserializeCV(event.contract_log.value.hex));
+      const { uuid, status } = cvToValue(deserializeCV(event.contract_log.value.hex));
 
-    const loanUUID = uuid.value.value;
-    const loanStatus = status.value;
+      const loanUUID = uuid.value.value;
+      const loanStatus = status.value;
 
-    store.dispatch(
-      fetchLoan({
-        loanUUID: loanUUID,
-        loanStatus: loanStatus,
-        loanTXHash: loanTXHash,
-        loanEvent: 'StatusUpdate',
-      })
-    );
+      store.dispatch(
+        fetchLoan({
+          loanUUID: loanUUID,
+          loanStatus: loanStatus,
+          loanTXHash: loanTXHash,
+          loanEvent: 'StatusUpdate',
+        })
+      );
+    }
   });
 }
