@@ -24,7 +24,7 @@ export function startEthereumObserver(blockchain) {
 
     console.log(`Listening to [${blockchain}]`);
 
-    protocolContractETH.protocolContractETH.on('StatusUpdate', (...args) => {
+    protocolContractETH.on('StatusUpdate', (...args) => {
       const loanUUID = args[1];
       const loanStatus = args[2];
       const loanTXHash = args[args.length - 1].transactionHash;
