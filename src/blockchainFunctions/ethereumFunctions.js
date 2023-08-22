@@ -14,7 +14,7 @@ import { toggleInfoModalVisibility } from '../store/componentSlice';
 import { loanSetupRequested, loanEventReceived } from '../store/loansSlice';
 
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
-import { fixedTwoDecimalShift } from '../utils';
+import { fixedTwoDecimalShift } from '../utilities/utils';
 import { ToastEvent } from '../components/CustomToast';
 
 let protocolContractETH;

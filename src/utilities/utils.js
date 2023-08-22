@@ -25,20 +25,13 @@ export function hexToBytes(hex) {
   return hexToBytesMS(hex.substring(0, 2) === '0x' ? hex.substring(2) : hex);
 }
 
-export const loanDecimalShiftMap = {
-  metamask: 18,
-  hiro: 6,
-  xverse: 6,
-  walletConnect: 6,
-};
-
 export function calculateCollateralCoveragePercentageForBorrow(
   collateralAmount,
-  bitcoinValue,
+  bitcoinUSDValue,
   existingDebt,
   additionalLoan
 ) {
-  const collateralValueInUSD = Math.round(collateralAmount * bitcoinValue);
+  const collateralValueInUSD = collateralAmount * bitcoinUSDValue;
   const totalDebt = existingDebt + additionalLoan;
 
   if (isNaN(collateralValueInUSD) || isNaN(totalDebt) || totalDebt <= 0) {
@@ -46,7 +39,6 @@ export function calculateCollateralCoveragePercentageForBorrow(
   }
 
   const collateralToDebtRatio = collateralValueInUSD / totalDebt;
-
   const ratioPercentage = Math.round(collateralToDebtRatio * 100);
 
   return ratioPercentage;
@@ -54,25 +46,25 @@ export function calculateCollateralCoveragePercentageForBorrow(
 
 export function calculateCollateralCoveragePercentageForRepay(
   collateralAmount,
-  bitcoinValue,
+  bitcoinUSDValue,
   existingDebt,
   additionalRepayment
 ) {
-  const collateralValueInUSD = Math.round(collateralAmount * bitcoinValue);
-  const totalDebt = existingDebt - additionalRepayment;
+  const collateralValueInUSD = collateralAmount * bitcoinUSDValue;
+  const totalUSDDebt = existingDebt - additionalRepayment;
 
-  if (isNaN(collateralValueInUSD) || isNaN(totalDebt) || totalDebt <= 0) {
+  if (isNaN(collateralValueInUSD) || isNaN(totalUSDDebt) || totalUSDDebt <= 0) {
     return NaN;
   }
 
-  const collateralToDebtRatio = collateralValueInUSD / totalDebt;
+  const collateralToDebtRatio = collateralValueInUSD / totalUSDDebt;
   const ratioPercentage = Math.round(collateralToDebtRatio * 100);
 
   return ratioPercentage;
 }
 
 export function calculateCollateralCoveragePercentageForLiquidation(collateralAmount, bitcoinValue, totalDebt) {
-  const collateralValueInUSD = Math.round(collateralAmount * bitcoinValue);
+  const collateralValueInUSD = collateralAmount * bitcoinValue;
 
   if (isNaN(collateralValueInUSD) || isNaN(totalDebt) || totalDebt <= 0) {
     return NaN;

@@ -3,7 +3,7 @@
 import store from '../store/store';
 import { loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
-import { customShiftValue } from '../utils';
+import { customShiftValue } from '../utilities/utils';
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   const counterPartyWalletDetails = {
@@ -43,8 +43,7 @@ const sendOfferForSigning = async (urlParams) => {
 export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContract) => {
   const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
   const attestorListJSON = JSON.stringify(loanContract.attestorList);
-  console.log(attestorListJSON);
-  console.log(loanContract.uuid);
+
   try {
     const response = await fetch(URL, {
       method: 'POST',

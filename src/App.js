@@ -1,14 +1,11 @@
-import SelectWalletModal from './modals/SelectWalletModal';
 import Header from './components/Header';
 import Intro from './components/Intro';
 import React, { useEffect } from 'react';
-import DepositModal from './modals/DepositModal';
-import { Box, Collapse, useToast } from '@chakra-ui/react';
+import { Box, useToast } from '@chakra-ui/react';
 import CustomToast from './components/CustomToast';
 import { useSelector } from 'react-redux';
 import LoansScreen from './components/LoansScreen';
-import BorrowModal from './modals/BorrowModal';
-import RepayModal from './modals/RepayModal';
+import ModalContainer from './modals/ModalContainer';
 
 /* global BigInt */
 
@@ -48,11 +45,7 @@ export default function App() {
     <>
       <Box>
         <Header isConnected={address} />
-        <DepositModal />
-        <RepayModal />
-        <BorrowModal />
-        {/* <RepayModal/> */}
-        <SelectWalletModal />
+        <ModalContainer />
         <Intro />
         {address && <LoansScreen isConnected={address} />}
       </Box>

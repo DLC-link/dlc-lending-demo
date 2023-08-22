@@ -11,8 +11,8 @@ import { motion } from 'framer-motion';
 import Status from './Status';
 import { ActionButtons } from './ActionButtons';
 
-import { calculateCollateralCoveragePercentageForLiquidation } from '../utils';
-import { easyTruncateAddress } from '../utilities/formatFunctions';
+import { calculateCollateralCoveragePercentageForLiquidation } from '../utilities/utils';
+import { easyTruncateAddress } from '../utilities/utils';
 
 export default function Card({ loan }) {
   const bitcoinValue = useSelector((state) => state.externalData.bitcoinValue);

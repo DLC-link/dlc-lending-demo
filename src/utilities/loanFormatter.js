@@ -1,4 +1,4 @@
-import { customShiftValue, fixedTwoDecimalShift } from '../utils';
+import { customShiftValue, fixedTwoDecimalShift } from './utils';
 import { cvToValue } from '@stacks/transactions';
 
 export function formatClarityLoanContract(loanContract) {
@@ -14,7 +14,6 @@ export function formatClarityLoanContract(loanContract) {
   const liquidationRatio = parseInt(loanContract['liquidation-ratio'].value);
   const formattedLiquidationRatio = `${liquidationRatio} %`;
   const attestorList = loanContract.attestors.value.map((attestor) => attestor.value.dns.value);
-
   return {
     uuid,
     status,

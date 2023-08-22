@@ -6,10 +6,10 @@ import loansReducer from './loansSlice';
 import externalDataReducer from './externalDataSlice';
 
 export default configureStore({
-    reducer: {
-        account: accountReducer,
-        loans: loansReducer,
-        component: componentReducer,
-        externalData: externalDataReducer,
-    },
+  reducer: {
+    account: accountReducer,
+    loans: loansReducer,
+    component: componentReducer,
+    externalData: externalDataReducer,
+  },
 });

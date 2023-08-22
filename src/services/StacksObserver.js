@@ -4,7 +4,8 @@ import { StacksNetworks } from '../networks/networks';
 import store from '../store/store';
 import { loanEventReceived, fetchLoan } from '../store/loansSlice';
 import { cvToValue, deserializeCV } from '@stacks/transactions';
-import { getStacksLoanByID, getStacksLoanByUUID, getStacksLoanIDByUUID } from '../blockchainFunctions/stacksFunctions';
+import { getStacksLoanByID } from '../blockchainFunctions/stacksFunctions';
+import { ToastEvent } from '../components/CustomToast';
 
 export function startStacksObserver(blockchain) {
   const { loanContractAddress, loanContractName, managerContractAddress, managerContractName, apiBase } =
@@ -27,6 +28,18 @@ export function startStacksObserver(blockchain) {
     console.log(`Listening to [${blockchain}]`);
   });
 
+  stacksSocket.socket.on('disconnect', async (reason) => {
+    console.log(`Disconnecting from [${blockchain}], reason: ${reason}`);
+    stacksSocket.socket.connect();
+  });
+
+  setInterval(() => {
+    if (stacksSocket.socket.disconnected) {
+      console.log(`[Stacks] Attempting to connect stacksSocket to [${blockchain}]...`);
+      stacksSocket.socket.connect();
+    }
+  }, 2000);
+
   stacksSocket.subscribeAddressTransactions(managerContractFullName);
   stacksSocket.subscribeAddressTransactions(loanContractFullName);
 
@@ -36,7 +49,7 @@ export function startStacksObserver(blockchain) {
     const _tx = txWithTransfers.tx;
 
     if (_tx.tx_status !== 'success') {
-      store.dispatch(loanEventReceived({ status: 'Failed', txHash: _tx.tx_id }));
+      store.dispatch(loanEventReceived({ status: ToastEvent.TRANSACTIONFAILED, txHash: _tx.tx_id }));
     }
 
     let txInfo;
@@ -71,6 +84,7 @@ export function startStacksObserver(blockchain) {
       const loanStatus = 'Funded';
       const loan = await getStacksLoanByID(loanID);
       const loanUUID = loan.dlc_uuid.value.value;
+
       store.dispatch(
         fetchLoan({
           loanUUID: loanUUID,

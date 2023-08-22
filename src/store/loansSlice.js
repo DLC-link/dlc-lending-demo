@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
 import store from './store';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
-import { customShiftValue } from '../utilities/formatFunctions';
+import { customShiftValue } from '../utilities/utils';
 import { formatClarityLoanContract, formatSolidityLoanContract } from '../utilities/loanFormatter';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { ToastEvent } from '../components/CustomToast';
@@ -32,7 +32,6 @@ export const loansSlice = createSlice({
       };
     },
     loanEventReceived: (state, action) => {
-      console.log('loanEventReceived', action.payload);
       state.toastEvent = {
         txHash: action.payload.txHash,
         status: action.payload.status,
@@ -207,7 +206,6 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
 
   const loan = await getLoanByUUID(loanUUID);
   const formattedLoan = formatLoanContract(loan);
-  console.log('formattedLoan', formattedLoan);
 
   return { formattedLoan, loanTXHash, loanEvent };
 });

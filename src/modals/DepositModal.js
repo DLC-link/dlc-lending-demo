@@ -19,11 +19,7 @@ import {
   Image,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import {
-  customShiftValue,
-  fixedTwoDecimalUnshift,
-  formatCollateralInUSD,
-} from '../utils';
+import { customShiftValue, fixedTwoDecimalUnshift, formatCollateralInUSD } from '../utilities/utils';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
 import { useSelector } from 'react-redux';
@@ -43,27 +39,20 @@ export default function DepositModal() {
 
   useEffect(() => {
     async function fetchData() {
-        await fetchBitcoinPrice().then((bitcoinPrice) => {
-            setBitCoinInUSDAsNumber(bitcoinPrice);
-            setBitCoinInUSDAsString(
-                new Intl.NumberFormat().format(bitcoinPrice)
-            );
-        });
+      await fetchBitcoinPrice().then((bitcoinPrice) => {
+        setBitCoinInUSDAsNumber(bitcoinPrice);
+        setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinPrice));
+      });
     }
     fetchData();
-}, [isDepositModalOpen === true]);
+  }, [isDepositModalOpen === true]);
 
-useEffect(() => {
-    setUSDAmount(
-        formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber)
-    );
-    setCollateralError(
-        collateralAmount < 0.0001 || collateralAmount === undefined
-    );
-}, [collateralAmount, bitCoinInUSDAsNumber]);
+  useEffect(() => {
+    setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
+    setCollateralError(collateralAmount < 0.0001 || collateralAmount === undefined);
+  }, [collateralAmount, bitCoinInUSDAsNumber]);
 
-const handleCollateralChange = (collateralAmount) =>
-    setCollateralAmount(collateralAmount.target.value);
+  const handleCollateralChange = (collateralAmount) => setCollateralAmount(collateralAmount.target.value);
 
   const createAndSendLoanContract = () => {
     const loanContract = createLoanContract();
@@ -166,9 +155,9 @@ const handleCollateralChange = (collateralAmount) =>
             </FormControl>
             <Flex justifyContent='center'>
               <Button
-              sx={{
-                margin: '15px',
-              }}
+                sx={{
+                  margin: '15px',
+                }}
                 variant='outline'
                 type='submit'
                 onClick={createAndSendLoanContract}>

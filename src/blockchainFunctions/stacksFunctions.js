@@ -13,7 +13,7 @@ import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { openContractCall } from '@stacks/connect';
-import { customShiftValue, hexToBytes } from '../utils';
+import { customShiftValue, hexToBytes } from '../utilities/utils';
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { NonFungibleConditionCode } from '@stacks/transactions';
 import { makeContractNonFungiblePostCondition } from '@stacks/transactions';
@@ -74,7 +74,6 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
 
 export async function requestAndDispatchStacksAccountInformation(walletType, blockchain) {
   const isUserSignedIn = userSession.isUserSignedIn();
-  console.log(isUserSignedIn);
 
   let address;
   switch (blockchain) {

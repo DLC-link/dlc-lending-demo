@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { Text, HStack, Image, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
-import { easyTruncateAddress } from '../utilities/formatFunctions';
+import { easyTruncateAddress } from '../utilities/utils';
 import { useDispatch } from 'react-redux';
 import { logout } from '../store/accountSlice';
 import { useSelector } from 'react-redux';
