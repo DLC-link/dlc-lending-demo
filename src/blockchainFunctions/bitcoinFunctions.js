@@ -75,7 +75,6 @@ export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContra
       console.error('Wallet type not supported');
       return;
   }
-  console.log(routerWalletURL);
 
   const attestorListJSON = JSON.stringify(loanContract.attestorList);
 

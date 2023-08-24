@@ -1,11 +1,11 @@
 import Header from './components/Header';
 import Intro from './components/Intro';
-import React, { useEffect } from 'react';
-import { Box, useToast } from '@chakra-ui/react';
-import CustomToast from './components/CustomToast';
+import React from 'react';
+import { Box } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import LoansScreen from './components/LoansScreen';
 import ModalContainer from './modals/ModalContainer';
+import CustomToastContainer from './components/CustomToastHandler';
 
 /* global BigInt */
 
@@ -14,32 +14,7 @@ BigInt.prototype.toJSON = function () {
 };
 
 export default function App() {
-  const toast = useToast();
-
   const address = useSelector((state) => state.account.address);
-  const blockchain = useSelector((state) => state.account.blockchain);
-  const toastEvent = useSelector((state) => state.loans.toastEvent);
-
-  const handleToast = (toastEvent) => {
-    if (!toast.isActive(toastEvent.status)) {
-      return toast({
-        id: toastEvent.status,
-        render: () => (
-          <CustomToast
-            txHash={toastEvent.txHash}
-            blockchain={blockchain}
-            status={toastEvent.status}
-          />
-        ),
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (toastEvent !== null) {
-      handleToast(toastEvent);
-    }
-  }, [toastEvent, handleToast]);
 
   return (
     <>
@@ -49,6 +24,7 @@ export default function App() {
         <Intro />
         {address && <LoansScreen isConnected={address} />}
       </Box>
+      <CustomToastContainer />
     </>
   );
 }

@@ -28,10 +28,6 @@ export const loansSlice = createSlice({
         formattedVaultCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
       };
       state.loans.unshift(initialLoan);
-      state.toastEvent = {
-        txHash: '',
-        status: ToastEvent.SETUPREQUESTED,
-      };
     },
     loanEventReceived: (state, action) => {
       state.toastEvent = {
@@ -155,7 +151,6 @@ export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans,
 export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   const { walletType } = store.getState().account;
   const { bitcoinTxHashes } = store.getState().loans;
-  console.log('bitcoinTxHashes', bitcoinTxHashes);
 
   let loans = [];
 
@@ -171,9 +166,6 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
     default:
       throw new Error('Unsupported wallet type!');
   }
-  console.log(loans);
-
-  console.log(bitcoinTxHashes);
 
   forEach((loan) => {
     if (Object.keys(bitcoinTxHashes).includes(loan.uuid)) {
@@ -212,21 +204,16 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
     default:
       throw new Error('Unsupported wallet type!');
   }
-  console.log(loanUUID, loanStatus, loanTXHash, loanEvent);
 
   if (loanStatus === solidityLoanStatuses.READY || loanStatus === clarityLoanStatuses.READY) {
-    console.log('fetching all loans');
     const fetchedLoans = await getAllLoansForAddress();
     fetchedLoanUUIDs = fetchedLoans.map((loan) => loan.uuid);
   }
 
   if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) return;
-  console.log('fetching loan');
 
   const loan = await getLoanByUUID(loanUUID);
-  console.log(loan);
   const formattedLoan = formatLoanContract(loan);
-  console.log(formattedLoan);
 
   return { formattedLoan, loanTXHash, loanEvent };
 });

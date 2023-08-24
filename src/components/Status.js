@@ -1,4 +1,4 @@
-import { Text, HStack, Tooltip, Button } from '@chakra-ui/react';
+import { Text, HStack, Tooltip } from '@chakra-ui/react';
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
@@ -7,13 +7,10 @@ import PaidIcon from '@mui/icons-material/Paid';
 import { InfoIcon } from '@chakra-ui/icons';
 import { useOnMount } from '../hooks/useOnMount';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useEffect } from 'react';
 
-export default function Status({ status, canBeLiquidated, txHash }) {
+export default function Status({ status, canBeLiquidated }) {
   const [text, setText] = useState();
   const [icon, setIcon] = useState();
-  console.log('txHash', txHash);
 
   const StatusInfo = ({ children, text }) => {
     return (
@@ -26,25 +23,6 @@ export default function Status({ status, canBeLiquidated, txHash }) {
           {text}
         </Text>
       </HStack>
-    );
-  };
-
-  const BitcoinTransaction = () => {
-    const { blockchain } = useSelector((state) => state.account);
-    const bitcoinNetwork = blockchain === 'stacks:1' || blockchain === 'ethereum:1' ? 'mainnet' : 'testnet';
-    const bitcoinExplorerURL = `https://mempool.space/${
-      bitcoinNetwork !== 'mainnet' ? bitcoinNetwork + '/' : ''
-    }tx/${txHash}`;
-
-    return (
-      <Button
-        size={'xs'}
-        width={75}
-        variant={'outline'}
-        fontSize={'3xs'}
-        onClick={() => window.open(bitcoinExplorerURL, '_blank', 'noopener,noreferrer')}>
-        BTC Transaction
-      </Button>
     );
   };
 
@@ -131,7 +109,6 @@ export default function Status({ status, canBeLiquidated, txHash }) {
       paddingBottom={2.5}
       justifyContent={'space-between'}>
       <StatusInfo text={text}>{icon}</StatusInfo>
-      {txHash && <BitcoinTransaction />}
       {status !== clarityLoanStatuses.LIQUIDATED && status !== solidityLoanStatuses.LIQUIDATED && (
         <LiquidationIndicator />
       )}

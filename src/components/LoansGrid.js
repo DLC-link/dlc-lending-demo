@@ -5,10 +5,10 @@ import { Flex, Collapse, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';
 import { useSelector } from 'react-redux';
 import SetupLoanButton from './SetupLoanButton';
-import { useLoans } from '../hooks/useLoans';
 import { useDispatch } from 'react-redux';
 import { fetchBitcoinValue } from '../store/externalDataSlice';
 import { useOnMount } from '../hooks/useOnMount';
+import { useLoans } from '../hooks/useLoans';
 
 export default function LoansGrid() {
   const dispatch = useDispatch();
