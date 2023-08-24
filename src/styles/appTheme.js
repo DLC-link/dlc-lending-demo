@@ -93,6 +93,7 @@ export const appTheme = extendTheme({
     accent: '#07E8D8',
     background1: '#500056',
     background2: '#000933',
+    warning: '#FF4500',
   },
 
   fonts: {

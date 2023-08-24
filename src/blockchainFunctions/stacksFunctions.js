@@ -8,6 +8,7 @@ import {
   FungibleConditionCode,
   makeContractFungiblePostCondition,
   makeStandardFungiblePostCondition,
+  PostConditionMode,
 } from '@stacks/transactions';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
@@ -59,6 +60,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
     network,
     fee: 100000,
     anchorMode: 1,
+    postConditionMode: PostConditionMode.Allow,
     onFinish: (data) => {
       if (typeof onFinishStatus !== 'string') {
         store.dispatch(loanSetupRequested(onFinishStatus));
@@ -347,10 +349,12 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
 
 export async function liquidateStacksLoan(UUID) {
   const { walletType, blockchain } = store.getState().account;
+  const { bitcoinUSDValue } = store.getState().externalData;
 
-  const loanContractID = await getStacksLoanIDByUUID(UUID);
+  const bitcoinUSDValueShifted = customShiftValue(bitcoinUSDValue, 8, false);
+
   const functionName = 'attempt-liquidate';
-  const functionArgs = [uintCV(parseInt(loanContractID))];
+  const functionArgs = [uintCV(bitcoinUSDValueShifted), bufferCV(hexToBytes(UUID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.LIQUIDATIONREQUESTED;

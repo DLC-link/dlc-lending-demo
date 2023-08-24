@@ -93,6 +93,18 @@ export function startStacksObserver(blockchain) {
           loanEvent: 'RepayEvent',
         })
       );
+    } else if (txInfo.contract_call.function_name === 'attempt-liquidate') {
+      const loanUUID = parseInt(deserializeCV(txInfo.contract_call.function_args[1].hex).value);
+      const loanStatus = 'PreLiquidated';
+
+      store.dispatch(
+        fetchLoan({
+          loanUUID: loanUUID,
+          loanStatus: loanStatus,
+          loanTXHash: loanTXHash,
+          loanEvent: 'LiquidationEvent',
+        })
+      );
     } else {
       const event = txInfo.events.find(
         (e) => e.event_type === 'smart_contract_log' && e.contract_log.contract_id === loanContractFullName

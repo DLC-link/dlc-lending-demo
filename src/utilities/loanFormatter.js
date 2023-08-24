@@ -1,3 +1,4 @@
+import { solidityLoanStatuses } from '../enums/loanStatuses';
 import { customShiftValue, fixedTwoDecimalShift } from './utils';
 import { cvToValue } from '@stacks/transactions';
 
@@ -31,11 +32,11 @@ export function formatClarityLoanContract(loanContract) {
 }
 
 export function formatSolidityLoanContract(loanContract) {
-  const uuid = loanContract.dlcUUID.value.value;
-  const status = loanContract.status;
+  const uuid = loanContract.dlcUUID;
+  const status = Object.values(solidityLoanStatuses)[loanContract.status];
   const owner = loanContract.owner;
-  const vaultCollateral = parseInt(loanContract.vaultCollateral._hex);
-  const formattedVaultCollateral = `${customShiftValue(vaultCollateral, 8, true)} BTC`;
+  const vaultCollateral = customShiftValue(parseInt(loanContract.vaultCollateral._hex), 8, true);
+  const formattedVaultCollateral = `${vaultCollateral} BTC`;
   const vaultLoan = customShiftValue(parseInt(loanContract.vaultLoan._hex), 18, true).toFixed(2);
   const formattedVaultLoan = `$ ${vaultLoan}`;
   const liquidationFee = fixedTwoDecimalShift(parseInt(loanContract.liquidationFee._hex));

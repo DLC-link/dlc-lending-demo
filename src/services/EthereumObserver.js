@@ -5,6 +5,7 @@ import { abi as usdcABI } from '../abis/usdcABI';
 import store from '../store/store';
 import { fetchLoan, loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
+import { solidityLoanStatuses } from '../enums/loanStatuses';
 
 export function startEthereumObserver(blockchain) {
   let ethereumProvider;
@@ -26,7 +27,7 @@ export function startEthereumObserver(blockchain) {
 
     protocolContractETH.on('StatusUpdate', (...args) => {
       const loanUUID = args[1];
-      const loanStatus = args[2];
+      const loanStatus = Object.values(solidityLoanStatuses)[args[2]];
       const loanTXHash = args[args.length - 1].transactionHash;
 
       store.dispatch(
@@ -41,7 +42,7 @@ export function startEthereumObserver(blockchain) {
 
     protocolContractETH.on('BorrowEvent', (...args) => {
       const loanUUID = args[1];
-      const loanStatus = args[4];
+      const loanStatus = Object.values(solidityLoanStatuses)[args[4]];
       const loanTXHash = args[args.length - 1].transactionHash;
 
       store.dispatch(
@@ -56,7 +57,7 @@ export function startEthereumObserver(blockchain) {
 
     protocolContractETH.on('RepayEvent', (...args) => {
       const loanUUID = args[1];
-      const loanStatus = args[4];
+      const loanStatus = Object.values(solidityLoanStatuses)[args[4]];
       const loanTXHash = args[args.length - 1].transactionHash;
 
       store.dispatch(
@@ -71,7 +72,7 @@ export function startEthereumObserver(blockchain) {
 
     protocolContractETH.on('DoesNotNeedLiquidation', (...args) => {
       const loanUUID = args[1];
-      const loanStatus = args[2];
+      const loanStatus = Object.values(solidityLoanStatuses)[args[2]];
       const loanTXHash = args[args.length - 1].transactionHash;
 
       store.dispatch(

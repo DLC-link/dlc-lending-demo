@@ -1,6 +1,6 @@
 /*global chrome*/
 
-import { Text, VStack, TableContainer, Tbody, Table, Tr, Td, Spacer } from '@chakra-ui/react';
+import { Text, VStack, TableContainer, Tbody, Table, Flex, Tr, Td, Spacer, Spinner } from '@chakra-ui/react';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -13,9 +13,10 @@ import { ActionButtons } from './ActionButtons';
 
 import { calculateCollateralCoveragePercentageForLiquidation } from '../utilities/utils';
 import { easyTruncateAddress } from '../utilities/utils';
+import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 
 export default function Card({ loan }) {
-  const bitcoinValue = useSelector((state) => state.externalData.bitcoinValue);
+  const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
 
   const cardInfo = [
@@ -42,7 +43,7 @@ export default function Card({ loan }) {
   useOnMount(() => {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
       loan.vaultCollateral,
-      bitcoinValue,
+      bitcoinUSDValue,
       loan.vaultLoan
     );
     const isLiquidable = collateralCoveragePercentage < 140;
@@ -108,6 +109,20 @@ export default function Card({ loan }) {
     );
   };
 
+  const CardSpinner = () => {
+    return (
+      <Flex padding={50}>
+        <Spinner
+          thickness={5}
+          speed='1s'
+          emptyColor='transparent'
+          color='accent'
+          size='xl'
+        />
+      </Flex>
+    );
+  };
+
   return (
     <CardAnimation>
       <CardContainer>
@@ -117,6 +132,7 @@ export default function Card({ loan }) {
         />
         <CardTable />
         <Spacer />
+        {[solidityLoanStatuses.NONE, clarityLoanStatuses.NONE].includes(loan.status) && <CardSpinner />}
         <ActionButtons
           loan={loan}
           canBeLiquidated={canBeLiquidated}

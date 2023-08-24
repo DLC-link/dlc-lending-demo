@@ -32,7 +32,13 @@ export function ActionButtons({ loan, canBeLiquidated }) {
   }
 
   const ButtonContainer = ({ children }) => {
-    return <VStack spacing={15}>{children}</VStack>;
+    return (
+      <VStack
+        spacing={2.5}
+        padding={15}>
+        {children}
+      </VStack>
+    );
   };
 
   switch (loan.status) {
@@ -41,8 +47,10 @@ export function ActionButtons({ loan, canBeLiquidated }) {
       actionButton = (
         <ButtonContainer>
           <Text
+            paddingBottom={25}
             width={200}
-            textAlign={'justify'}>
+            textAlign={'justify'}
+            as={'i'}>
             You have 3 minutes to lock in your BTC after setting up the loan, or the offer will expire.
           </Text>
           <Button
@@ -59,6 +67,8 @@ export function ActionButtons({ loan, canBeLiquidated }) {
         <ButtonContainer>
           <Button
             variant='outline'
+            margin={0}
+            padding={0}
             onClick={() => dispatch(toggleBorrowModalVisibility({ isOpen: true, loan: loan }))}>
             BORROW
           </Button>
@@ -78,10 +88,16 @@ export function ActionButtons({ loan, canBeLiquidated }) {
           {canBeLiquidated && (
             <Tooltip
               label='Liquidate the loan and redeem the collateral value for BTC.'
-              fontSize={'sm'}
-              padding={2}
+              fontSize={'10px'}
               textAlign={'justify'}
-              borderRadius={'lg'}>
+              padding={2.5}
+              placement={'bottom'}
+              width={200}
+              background={'transparent'}
+              border={'1px solid #FF4500'}
+              borderRadius={'lg'}
+              shadow={'dark-lg'}
+              gutter={35}>
               <Button
                 variant='outline'
                 onClick={() => liquidateAction()}>
@@ -92,8 +108,9 @@ export function ActionButtons({ loan, canBeLiquidated }) {
         </ButtonContainer>
       );
       break;
-    case solidityLoanStatuses.NOTREADY:
-    case clarityLoanStatuses.NOTREADY:
+    case solidityLoanStatuses.NONE:
+    case clarityLoanStatuses.NONE:
+      break;
     case solidityLoanStatuses.PREREPAID:
     case clarityLoanStatuses.PREREPAID:
     case solidityLoanStatuses.PRELIQUIDATED:

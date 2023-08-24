@@ -1,4 +1,5 @@
 export const solidityLoanStatuses = {
+  NONE: 'None',
   READY: 'Ready',
   FUNDED: 'Funded',
   PREREPAID: 'PreRepaid',
@@ -8,6 +9,7 @@ export const solidityLoanStatuses = {
 };
 
 export const clarityLoanStatuses = {
+  NONE: 'none',
   READY: 'ready',
   FUNDED: 'funded',
   PREREPAID: 'pre-repaid',

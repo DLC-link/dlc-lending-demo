@@ -6,11 +6,22 @@ import Card from './Card';
 import { useSelector } from 'react-redux';
 import SetupLoanButton from './SetupLoanButton';
 import { useLoans } from '../hooks/useLoans';
+import { useDispatch } from 'react-redux';
+import { fetchBitcoinValue } from '../store/externalDataSlice';
+import { useOnMount } from '../hooks/useOnMount';
 
 export default function LoansGrid() {
+  const dispatch = useDispatch();
   const loans = useLoans();
   const address = useSelector((state) => state.account.address);
   const isLoading = useSelector((state) => state.loans.status === 'loading');
+
+  useOnMount(() => {
+    const updateBitcoinUSDValue = async () => {
+      dispatch(fetchBitcoinValue());
+    };
+    updateBitcoinUSDValue();
+  });
 
   return (
     <>
@@ -22,7 +33,7 @@ export default function LoansGrid() {
             <SimpleGrid
               columns={[1, 2, 3, 4, 5]}
               spacing={50}
-              padding={50}>
+              padding={25}>
               <SetupLoanButton />
               {loans?.map((loan) => (
                 <Card

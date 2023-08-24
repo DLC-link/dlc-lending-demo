@@ -6,8 +6,25 @@ import { ToastEvent } from '../components/CustomToast';
 import { customShiftValue } from '../utilities/utils';
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
+  const { walletType } = store.getState().account;
+
+  let routerWalletURL = '';
+  switch (walletType) {
+    case 'metamask':
+      routerWalletURL = process.env.REACT_APP_ETHEREUM_WALLET_DOMAIN;
+      break;
+    case 'hiro':
+    case 'xverse':
+    case 'walletConnect':
+      routerWalletURL = process.env.REACT_APP_STACKS_WALLET_DOMAIN;
+      break;
+    default:
+      console.error('Wallet type not supported');
+      return;
+  }
+
   const counterPartyWalletDetails = {
-    counterpartyWalletURL: process.env.REACT_APP_WALLET_DOMAIN,
+    counterpartyWalletURL: routerWalletURL,
     counterpartyWalletName: 'DLC.Link',
     counterpartyWalletIcon: 'https://dlc-public-assets.s3.amazonaws.com/DLC.Link_logo_icon_color.svg',
   };
@@ -20,7 +37,7 @@ const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   return urlParams;
 };
 
-const sendOfferForSigning = async (urlParams) => {
+const sendOfferForSigning = async (urlParams, uuid) => {
   window.btc
     .request('acceptBitcoinContractOffer', urlParams)
     .then((response) => {
@@ -28,6 +45,7 @@ const sendOfferForSigning = async (urlParams) => {
         loanEventReceived({
           status: ToastEvent.ACCEPTSUCCEEDED,
           txHash: response.result.txId,
+          uuid: uuid,
         })
       );
     })
@@ -41,11 +59,28 @@ const sendOfferForSigning = async (urlParams) => {
 };
 
 export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContract) => {
-  const URL = process.env.REACT_APP_WALLET_DOMAIN + `/offer`;
+  const { walletType } = store.getState().account;
+
+  let routerWalletURL = '';
+  switch (walletType) {
+    case 'metamask':
+      routerWalletURL = `${process.env.REACT_APP_ETHEREUM_WALLET_DOMAIN}/offer`;
+      break;
+    case 'hiro':
+    case 'xverse':
+    case 'walletConnect':
+      routerWalletURL = `${process.env.REACT_APP_STACKS_WALLET_DOMAIN}/offer`;
+      break;
+    default:
+      console.error('Wallet type not supported');
+      return;
+  }
+  console.log(routerWalletURL);
+
   const attestorListJSON = JSON.stringify(loanContract.attestorList);
 
   try {
-    const response = await fetch(URL, {
+    const response = await fetch(routerWalletURL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -93,5 +128,5 @@ export const fetchBitcoinContractOfferAndSendToUserWallet = async (loanContract)
   const bitcoinContractOffer = await fetchBitcoinContractOfferFromCounterpartyWallet(loanContract);
   if (!bitcoinContractOffer) return;
   const urlParams = createURLParams(bitcoinContractOffer, loanContract.attestorList);
-  await sendOfferForSigning(urlParams);
+  await sendOfferForSigning(urlParams, loanContract.uuid);
 };
