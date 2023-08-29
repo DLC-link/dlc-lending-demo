@@ -37,7 +37,7 @@ const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   return urlParams;
 };
 
-const sendOfferForSigning = async (urlParams, uuid) => {
+const sendOfferForSigning = async (urlParams) => {
   window.btc
     .request('acceptBitcoinContractOffer', urlParams)
     .then((response) => {
@@ -45,7 +45,6 @@ const sendOfferForSigning = async (urlParams, uuid) => {
         loanEventReceived({
           status: ToastEvent.ACCEPTSUCCEEDED,
           txHash: response.result.txId,
-          uuid: uuid,
         })
       );
     })

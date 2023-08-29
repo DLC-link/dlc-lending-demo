@@ -1,6 +1,19 @@
 /*global chrome*/
 
-import { Text, VStack, TableContainer, Tbody, Table, Flex, Tr, Td, Spacer, Spinner } from '@chakra-ui/react';
+import {
+  Text,
+  VStack,
+  TableContainer,
+  Tbody,
+  Table,
+  Flex,
+  Tr,
+  Td,
+  Spacer,
+  Spinner,
+  Tooltip,
+  useClipboard,
+} from '@chakra-ui/react';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -17,7 +30,10 @@ import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses
 
 export default function Card({ loan }) {
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
+  const { onCopy, hasCopied } = useClipboard(loan.uuid || '');
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
+
+  console.log('loanUUID', loan.uuid);
 
   const cardInfo = [
     { label: 'UUID', value: loan.uuid && easyTruncateAddress(loan.uuid) },
@@ -38,6 +54,10 @@ export default function Card({ loan }) {
 
   const cardAnimationExitState = {
     x: 300,
+  };
+
+  const handleCopyClick = () => {
+    onCopy();
   };
 
   useOnMount(() => {
@@ -99,7 +119,18 @@ export default function Card({ loan }) {
                   <Text variant='property'>{row.label}</Text>
                 </Td>
                 <Td width={5}>
-                  <Text>{row.value}</Text>
+                  {row.label === 'UUID' ? (
+                    <Tooltip label={hasCopied ? 'UUID copied to clipboard!' : 'Click to copy the UUID!'}>
+                      <Text
+                        as={'a'}
+                        variant='property'
+                        onClick={() => handleCopyClick()}>
+                        {row.value}
+                      </Text>
+                    </Tooltip>
+                  ) : (
+                    <Text>{row.value}</Text>
+                  )}
                 </Td>
               </Tr>
             ))}

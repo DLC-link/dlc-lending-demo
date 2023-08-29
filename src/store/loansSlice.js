@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector, current } from '@reduxjs/toolkit';
 import store from './store';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
@@ -179,7 +179,7 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
   const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
-  const { loans } = store.getState().loans;
+  const { loans, previousLoanEvent } = store.getState().loans;
   const storedLoanUUIDs = loans.map((loan) => loan.uuid);
   let fetchedLoanUUIDs = [];
 

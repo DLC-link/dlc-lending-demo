@@ -1,4 +1,4 @@
-import { Flex, Text, VStack } from '@chakra-ui/react';
+import { Text, VStack } from '@chakra-ui/react';
 import { toggleDepositModalVisibility } from '../store/componentSlice';
 import { useDispatch } from 'react-redux';
 
@@ -7,8 +7,8 @@ export default function SetupLoanButton() {
 
   const SetupLoanButtonContainer = ({ children }) => (
     <VStack
-      height='350px'
-      width='250px'
+      height={350}
+      width={250}
       borderRadius='lg'
       shadow='dark-lg'
       padding={15}

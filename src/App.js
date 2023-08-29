@@ -19,10 +19,10 @@ export default function App() {
   return (
     <>
       <Box>
-        <Header isConnected={address} />
+        <Header />
         <ModalContainer />
         <Intro />
-        {address && <LoansScreen isConnected={address} />}
+        {address && <LoansScreen />}
       </Box>
       <CustomToastContainer />
     </>

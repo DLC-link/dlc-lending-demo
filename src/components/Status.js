@@ -64,7 +64,7 @@ export default function Status({ status, canBeLiquidated }) {
     switch (status) {
       case solidityLoanStatuses.NONE:
       case clarityLoanStatuses.NONE:
-        setIcon(<HourglassEmptyIcon sx={{ color: 'orange', height: '20px' }} />);
+        setIcon(<HourglassEmptyIcon sx={{ color: '#FF4500', height: '20px' }} />);
         setText('Not ready');
         break;
       case solidityLoanStatuses.PREREPAID:

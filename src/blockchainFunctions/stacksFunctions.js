@@ -135,13 +135,7 @@ export async function sendLoanContractToStacks(loanContract) {
   const selectedAttestors = await selectRandomAttestors(allAttestors, loanContract.attestorCount);
 
   const functionName = 'setup-loan';
-  const functionArgs = [
-    uintCV(loanContract.BTCDeposit),
-    uintCV(loanContract.liquidationRatio),
-    uintCV(loanContract.liquidationFee),
-    uintCV(5), //TODO: Remove this hardcoded value
-    bufferCV(selectedAttestors),
-  ];
+  const functionArgs = [uintCV(loanContract.BTCDeposit), bufferCV(selectedAttestors)];
   const senderAddress = undefined;
   const onFinishStatus = loanContract.BTCDeposit;
 

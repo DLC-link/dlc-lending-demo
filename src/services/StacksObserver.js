@@ -41,7 +41,6 @@ export function startStacksObserver(blockchain) {
   }, 2000);
 
   stacksSocket.subscribeAddressTransactions(managerContractFullName);
-  stacksSocket.subscribeAddressTransactions(loanContractFullName);
 
   stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
     console.log(`TX happened on ${address}`);
