@@ -1,59 +1,72 @@
 import React from 'react';
-import { Text, HStack, Flex, Spacer } from '@chakra-ui/react';
+import { Text, HStack, VStack, Divider, Image } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
-import { customShiftValue } from '../utilities/formatFunctions';
 import { selectTotalFundedCollateralAndLoan } from '../store/loansSlice';
 
 export default function Balance() {
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
-  const { walletType } = useSelector((state) => state.account);
 
-  let shiftValue;
+  const BalanceContainer = ({ children }) => {
+    return (
+      <HStack
+        padding={15}
+        width={325}
+        borderRadius={'lg'}
+        shadow={'dark-lg'}
+        justifyContent={'space-evenly'}>
+        {children}
+      </HStack>
+    );
+  };
 
-  switch (walletType) {
-    case 'metamask':
-      shiftValue = 18;
-      break;
-    case 'hiro':
-    case 'xverse':
-    case 'walletConnect':
-      shiftValue = 6;
-      break;
-    default:
-      console.error('Unknown wallet type');
-      break;
-  }
+  const BalanceTextStack = ({ header, data }) => {
+    return (
+      <VStack width={125}>
+        <Text
+          fontSize={'sm'}
+          fontWeight={'bold'}
+          color={'header'}>
+          {header}
+        </Text>
+        <HStack>
+          {header === 'BTC Collateral' ? (
+            <Image
+              src='/btc_logo.png'
+              alt='Bitcoin Logo'
+              boxSize={15}
+            />
+          ) : (
+            <Image
+              src='/usdc_logo.png'
+              alt='USDC Logo'
+              boxSize={15}
+            />
+          )}
+          <Text
+            fontSize={'md'}
+            fontWeight={'extrabold'}
+            color={'white'}>
+            {data}
+          </Text>
+        </HStack>
+      </VStack>
+    );
+  };
 
   return (
-    <>
-      <>
-        <Flex
-          padding='15px'
-          height='auto'
-          width='350px'
-          border='1px'
-          borderRadius='lg'
-          borderColor='white'
-          shadow='dark-lg'>
-          <HStack justifyContent={'space-between'}>
-            <Text
-              fontSize='small'
-              fontWeight='extrabold'
-              color='accent'>
-              Total Redeemable:{' '}
-            </Text>
-            <Text>{customShiftValue(fundedCollateralSum, 8, true) + ' BTC'}</Text>
-            <Spacer width={'15px'}></Spacer>
-            <Text
-              fontSize='small'
-              fontWeight='extrabold'
-              color='accent'>
-              Borrowed USDC amount:{' '}
-            </Text>
-            <Text>{customShiftValue(fundedLoanSum, shiftValue, true) + ' USDC'}</Text>
-          </HStack>
-        </Flex>
-      </>
-    </>
+    <BalanceContainer>
+      <BalanceTextStack
+        header={'BTC Collateral'}
+        data={fundedCollateralSum.toFixed(4)}
+      />
+      <Divider
+        orientation='vertical'
+        height='50px'
+      />
+      <BalanceTextStack
+        header={'USDC Debt'}
+        data={fundedLoanSum}
+      />
+    </BalanceContainer>
   );
 }

@@ -1,32 +1,22 @@
-import { customShiftValue, fixedTwoDecimalShift } from '../utils';
-import { addressToString } from '@stacks/transactions';
-import { bytesToHex } from 'micro-stacks/common';
-import { solidityLoanStatuses } from '../enums/loanStatuses';
+import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
+import { customShiftValue, fixedTwoDecimalShift } from './utils';
+import { cvToValue } from '@stacks/transactions';
 
 export function formatClarityLoanContract(loanContract) {
-  const loanContractData = loanContract.value.data;
-
-  const uuid = loanContractData.dlc_uuid.hasOwnProperty('value')
-    ? bytesToHex(loanContract.value.data.dlc_uuid.value.buffer)
-    : null;
-  const formattedUUID = loanContractData.dlc_uuid.hasOwnProperty('value') ? `0x${uuid}` : null;
-  const status = loanContractData.status.data;
-  const owner = addressToString(loanContractData.owner.address);
-  const vaultCollateral = loanContractData['vault-collateral'].value.toString();
-  const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true) + ' BTC';
-  const vaultLoan = loanContractData['vault-loan'].value.toString();
-  const formattedVaultLoan = '$ ' + customShiftValue(vaultLoan, 6, true);
-  const liquidationFee = loanContractData['liquidation-fee'].value.toString();
-  const formattedLiquidationFee = parseInt(liquidationFee._hex) + ' %';
-  const liquidationRatio = loanContractData['liquidation-ratio'].value.toString();
-  const formattedLiquidationRatio = parseInt(liquidationRatio._hex) + ' %';
+  const uuid = loanContract.dlc_uuid.value.value;
+  const status = loanContract.status.value;
+  const owner = loanContract.owner.value;
+  const vaultCollateral = customShiftValue(parseInt(loanContract['vault-collateral'].value), 8, true);
+  const formattedVaultCollateral = `${vaultCollateral} BTC`;
+  const vaultLoan = customShiftValue(parseInt(loanContract['vault-loan'].value), 6, true);
+  const formattedVaultLoan = `$ ${vaultLoan}`;
+  const liquidationFee = parseInt(loanContract['liquidation-fee'].value);
+  const formattedLiquidationFee = `${liquidationFee} %`;
+  const liquidationRatio = parseInt(loanContract['liquidation-ratio'].value);
+  const formattedLiquidationRatio = `${liquidationRatio} %`;
+  const attestorList = loanContract.attestors.value.map((attestor) => attestor.value.dns.value);
   return {
-    ...(uuid && {
-      uuid,
-    }),
-    ...(formattedUUID && {
-      formattedUUID,
-    }),
+    uuid,
     status,
     owner,
     vaultCollateral,
@@ -37,25 +27,25 @@ export function formatClarityLoanContract(loanContract) {
     formattedLiquidationFee,
     liquidationRatio,
     formattedLiquidationRatio,
+    attestorList,
   };
 }
 
 export function formatSolidityLoanContract(loanContract) {
   const uuid = loanContract.dlcUUID;
-  const formattedUUID = uuid;
   const status = Object.values(solidityLoanStatuses)[loanContract.status];
   const owner = loanContract.owner;
-  const vaultCollateral = parseInt(loanContract.vaultCollateral._hex);
-  const formattedVaultCollateral = customShiftValue(vaultCollateral, 8, true) + ' BTC';
-  const vaultLoan = parseInt(loanContract.vaultLoan._hex);
-  const formattedVaultLoan = '$ ' + customShiftValue(vaultLoan, 18, true).toFixed(2);
-  const liquidationFee = parseInt(loanContract.liquidationFee._hex);
-  const formattedLiquidationFee = fixedTwoDecimalShift(liquidationFee) + ' %';
-  const liquidationRatio = parseInt(loanContract.liquidationRatio._hex);
-  const formattedLiquidationRatio = fixedTwoDecimalShift(liquidationRatio) + ' %';
+  const vaultCollateral = customShiftValue(parseInt(loanContract.vaultCollateral._hex), 8, true);
+  const formattedVaultCollateral = `${vaultCollateral} BTC`;
+  const vaultLoan = customShiftValue(parseInt(loanContract.vaultLoan._hex), 18, true).toFixed(2);
+  const formattedVaultLoan = `$ ${vaultLoan}`;
+  const liquidationFee = fixedTwoDecimalShift(parseInt(loanContract.liquidationFee._hex));
+  const formattedLiquidationFee = `${liquidationFee} %`;
+  const liquidationRatio = fixedTwoDecimalShift(parseInt(loanContract.liquidationRatio._hex));
+  const formattedLiquidationRatio = `${liquidationRatio} %`;
+  const attestorList = loanContract.attestorList;
   return {
     uuid,
-    formattedUUID,
     status,
     owner,
     vaultCollateral,
@@ -66,6 +56,7 @@ export function formatSolidityLoanContract(loanContract) {
     formattedLiquidationFee,
     liquidationRatio,
     formattedLiquidationRatio,
+    attestorList,
   };
 }
 
@@ -76,11 +67,16 @@ export function formatAllLoanContracts(loans, responseType) {
       formattedLoans = loans.map((loan) => formatSolidityLoanContract(loan));
       break;
     case 'clarity':
-      formattedLoans = loans.map((loan) => formatClarityLoanContract(loan));
+      formattedLoans = loans.map((loan) => formatClarityLoanContract(cvToValue(loan.value)));
       break;
     default:
       console.error('Unsupported language!');
       break;
   }
   return formattedLoans;
+}
+
+export function updateLoanToFundingInProgress(loan, loanTXHash, walletType) {
+  loan.txHash = loanTXHash;
+  loan.status = walletType === 'solidity' ? solidityLoanStatuses.PREFUNDED : clarityLoanStatuses.PREFUNDED;
 }

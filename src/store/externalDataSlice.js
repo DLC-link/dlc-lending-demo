@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
 const initialState = {
-  bitcoinValue: undefined,
+  bitcoinUSDValue: undefined,
   status: 'idle',
   error: null,
 };
@@ -19,15 +19,14 @@ export const externalDataSlice = createSlice({
       .addCase(fetchBitcoinValue.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.error = null;
-        state.bitcoinValue = action.payload;
+        state.bitcoinUSDValue = action.payload;
       })
       .addCase(fetchBitcoinValue.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
-      })
+      });
   },
 });
-
 
 export default externalDataSlice.reducer;
 

@@ -1,81 +1,134 @@
+import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons';
+import { HStack, Image, Menu, MenuButton, MenuItem, MenuList, Spacer, Text, VStack, keyframes } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
-import { Text, HStack, Image, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
-import { easyTruncateAddress } from '../utilities/formatFunctions';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { TutorialStep } from '../enums/TutorialSteps';
 import { logout } from '../store/accountSlice';
-import { useSelector } from 'react-redux';
 import { toggleSelectWalletModalVisibility } from '../store/componentSlice';
+import { easyTruncateAddress } from '../utilities/utils';
+import TutorialBox from './TutorialBox';
+import TutorialSwitch from './TutorialSwitch';
 
 export default function Account() {
-  const [walletLogo, setWalletLogo] = useState(undefined);
-  const address = useSelector((state) => state.account.address);
-  const walletType = useSelector((state) => state.account.walletType);
   const dispatch = useDispatch();
 
+  const { address } = useSelector((state) => state.account);
+  const { tutorialOn, tutorialStep } = useSelector((state) => state.tutorial);
+
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [walletLogo, setWalletLogo] = useState(undefined);
+
+  const walletType = useSelector((state) => state.account.walletType);
+
   const walletLogos = {
-    hiro: { src: '/h_logo.png', alt: 'Hiro Wallet Logo', boxSize: '15px' },
-    xverse: { src: '/xverse_logo.png', alt: 'Xverse Wallet Logo', boxSize: '15px' },
-    walletconnect: { src: '/wc_logo.png', alt: 'Wallet Connect Logo', boxSize: '15px' },
-    metamask: { src: '/mm_logo.png', alt: 'Metamask Logo', boxSize: '15px' },
+    leather: { src: '/leather_logo.svg', alt: 'Leather Logo', boxSize: [5, 25] },
+    xverse: { src: '/xverse_logo.png', alt: 'Xverse Logo', boxSize: [5, 15] },
+    walletconnect: { src: '/wc_logo.png', alt: 'Wallet Connect Logo', boxSize: [5, 15] },
+    metamask: { src: '/metamask_logo.svg', alt: 'Metamask Logo', boxSize: [5, 25] },
   };
+
+  const glowAnimation = keyframes`
+0% {
+    box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+}
+50% {
+    box-shadow: 0px 0px 100px rgba(7, 232, 216, 0.5);
+}
+100% {
+    box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+}
+}
+`;
+
+  useEffect(() => {
+    const isTutorialStepMatches = tutorialStep === TutorialStep.CONNECTWALLET;
+    setShowTutorial(tutorialOn && isTutorialStepMatches);
+  }, [tutorialOn, tutorialStep]);
 
   useEffect(() => {
     const currentWalletLogo = walletLogos[walletType];
     setWalletLogo(currentWalletLogo);
-  }, [walletType]);
+  }, [walletType, tutorialStep]);
 
-  return (
-    <Menu>
-      {address ? (
-        <>
-          <MenuButton
-            margin='0px'
-            height='50px'
-            width='250px'
-            borderRadius='lg'
-            shadow='dark-lg'>
-            <HStack>
-              {walletLogo && (
-                <Image
-                  src={walletLogo.src}
-                  alt={walletLogo.alt}
-                  boxSize={walletLogo.boxSize}
-                />
-              )}
-              <CheckCircleIcon
-                boxSize='15px'
-                color='secondary1'
-              />
-              <Text fontSize='15px'>Account:{easyTruncateAddress(address)}</Text>
-            </HStack>
-          </MenuButton>
-          <MenuList
-            width='250px'
-            margin='0px'>
-            <MenuItem onClick={() => dispatch(logout())}>Disconnect Wallet</MenuItem>
-          </MenuList>
-        </>
-      ) : (
+  const handleClick = () => {
+    dispatch(toggleSelectWalletModalVisibility(true));
+  };
+
+  const DisconnectMenu = () => {
+    return (
+      <Menu>
         <MenuButton
-          height='50px'
-          width='250px'
-          borderRadius='lg'
-          shadow='dark-lg'
-          onClick={() => dispatch(toggleSelectWalletModalVisibility(true))}>
-          <HStack>
+          height={50}
+          width={150}
+          padding={2.5}
+          borderRadius={'lg'}
+          shadow={'dark-lg'}
+          animation={
+            showTutorial
+              ? `
+                              ${glowAnimation} 5 1s
+                          `
+              : ''
+          }>
+          <HStack justifyContent={'space-between'}>
+            {walletLogo && (
+              <Image
+                src={walletLogo.src}
+                alt={walletLogo.alt}
+                boxSize={walletLogo.boxSize}
+              />
+            )}
+            <Text fontSize={14}>{easyTruncateAddress(address)}</Text>
+            <ChevronDownIcon color={'white'} />
+          </HStack>
+        </MenuButton>
+        <MenuList width={250}>
+          <MenuItem onClick={() => dispatch(logout())}>Disconnect Wallet</MenuItem>
+        </MenuList>
+      </Menu>
+    );
+  };
+
+  const ConnectMenu = () => {
+    return (
+      <Menu>
+        <MenuButton
+          height={50}
+          width={150}
+          padding={2.5}
+          borderRadius={'lg'}
+          shadow={'dark-lg'}
+          onClick={() => handleClick()}
+          animation={
+            showTutorial
+              ? `
+                              ${glowAnimation} 5 1s
+                          `
+              : ''
+          }>
+          <HStack justifyContent={'space-between'}>
             <WarningIcon
-              boxSize='15px'
-              color='secondary2'
+              boxSize={15}
+              color={'#FF4500'}
             />
             <Text
-              fontSize='15px'
-              fontWeight='bold'>
+              fontSize={12}
+              fontWeight={'extrabold'}>
               Connect Wallet
             </Text>
           </HStack>
         </MenuButton>
-      )}
-    </Menu>
+      </Menu>
+    );
+  };
+
+  return (
+    <VStack marginTop={15}>
+      <HStack>
+        <TutorialSwitch tutorialStep={tutorialStep} />
+        {address ? <DisconnectMenu /> : <ConnectMenu />}
+      </HStack>
+      {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+    </VStack>
   );
 }

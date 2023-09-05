@@ -8,20 +8,43 @@ import {
   FungibleConditionCode,
   makeContractFungiblePostCondition,
   makeStandardFungiblePostCondition,
+  PostConditionMode,
 } from '@stacks/transactions';
 import { userSession } from '../hiroWalletUserSession';
 import { showConnect } from '@stacks/connect';
 import { principalCV } from '@stacks/transactions/dist/clarity/types/principalCV';
 import { openContractCall } from '@stacks/connect';
-import { customShiftValue, hexToBytes } from '../utils';
+import { customShiftValue, hexToBytes } from '../utilities/utils';
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
+import { NonFungibleConditionCode } from '@stacks/transactions';
+import { makeContractNonFungiblePostCondition } from '@stacks/transactions';
 import store from '../store/store';
 
 import { StacksNetworks } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
-import { requestStatuses } from '../enums/loanStatuses';
+import { ToastEvent } from '../components/CustomToast';
+
+const getAllAttestors = async () => {
+  const { blockchain } = store.getState().account;
+  const { managerContractAddress, managerContractName, apiBase } = StacksNetworks[blockchain];
+  const attestorNFT = 'dlc-attestors';
+
+  const getAllAttestorsURL = `https://${apiBase}/extended/v1/tokens/nft/holdings?asset_identifiers=${managerContractAddress}.${managerContractName}::${attestorNFT}&principal=${managerContractAddress}.${managerContractName}`;
+  const response = await fetch(getAllAttestorsURL);
+  const result = await response.json();
+  const attestorIDs = result.results.map((attestor) =>
+    parseInt(attestor.value.repr.slice(1, attestor.value.repr.length))
+  );
+  return attestorIDs;
+};
+
+const selectRandomAttestors = async (attestorList, attestorCount) => {
+  const shuffledAttestorList = [...attestorList].sort(() => 0.5 - Math.random());
+  const selectedAttestors = shuffledAttestorList.slice(0, attestorCount);
+  return Buffer.from(selectedAttestors);
+};
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
   const { loanContractAddress, loanContractName, network } = StacksNetworks[blockchain];
@@ -37,6 +60,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
     network,
     fee: 100000,
     anchorMode: 1,
+    postConditionMode: PostConditionMode.Allow,
     onFinish: (data) => {
       if (typeof onFinishStatus !== 'string') {
         store.dispatch(loanSetupRequested(onFinishStatus));
@@ -45,7 +69,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
       }
     },
     onCancel: () => {
-      store.dispatch(loanEventReceived({ status: onFinishStatus }));
+      store.dispatch(loanEventReceived({ status: ToastEvent.TRANSACTIONCANCELLED }));
     },
   };
 };
@@ -107,20 +131,18 @@ async function showConnectAndGetAddress(blockchain) {
 export async function sendLoanContractToStacks(loanContract) {
   const { walletType, blockchain } = store.getState().account;
 
+  const allAttestors = await getAllAttestors();
+  const selectedAttestors = await selectRandomAttestors(allAttestors, loanContract.attestorCount);
+
   const functionName = 'setup-loan';
-  const functionArgs = [
-    uintCV(loanContract.BTCDeposit),
-    uintCV(loanContract.liquidationRatio),
-    uintCV(loanContract.liquidationFee),
-    uintCV(loanContract.emergencyRefundTime),
-  ];
+  const functionArgs = [uintCV(loanContract.BTCDeposit), bufferCV(selectedAttestors)];
   const senderAddress = undefined;
   const onFinishStatus = loanContract.BTCDeposit;
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -129,7 +151,11 @@ export async function sendLoanContractToStacks(loanContract) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -148,7 +174,11 @@ export async function getAllStacksLoansForAddress() {
     const loanContracts = response.list;
     formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.RETRIEVALFAILED,
+      })
+    );
   }
   return formattedLoans;
 }
@@ -166,7 +196,11 @@ export async function getStacksLoanIDByUUID(UUID) {
     const response = await callReadOnlyFunction(txOptions);
     return cvToValue(response.value);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -183,7 +217,32 @@ export async function getStacksLoanByUUID(UUID) {
     const response = await callReadOnlyFunction(txOptions);
     return cvToValue(response.value);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
+  }
+}
+
+export async function getStacksLoanByID(ID) {
+  const { address, blockchain } = store.getState().account;
+
+  const functionName = 'get-loan';
+  const functionArgs = [uintCV(ID)];
+  const senderAddress = address;
+
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+
+  try {
+    const response = await callReadOnlyFunction(txOptions);
+    return cvToValue(response.value);
+  } catch (error) {
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -195,7 +254,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.BORROWREQUESTED;
+  const onFinishStatus = ToastEvent.BORROWREQUESTED;
   const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const contractFungiblePostConditionForBorrow = [
@@ -217,8 +276,8 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -227,7 +286,11 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -239,7 +302,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   const functionName = 'repay';
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.REPAYREQUESTED;
+  const onFinishStatus = ToastEvent.REPAYREQUESTED;
   const { assetContractAddress, assetContractName, assetName } = StacksNetworks[blockchain];
 
   const standardFungiblePostConditionForRepay = [
@@ -260,8 +323,8 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -270,19 +333,25 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
 export async function liquidateStacksLoan(UUID) {
   const { walletType, blockchain } = store.getState().account;
+  const { bitcoinUSDValue } = store.getState().externalData;
 
-  const loanContractID = await getStacksLoanIDByUUID(UUID);
+  const bitcoinUSDValueShifted = customShiftValue(bitcoinUSDValue, 8, false);
+
   const functionName = 'attempt-liquidate';
-  const functionArgs = [uintCV(parseInt(loanContractID))];
+  const functionArgs = [uintCV(bitcoinUSDValueShifted), bufferCV(hexToBytes(UUID))];
   const contractFungiblePostCondition = [];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.LIQUIDATIONREQUESTED;
+  const onFinishStatus = ToastEvent.LIQUIDATIONREQUESTED;
 
   const txOptions = populateTxOptions(
     functionName,
@@ -293,8 +362,8 @@ export async function liquidateStacksLoan(UUID) {
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -303,7 +372,11 @@ export async function liquidateStacksLoan(UUID) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }
 
@@ -313,21 +386,32 @@ export async function closeStacksLoan(UUID) {
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
-  const contractFungiblePostCondition = [];
   const senderAddress = undefined;
-  const onFinishStatus = requestStatuses.CLOSEREQUESTED;
+  const onFinishStatus = ToastEvent.CLOSEREQUESTED;
+  const openDLCNFT = 'open-dlc';
+  const { managerContractAddress, managerContractName } = StacksNetworks[blockchain];
+
+  const contractNonFungiblePostConditionForClose = [
+    makeContractNonFungiblePostCondition(
+      managerContractAddress,
+      managerContractName,
+      NonFungibleConditionCode.Sends,
+      createAssetInfo(managerContractAddress, managerContractName, openDLCNFT),
+      bufferCV(hexToBytes(UUID))
+    ),
+  ];
 
   const txOptions = populateTxOptions(
     functionName,
     functionArgs,
-    contractFungiblePostCondition,
+    contractNonFungiblePostConditionForClose,
     senderAddress,
     onFinishStatus,
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -336,6 +420,10 @@ export async function closeStacksLoan(UUID) {
   try {
     openContractCall(txOptions);
   } catch (error) {
-    console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.TRANSACTIONFAILED,
+      })
+    );
   }
 }

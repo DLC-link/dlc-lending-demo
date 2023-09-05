@@ -1,121 +1,150 @@
-import { Text, HStack, Spacer, Tooltip } from '@chakra-ui/react';
+import { Text, HStack, Tooltip } from '@chakra-ui/react';
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import PaidIcon from '@mui/icons-material/Paid';
-import { ArrowForwardIosRounded, ErrorOutlineOutlined } from '@mui/icons-material';
-import { InfoIcon } from '@chakra-ui/icons';
+import { ExternalLinkIcon, InfoIcon } from '@chakra-ui/icons';
+import { useOnMount } from '../hooks/useOnMount';
+import { useState } from 'react';
+import { IconButton } from '@chakra-ui/react';
+import { InfoOutlined } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 
-export default function Status({ status, canBeLiquidated }) {
-  let statusComponent;
-  let liquidationIndicator;
+export default function Status({ status, canBeLiquidated, txHash }) {
+  const { blockchain } = useSelector((state) => state.account);
+  const [text, setText] = useState();
+  const [icon, setIcon] = useState();
 
-  const setStatusComponent = () => {
+  const bitcoinNetwork = blockchain === 'stacks:1' || blockchain === 'ethereum:1' ? 'mainnet' : 'testnet';
+
+  const bitcoinExplorerURL = `https://mempool.space/${
+    bitcoinNetwork !== 'mainnet' ? bitcoinNetwork + '/' : ''
+  }tx/${txHash}`;
+
+  const OpenExplorerLink = () => {
+    window.open(bitcoinExplorerURL, '_blank');
+  };
+
+  const StatusInfo = ({ children, text }) => {
+    return (
+      <HStack>
+        {children}
+        <Text
+          fontWeight={'extrabold'}
+          color='white'
+          fontSize={12}>
+          {text}
+        </Text>
+      </HStack>
+    );
+  };
+
+  const LiquidationIndicator = () => {
+    return canBeLiquidated ? (
+      <Tooltip
+        label={'Loan health: The collateral to debt ratio is lower than the liquidation ratio.'}
+        fontSize={'10px'}
+        textAlign={'justify'}
+        padding={2.5}
+        placement={'top-end'}
+        width={235}
+        background={'transparent'}
+        border={'1px solid #FF4500'}
+        borderRadius={'lg'}
+        shadow={'dark-lg'}
+        gutter={35}>
+        <CurrencyExchangeIcon sx={{ color: '#FF4500', height: '20px' }} />
+      </Tooltip>
+    ) : (
+      <Tooltip
+        label={'Loan health: Good'}
+        fontSize={'10px'}
+        textAlign={'justify'}
+        padding={2.5}
+        placement={'top-end'}
+        width={235}
+        background={'transparent'}
+        border={'1px solid #07E8D8'}
+        borderRadius={'lg'}
+        shadow={'dark-lg'}
+        gutter={35}>
+        <InfoIcon sx={{ color: 'accent', height: '20px' }} />
+      </Tooltip>
+    );
+  };
+
+  useOnMount(() => {
     switch (status) {
-      case solidityLoanStatuses.NOTREADY:
-      case clarityLoanStatuses.NOTREADY:
-        return (
-          <HStack spacing={2}>
-            <HourglassEmptyIcon sx={{ color: 'orange' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Not ready
-            </Text>
-          </HStack>
-        );
+      case solidityLoanStatuses.NONE:
+      case clarityLoanStatuses.NONE:
+        setIcon(<HourglassEmptyIcon sx={{ color: '#FF4500', height: '20px' }} />);
+        setText('Not ready');
+        break;
       case solidityLoanStatuses.PREREPAID:
       case clarityLoanStatuses.PREREPAID:
-        return (
-          <HStack spacing={2}>
-            <HourglassEmptyIcon sx={{ color: 'orange' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Waiting to be repaid
-            </Text>
-          </HStack>
-        );
+        setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Repayment pending');
+        break;
       case solidityLoanStatuses.PRELIQUIDATED:
       case clarityLoanStatuses.PRELIQUIDATED:
-        return (
-          <HStack spacing={2}>
-            <HourglassEmptyIcon sx={{ color: 'orange' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Waiting to be liquidated
-            </Text>
-          </HStack>
-        );
+        setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Liquidation pending');
+        break;
+      case solidityLoanStatuses.PREFUNDED:
+      case clarityLoanStatuses.PREFUNDED:
+        setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Funding pending');
+        break;
       case solidityLoanStatuses.READY:
       case clarityLoanStatuses.READY:
-        return (
-          <HStack spacing={2}>
-            <CurrencyBitcoinIcon sx={{ color: 'orange' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Ready
-            </Text>
-          </HStack>
-        );
+        setIcon(<CurrencyBitcoinIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Ready');
+        break;
       case solidityLoanStatuses.FUNDED:
       case clarityLoanStatuses.FUNDED:
-        return (
-          <HStack spacing={2}>
-            <CurrencyBitcoinIcon sx={{ color: 'green' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Funded
-            </Text>
-          </HStack>
-        );
+        setIcon(<CurrencyBitcoinIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Funded');
+        break;
       case solidityLoanStatuses.LIQUIDATED:
       case clarityLoanStatuses.LIQUIDATED:
-        return (
-          <HStack spacing={2}>
-            <CurrencyExchangeIcon sx={{ color: 'green' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Liquidated
-            </Text>
-          </HStack>
-        );
+        setIcon(<CurrencyExchangeIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Liquidated');
+        break;
       case solidityLoanStatuses.REPAID:
       case clarityLoanStatuses.REPAID:
-        return (
-          <HStack spacing={2}>
-            <PaidIcon sx={{ color: 'green' }} />
-            <Text
-              color='white'
-              fontSize={12}>
-              Closed
-            </Text>
-          </HStack>
-        );
+        setIcon(<PaidIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Closed');
+        break;
       default:
         break;
     }
-  };
-  statusComponent = setStatusComponent();
-  liquidationIndicator = canBeLiquidated ? (
-    <Tooltip label={'The collateral-to-debt ratio is lower than the liquidation ratio.'}>
-      <CurrencyExchangeIcon sx={{ color: 'red' }}></CurrencyExchangeIcon>
-    </Tooltip>
-  ) : (
-    <Tooltip label={'The collateral-to-debt ratio exceeds liquidation ratio.'}>
-      <InfoIcon sx={{ color: 'green' }}></InfoIcon>
-    </Tooltip>
-  );
+  });
+
   return (
-    <HStack>
-      {statusComponent}
+    <HStack
+      width={215}
+      paddingTop={2.5}
+      paddingBottom={2.5}
+      justifyContent={'space-between'}>
+      <StatusInfo text={text}>{icon}</StatusInfo>
+      {(status === solidityLoanStatuses.PREFUNDED || status === clarityLoanStatuses.PREFUNDED) && (
+        <Tooltip
+          label='View transaction in explorer'
+          gutter={35}
+          placement={'top-end'}>
+          <IconButton
+            icon={<ExternalLinkIcon />}
+            variant={'ghost'}
+            boxSize={5}
+            color='#07E8D8'
+            _hover={{ background: 'transparent' }}
+            onClick={() => OpenExplorerLink()}
+          />
+        </Tooltip>
+      )}
       {status !== clarityLoanStatuses.LIQUIDATED && status !== solidityLoanStatuses.LIQUIDATED && (
-        <>{liquidationIndicator}</>
+        <LiquidationIndicator />
       )}
     </HStack>
   );

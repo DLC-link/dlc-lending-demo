@@ -1,15 +1,22 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import store from './store';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
-import { getAllStacksLoansForAddress } from '../blockchainFunctions/stacksFunctions';
-import { customShiftValue } from '../utilities/formatFunctions';
-import { formatSolidityLoanContract } from '../utilities/loanFormatter';
-import { clarityFunctionNames, clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
+import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
+import { customShiftValue } from '../utilities/utils';
+import {
+  formatClarityLoanContract,
+  formatSolidityLoanContract,
+  updateLoanToFundingInProgress,
+} from '../utilities/loanFormatter';
+import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
+import { ToastEvent } from '../components/CustomToast';
+import { forEach } from 'ramda';
 
 const initialState = {
   loans: [],
   status: 'idle',
   error: null,
+  loansWithBTCTransactions: [],
   toastEvent: null,
 };
 
@@ -19,27 +26,30 @@ export const loansSlice = createSlice({
   reducers: {
     loanSetupRequested: (state, action) => {
       const initialLoan = {
-        uuid: '',
-        status: 'Initialized',
+        uuid: '-',
+        status: 'None',
         formattedVaultLoan: 0,
         formattedVaultCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
       };
       state.loans.unshift(initialLoan);
-      state.toastEvent = {
-        txHash: '',
-        status: 'SetupRequested',
-      };
     },
     loanEventReceived: (state, action) => {
+      if (action.payload.status === ToastEvent.ACCEPTSUCCEEDED) {
+        state.loansWithBTCTransactions.push([action.payload.uuid, action.payload.txHash]);
+        fetchLoans();
+      }
       state.toastEvent = {
         txHash: action.payload.txHash,
         status: action.payload.status,
       };
     },
+    deleteToastEvent: (state) => {
+      state.toastEvent = null;
+    },
   },
   extraReducers(builder) {
     builder
-      .addCase(fetchLoans.pending, (state, action) => {
+      .addCase(fetchLoans.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchLoans.fulfilled, (state, action) => {
@@ -52,30 +62,12 @@ export const loansSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(fetchLoan.fulfilled, (state, action) => {
-        let loanIndex;
-        let loanStatuses;
+        const { formattedLoan, loanTXHash, loanEvent } = action.payload;
 
-        const { walletType, formattedLoan, loanTXHash, loanEvent } = action.payload;
-
-        switch (walletType) {
-          case 'metamask':
-            loanStatuses = solidityLoanStatuses;
-            break;
-          case 'xverse':
-          case 'hiro':
-          case 'walletconnect':
-            loanStatuses = clarityFunctionNames;
-            break;
-          default:
-            console.error('Unsupported wallet type!');
-            break;
-        }
-
-        if (formattedLoan.status === loanStatuses.NOTREADY) {
-          loanIndex = state.loans.findIndex((loan) => loan.status === 'Initialized');
-        } else {
-          loanIndex = state.loans.findIndex((loan) => loan.uuid === formattedLoan.uuid);
-        }
+        const loanIndex =
+          formattedLoan.status === solidityLoanStatuses.READY || formattedLoan.status === clarityLoanStatuses.READY
+            ? state.loans.findIndex((loan) => loan.status === 'None')
+            : state.loans.findIndex((loan) => loan.uuid === formattedLoan.uuid);
 
         state.loans[loanIndex] = formattedLoan;
 
@@ -83,16 +75,40 @@ export const loansSlice = createSlice({
 
         switch (loanEvent) {
           case 'StatusUpdate':
-            toastStatus = formattedLoan.status;
+            switch (formattedLoan.status) {
+              case solidityLoanStatuses.READY:
+              case clarityLoanStatuses.READY:
+                toastStatus = ToastEvent.READY;
+                break;
+              case solidityLoanStatuses.FUNDED:
+              case clarityLoanStatuses.FUNDED:
+                toastStatus = ToastEvent.FUNDED;
+                break;
+              case solidityLoanStatuses.LIQUIDATED:
+              case clarityLoanStatuses.LIQUIDATED:
+                toastStatus = ToastEvent.LIQUIDATED;
+                break;
+              case solidityLoanStatuses.PRELIQUIDATED:
+              case clarityLoanStatuses.PRELIQUIDATED:
+                toastStatus = ToastEvent.PRELIQUIDATED;
+                break;
+              case solidityLoanStatuses.PRECLOSED:
+              case clarityLoanStatuses.PRECLOSED:
+                toastStatus = ToastEvent.PREREPAID;
+                break;
+            }
             break;
           case 'BorrowEvent':
-            toastStatus = 'Borrowed';
+            toastStatus = ToastEvent.BORROWED;
             break;
           case 'RepayEvent':
-            toastStatus = 'Repaid';
+            toastStatus = ToastEvent.REPAID;
             break;
-          case 'InvalidLiquidationEvent':
-            toastStatus = 'InvalidLiquidation';
+          case 'DoesNotNeedLiquidation':
+            toastStatus = ToastEvent.INVALIDLIQUIDATION;
+            break;
+          case 'LiquidationEvent':
+            toastStatus = ToastEvent.PRELIQUIDATED;
             break;
         }
 
@@ -112,7 +128,7 @@ export const loansSlice = createSlice({
   },
 });
 
-export const { loanSetupRequested, loanEventReceived } = loansSlice.actions;
+export const { loanSetupRequested, loanEventReceived, deleteToastEvent } = loansSlice.actions;
 
 export default loansSlice.reducer;
 
@@ -125,11 +141,18 @@ export const selectLoanByUUID = (state, uuid) => {
 };
 
 export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans, (loans) => {
-  const fundedLoans = loans.filter((loan) =>
-    [clarityLoanStatuses.FUNDED, solidityLoanStatuses.FUNDED].includes(loan.status)
-  );
-  const fundedCollateralSum = fundedLoans.reduce((acc, loan) => acc + loan.vaultCollateral, 0);
-  const fundedLoanSum = fundedLoans.reduce((acc, loan) => acc + loan.vaultLoan, 0);
+  const fundedLoans = loans.filter((loan) => {
+    return [clarityLoanStatuses.FUNDED, solidityLoanStatuses.FUNDED].includes(loan.status);
+  });
+
+  const fundedCollateralSum = fundedLoans.reduce((acc, loan) => {
+    return acc + loan.vaultCollateral;
+  }, 0);
+
+  const fundedLoanSum = fundedLoans.reduce((acc, loan) => {
+    return acc + loan.vaultLoan;
+  }, 0);
+
   return {
     fundedCollateralSum,
     fundedLoanSum,
@@ -138,6 +161,7 @@ export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans,
 
 export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   const { walletType } = store.getState().account;
+  const { loansWithBTCTransactions } = store.getState().loans;
 
   let loans = [];
 
@@ -146,7 +170,7 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
       loans = await getAllEthereumLoansForAddress();
       break;
     case 'xverse':
-    case 'hiro':
+    case 'leather':
     case 'walletConnect':
       loans = await getAllStacksLoansForAddress();
       break;
@@ -154,45 +178,58 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
       throw new Error('Unsupported wallet type!');
   }
 
+  forEach((loan) => {
+    if (loan.status === clarityLoanStatuses.READY || loan.status === solidityLoanStatuses.READY) {
+      const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
+        (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
+      );
+      if (matchingLoanWithBTCTransaction) {
+        updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
+      }
+    }
+  }, loans);
+
   return loans;
 });
 
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
-  const { loanUUID, loanStatus, loanTXHash, loanEvent, loanOwner } = payload;
-
+  const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
-
-  const loanStatusKey = Object.keys(solidityLoanStatuses)[loanStatus];
-  const loanStatusValue = solidityLoanStatuses[loanStatusKey];
-
-  const { loans } = store.getState().loans;
-
+  const { loans, previousLoanEvent } = store.getState().loans;
   const storedLoanUUIDs = loans.map((loan) => loan.uuid);
-
   let fetchedLoanUUIDs = [];
 
-  if (loanStatusValue === solidityLoanStatuses.NOTREADY) {
-    const fetchedLoans = await getAllEthereumLoansForAddress();
+  let getAllLoansForAddress;
+  let getLoanByUUID;
+  let formatLoanContract;
+
+  switch (walletType) {
+    case 'metamask':
+      getAllLoansForAddress = getAllEthereumLoansForAddress;
+      getLoanByUUID = getEthereumLoanByUUID;
+      formatLoanContract = formatSolidityLoanContract;
+      break;
+    case 'xverse':
+    case 'leather':
+      getAllLoansForAddress = getAllStacksLoansForAddress;
+      getLoanByUUID = getStacksLoanByUUID;
+      formatLoanContract = formatClarityLoanContract;
+      break;
+    case 'walletConnect':
+      break;
+    default:
+      throw new Error('Unsupported wallet type!');
+  }
+
+  if (loanStatus === solidityLoanStatuses.READY || loanStatus === clarityLoanStatuses.READY) {
+    const fetchedLoans = await getAllLoansForAddress();
     fetchedLoanUUIDs = fetchedLoans.map((loan) => loan.uuid);
   }
 
-  let formattedLoan;
+  if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) return;
 
-  if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) {
-    return;
-  } else {
-    switch (walletType) {
-      case 'metamask':
-        formattedLoan = formatSolidityLoanContract(await getEthereumLoanByUUID(loanUUID));
-        break;
-      case 'xverse':
-      case 'hiro':
-      case 'walletConnect':
-        break;
-      default:
-        throw new Error('Unsupported wallet type!');
-    }
-  }
+  const loan = await getLoanByUUID(loanUUID);
+  const formattedLoan = formatLoanContract(loan);
 
-  return { formattedLoan, walletType, loanTXHash, loanEvent };
+  return { formattedLoan, loanTXHash, loanEvent };
 });
