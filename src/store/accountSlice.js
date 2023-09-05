@@ -15,7 +15,7 @@ export const accountSlice = createSlice({
       state.blockchain = action.payload.blockchain;
     },
     logout: (state) => {
-      if (state.walletType === 'hiro' || state.walletType === 'xverse') {
+      if (state.walletType === 'leather' || state.walletType === 'xverse') {
         userSession.signUserOut();
       }
       state.walletType = null;

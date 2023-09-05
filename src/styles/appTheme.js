@@ -1,9 +1,27 @@
 import { extendTheme } from '@chakra-ui/react';
 import { menuTheme } from './menuTheme';
+import { switchTheme } from './switchTheme';
 
 export const appTheme = extendTheme({
   components: {
+    Switch: switchTheme,
     Menu: menuTheme,
+    Tooltip: {
+      baseStyle: {
+        fontSize: 'xs',
+        textAlign: 'justify',
+        padding: '5px',
+        background: 'transparent',
+        border: '1px solid #07E8D8',
+        borderRadius: 'lg',
+        shadow: 'dark-lg',
+      },
+      variants: {
+        warning: {
+          border: '1px solid #FF4500',
+        },
+      },
+    },
     Text: {
       baseStyle: {
         fontSize: '12px',
@@ -16,8 +34,13 @@ export const appTheme = extendTheme({
           fontWeight: 'extrabold',
           color: 'white',
         },
-        property: {
+        value: {
           fontWeight: 'extrabold',
+        },
+        tutorial: {
+          fontSize: 'sm',
+          fontWeight: 'bold',
+          textAlign: 'justify',
         },
         connect: {
           fontSize: ['xs', 'xl'],
@@ -65,6 +88,13 @@ export const appTheme = extendTheme({
             transform: 'translateY(-2.5px)',
           },
         },
+        uuid: {
+          justifyContent: 'left',
+          margin: '0px',
+          padding: '0px',
+          width: '25px',
+          height: '1.5px',
+        },
         connect: {
           _hover: {
             background: 'secondary1',
@@ -94,6 +124,7 @@ export const appTheme = extendTheme({
     background1: '#500056',
     background2: '#000933',
     warning: '#FF4500',
+    header: '#9ac9ff',
   },
 
   fonts: {

@@ -1,15 +1,16 @@
 import React from 'react';
-import { HStack } from '@chakra-ui/react';
+import { HStack, Box, Flex } from '@chakra-ui/react';
 import Account from './Account';
 import CompanyWebsiteButton from './CompanyWebsiteButton';
 
 export default function Header() {
   return (
-    <HStack
-      margin='30px'
-      justifyContent='space-between'>
+    <Flex
+      flexDirection={'row'}
+      margin={25}
+      justifyContent={'space-between'}>
       <CompanyWebsiteButton />
       <Account />
-    </HStack>
+    </Flex>
   );
 }

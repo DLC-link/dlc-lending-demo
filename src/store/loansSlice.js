@@ -1,9 +1,13 @@
-import { createSlice, createAsyncThunk, createSelector, current } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import store from './store';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
 import { customShiftValue } from '../utilities/utils';
-import { formatClarityLoanContract, formatSolidityLoanContract } from '../utilities/loanFormatter';
+import {
+  formatClarityLoanContract,
+  formatSolidityLoanContract,
+  updateLoanToFundingInProgress,
+} from '../utilities/loanFormatter';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { ToastEvent } from '../components/CustomToast';
 import { forEach } from 'ramda';
@@ -12,8 +16,8 @@ const initialState = {
   loans: [],
   status: 'idle',
   error: null,
+  loansWithBTCTransactions: [],
   toastEvent: null,
-  bitcoinTxHashes: {},
 };
 
 export const loansSlice = createSlice({
@@ -22,7 +26,7 @@ export const loansSlice = createSlice({
   reducers: {
     loanSetupRequested: (state, action) => {
       const initialLoan = {
-        uuid: '',
+        uuid: '-',
         status: 'None',
         formattedVaultLoan: 0,
         formattedVaultCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
@@ -30,10 +34,17 @@ export const loansSlice = createSlice({
       state.loans.unshift(initialLoan);
     },
     loanEventReceived: (state, action) => {
+      if (action.payload.status === ToastEvent.ACCEPTSUCCEEDED) {
+        state.loansWithBTCTransactions.push([action.payload.uuid, action.payload.txHash]);
+        fetchLoans();
+      }
       state.toastEvent = {
         txHash: action.payload.txHash,
         status: action.payload.status,
       };
+    },
+    deleteToastEvent: (state) => {
+      state.toastEvent = null;
     },
   },
   extraReducers(builder) {
@@ -117,7 +128,7 @@ export const loansSlice = createSlice({
   },
 });
 
-export const { loanSetupRequested, loanEventReceived } = loansSlice.actions;
+export const { loanSetupRequested, loanEventReceived, deleteToastEvent } = loansSlice.actions;
 
 export default loansSlice.reducer;
 
@@ -150,7 +161,7 @@ export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans,
 
 export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   const { walletType } = store.getState().account;
-  const { bitcoinTxHashes } = store.getState().loans;
+  const { loansWithBTCTransactions } = store.getState().loans;
 
   let loans = [];
 
@@ -159,7 +170,7 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
       loans = await getAllEthereumLoansForAddress();
       break;
     case 'xverse':
-    case 'hiro':
+    case 'leather':
     case 'walletConnect':
       loans = await getAllStacksLoansForAddress();
       break;
@@ -168,8 +179,13 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   }
 
   forEach((loan) => {
-    if (Object.keys(bitcoinTxHashes).includes(loan.uuid)) {
-      loan.bitcoinTxHash = bitcoinTxHashes[loan.uuid];
+    if (loan.status === clarityLoanStatuses.READY || loan.status === solidityLoanStatuses.READY) {
+      const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
+        (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
+      );
+      if (matchingLoanWithBTCTransaction) {
+        updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
+      }
     }
   }, loans);
 
@@ -194,7 +210,7 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
       formatLoanContract = formatSolidityLoanContract;
       break;
     case 'xverse':
-    case 'hiro':
+    case 'leather':
       getAllLoansForAddress = getAllStacksLoansForAddress;
       getLoanByUUID = getStacksLoanByUUID;
       formatLoanContract = formatClarityLoanContract;

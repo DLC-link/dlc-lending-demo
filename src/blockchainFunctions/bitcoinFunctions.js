@@ -1,26 +1,47 @@
 /*global chrome*/
 
 import store from '../store/store';
-import { loanEventReceived } from '../store/loansSlice';
+import { fetchLoans, loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 import { customShiftValue } from '../utilities/utils';
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
-  const { walletType } = store.getState().account;
+  const { walletType, blockchain } = store.getState().account;
 
   let routerWalletURL = '';
   switch (walletType) {
     case 'metamask':
-      routerWalletURL = process.env.REACT_APP_ETHEREUM_WALLET_DOMAIN;
-      break;
-    case 'hiro':
+      switch (blockchain) {
+        case 'ethereum:5':
+        case 'ethereum:11155111':
+          routerWalletURL = process.env.REACT_APP_TESTNET_ETHEREUM_WALLET_DOMAIN;
+          break;
+        case 'ethereum:31337':
+          routerWalletURL = process.env.REACT_APP_DEVNET_ETHEREUM_WALLET_DOMAIN;
+          break;
+        default:
+          console.error('Blockchain not supported');
+          break;
+      }
+    case 'leather':
     case 'xverse':
     case 'walletConnect':
-      routerWalletURL = process.env.REACT_APP_STACKS_WALLET_DOMAIN;
-      break;
+      switch (blockchain) {
+        case 'stacks:1':
+          routerWalletURL = process.env.REACT_APP_MAINNET_STACKS_WALLET_DOMAIN;
+        case 'stacks:2147483648':
+          routerWalletURL = process.env.REACT_APP_TESTNET_STACKS_WALLET_DOMAIN;
+          break;
+        case 'stacks:42':
+          routerWalletURL = process.env.REACT_APP_DEVNET_STACKS_WALLET_DOMAIN;
+          break;
+        default:
+          console.error('Blockchain not supported');
+          break;
+      }
     default:
       console.error('Wallet type not supported');
-      return;
+      break;
   }
 
   const counterPartyWalletDetails = {
@@ -37,7 +58,7 @@ const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   return urlParams;
 };
 
-const sendOfferForSigning = async (urlParams) => {
+const sendOfferForSigning = async (urlParams, loanUUID) => {
   window.btc
     .request('acceptBitcoinContractOffer', urlParams)
     .then((response) => {
@@ -45,8 +66,10 @@ const sendOfferForSigning = async (urlParams) => {
         loanEventReceived({
           status: ToastEvent.ACCEPTSUCCEEDED,
           txHash: response.result.txId,
+          uuid: loanUUID,
         })
       );
+      store.dispatch(fetchLoans());
     })
     .catch((error) => {
       store.dispatch(
@@ -58,27 +81,48 @@ const sendOfferForSigning = async (urlParams) => {
 };
 
 export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContract) => {
-  const { walletType } = store.getState().account;
+  const { walletType, blockchain } = store.getState().account;
 
   let routerWalletURL = '';
   switch (walletType) {
     case 'metamask':
-      routerWalletURL = `${process.env.REACT_APP_ETHEREUM_WALLET_DOMAIN}/offer`;
-      break;
-    case 'hiro':
+      switch (blockchain) {
+        case 'ethereum:5':
+        case 'ethereum:11155111':
+          routerWalletURL = process.env.REACT_APP_TESTNET_ETHEREUM_WALLET_DOMAIN;
+          break;
+        case 'ethereum:31337':
+          routerWalletURL = process.env.REACT_APP_DEVNET_ETHEREUM_WALLET_DOMAIN;
+          break;
+        default:
+          console.error('Blockchain not supported');
+          break;
+      }
+    case 'leather':
     case 'xverse':
     case 'walletConnect':
-      routerWalletURL = `${process.env.REACT_APP_STACKS_WALLET_DOMAIN}/offer`;
-      break;
+      switch (blockchain) {
+        case 'stacks:1':
+          routerWalletURL = process.env.REACT_APP_MAINNET_STACKS_WALLET_DOMAIN;
+        case 'stacks:2147483648':
+          routerWalletURL = process.env.REACT_APP_TESTNET_STACKS_WALLET_DOMAIN;
+          break;
+        case 'stacks:42':
+          routerWalletURL = process.env.REACT_APP_DEVNET_STACKS_WALLET_DOMAIN;
+          break;
+        default:
+          console.error('Blockchain not supported');
+          break;
+      }
     default:
       console.error('Wallet type not supported');
-      return;
+      break;
   }
 
   const attestorListJSON = JSON.stringify(loanContract.attestorList);
 
   try {
-    const response = await fetch(routerWalletURL, {
+    const response = await fetch(`${routerWalletURL}/offer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -95,7 +95,7 @@ export default function RepayModal() {
   const repayLoanContract = async () => {
     store.dispatch(toggleRepayModalVisibility({ isOpen: false }));
     switch (walletType) {
-      case 'hiro':
+      case 'leather':
       case 'xverse':
         repayStacksLoan(loan.uuid, additionalRepayment);
         break;

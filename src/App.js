@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import LoansScreen from './components/LoansScreen';
 import ModalContainer from './modals/ModalContainer';
 import CustomToastContainer from './components/CustomToastHandler';
+import useTutorialStep from './hooks/useTutorialUpdater';
 
 /* global BigInt */
 
@@ -15,6 +16,8 @@ BigInt.prototype.toJSON = function () {
 
 export default function App() {
   const address = useSelector((state) => state.account.address);
+
+  useTutorialStep();
 
   return (
     <>

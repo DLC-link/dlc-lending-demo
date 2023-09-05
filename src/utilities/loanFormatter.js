@@ -1,4 +1,4 @@
-import { solidityLoanStatuses } from '../enums/loanStatuses';
+import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import { customShiftValue, fixedTwoDecimalShift } from './utils';
 import { cvToValue } from '@stacks/transactions';
 
@@ -74,4 +74,9 @@ export function formatAllLoanContracts(loans, responseType) {
       break;
   }
   return formattedLoans;
+}
+
+export function updateLoanToFundingInProgress(loan, loanTXHash, walletType) {
+  loan.txHash = loanTXHash;
+  loan.status = walletType === 'solidity' ? solidityLoanStatuses.PREFUNDED : clarityLoanStatuses.PREFUNDED;
 }

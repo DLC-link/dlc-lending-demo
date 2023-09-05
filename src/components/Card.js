@@ -1,18 +1,19 @@
 /*global chrome*/
 
 import {
-  Text,
-  VStack,
-  TableContainer,
-  Tbody,
-  Table,
   Flex,
-  Tr,
-  Td,
   Spacer,
   Spinner,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Text,
   Tooltip,
+  Tr,
+  VStack,
   useClipboard,
+  Button,
 } from '@chakra-ui/react';
 
 import { useState } from 'react';
@@ -21,25 +22,45 @@ import { useOnMount } from '../hooks/useOnMount';
 
 import { motion } from 'framer-motion';
 
-import Status from './Status';
 import { ActionButtons } from './ActionButtons';
+import Status from './Status';
 
-import { calculateCollateralCoveragePercentageForLiquidation } from '../utilities/utils';
-import { easyTruncateAddress } from '../utilities/utils';
+import { useEffect } from 'react';
+import { TutorialStep } from '../enums/TutorialSteps';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
+import { calculateCollateralCoveragePercentageForLiquidation, easyTruncateAddress } from '../utilities/utils';
+import TutorialBox from './TutorialBox';
+import { keyframes } from '@chakra-ui/react';
 
 export default function Card({ loan }) {
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
-  const { onCopy, hasCopied } = useClipboard(loan.uuid || '');
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
-  console.log('loanUUID', loan.uuid);
+  const { tutorialOn, tutorialStep, tutorialLoanUUID } = useSelector((state) => state.tutorial);
 
   const cardInfo = [
     { label: 'UUID', value: loan.uuid && easyTruncateAddress(loan.uuid) },
-    { label: 'Total Collateral', value: loan.formattedVaultCollateral },
-    { label: 'Borrowed Amount', value: loan.formattedVaultLoan },
+    { label: 'Collateral', value: loan.formattedVaultCollateral },
+    { label: 'Borrowed', value: loan.formattedVaultLoan },
   ];
+
+  useEffect(() => {
+    const isTutorialLoanUUIDMatches = tutorialLoanUUID === loan.uuid;
+
+    const isTutorialStepMatches = [
+      TutorialStep.WAITFORSETUP,
+      TutorialStep.FUNDLOAN,
+      TutorialStep.WAITFORCONFIRMATION,
+      TutorialStep.BORROWREPAY,
+      TutorialStep.WAITFORCLOSE,
+      TutorialStep.ENDFLOW,
+    ].includes(tutorialStep);
+
+    const shouldShowTutorial = tutorialOn && isTutorialLoanUUIDMatches && isTutorialStepMatches;
+
+    setShowTutorial(shouldShowTutorial);
+  }, [tutorialOn, tutorialStep, tutorialLoanUUID, loan.uuid, loan.status]);
 
   const cardAnimationInitialState = {
     x: -300,
@@ -56,9 +77,18 @@ export default function Card({ loan }) {
     x: 300,
   };
 
-  const handleCopyClick = () => {
-    onCopy();
-  };
+  const glowAnimation = keyframes`
+  0% {
+      box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+  }
+  50% {
+      box-shadow: 0px 0px 100px rgba(7, 232, 216, 0.5);
+  }
+  100% {
+      box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+  }
+  }
+  `;
 
   useOnMount(() => {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
@@ -97,6 +127,13 @@ export default function Card({ loan }) {
         backgroundPosition='right'
         backgroundSize='200%'
         transition='background-position 500ms ease'
+        animation={
+          showTutorial
+            ? `
+            ${glowAnimation} infinite 1s
+        `
+            : ''
+        }
         justifyContent='center'
         _hover={{
           backgroundPosition: 'left',
@@ -111,25 +148,29 @@ export default function Card({ loan }) {
       <TableContainer>
         <Table
           variant='unstyled'
-          size='sm'>
+          size={'sm'}
+          maxWidth={'100%'}>
           <Tbody>
             {cardInfo.map((row, index) => (
-              <Tr key={index}>
-                <Td padding={(0, 1.5)}>
-                  <Text variant='property'>{row.label}</Text>
+              <Tr
+                key={index}
+                width={'100%'}>
+                <Td width={45}>
+                  <Text>{row.label}</Text>
                 </Td>
-                <Td width={5}>
+                <Td width={170}>
                   {row.label === 'UUID' ? (
-                    <Tooltip label={hasCopied ? 'UUID copied to clipboard!' : 'Click to copy the UUID!'}>
-                      <Text
-                        as={'a'}
-                        variant='property'
-                        onClick={() => handleCopyClick()}>
-                        {row.value}
-                      </Text>
-                    </Tooltip>
+                    <Button
+                      variant={'uuid'}
+                      onClick={() => navigator.clipboard.writeText(loan.uuid)}>
+                      <Tooltip
+                        label={'Click to copy UUID'}
+                        placement={'top'}>
+                        <Text variant='value'>{row.value}</Text>
+                      </Tooltip>
+                    </Button>
                   ) : (
-                    <Text>{row.value}</Text>
+                    <Text variant={'value'}>{row.value}</Text>
                   )}
                 </Td>
               </Tr>
@@ -160,6 +201,7 @@ export default function Card({ loan }) {
         <Status
           status={loan.status}
           canBeLiquidated={canBeLiquidated}
+          txHash={loan.txHash}
         />
         <CardTable />
         <Spacer />
@@ -169,6 +211,7 @@ export default function Card({ loan }) {
           canBeLiquidated={canBeLiquidated}
         />
       </CardContainer>
+      {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
     </CardAnimation>
   );
 }

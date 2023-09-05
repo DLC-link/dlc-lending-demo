@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, HStack, VStack } from '@chakra-ui/react';
+import { Text, HStack, VStack, Divider, Image } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import { selectTotalFundedCollateralAndLoan } from '../store/loansSlice';
 
@@ -10,11 +10,10 @@ export default function Balance() {
     return (
       <HStack
         padding={15}
-        width={275}
-        border={'1px solid white'}
+        width={325}
         borderRadius={'lg'}
         shadow={'dark-lg'}
-        justifyContent={'space-between'}>
+        justifyContent={'space-evenly'}>
         {children}
       </HStack>
     );
@@ -24,12 +23,32 @@ export default function Balance() {
     return (
       <VStack width={125}>
         <Text
-          fontSize='small'
-          fontWeight='extrabold'
-          color='accent'>
+          fontSize={'sm'}
+          fontWeight={'bold'}
+          color={'header'}>
           {header}
         </Text>
-        <Text>{data}</Text>
+        <HStack>
+          {header === 'BTC Collateral' ? (
+            <Image
+              src='/btc_logo.png'
+              alt='Bitcoin Logo'
+              boxSize={15}
+            />
+          ) : (
+            <Image
+              src='/usdc_logo.png'
+              alt='USDC Logo'
+              boxSize={15}
+            />
+          )}
+          <Text
+            fontSize={'md'}
+            fontWeight={'extrabold'}
+            color={'white'}>
+            {data}
+          </Text>
+        </HStack>
       </VStack>
     );
   };
@@ -38,11 +57,15 @@ export default function Balance() {
     <BalanceContainer>
       <BalanceTextStack
         header={'BTC Collateral'}
-        data={fundedCollateralSum.toFixed(4) + ' BTC'}
+        data={fundedCollateralSum.toFixed(4)}
+      />
+      <Divider
+        orientation='vertical'
+        height='50px'
       />
       <BalanceTextStack
         header={'USDC Debt'}
-        data={fundedLoanSum + ' USDC'}
+        data={fundedLoanSum}
       />
     </BalanceContainer>
   );

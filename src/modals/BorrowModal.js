@@ -94,7 +94,7 @@ export default function BorrowModal() {
   const borrowLoanContract = async () => {
     store.dispatch(toggleBorrowModalVisibility({ isOpen: false }));
     switch (walletType) {
-      case 'hiro':
+      case 'leather':
       case 'xverse':
         borrowStacksLoan(loan.uuid, additionalLoan);
         break;

@@ -3,7 +3,7 @@ import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
 const mainnet = new StacksMainnet();
 const testnet = new StacksTestnet();
 const mocknet = new StacksMocknet({
-  url: process.env.REACT_APP_STACKS_MOCKNET_ADDRESS,
+  url: process.env.REACT_APP_STACKS_DEVNET_ADDRESS,
 });
 
 export const EthereumNetworks = {
@@ -21,9 +21,9 @@ export const EthereumNetworks = {
   },
   'ethereum:31337': {
     name: 'Localhost',
-    protocolContractAddress: '',
-    usdcAddress: '',
-    dlcManagerAddress: '',
+    protocolContractAddress: process.env.REACT_APP_LOCALHOST_PROTOCOL_CONTRACT_ADDRESS,
+    usdcAddress: process.env.REACT_APP_LOCALHOST_USDC_ADDRESS,
+    dlcManagerAddress: process.env.REACT_APP_LOCALHOST_DLC_MANAGER_ADDRESS,
   },
 };
 
@@ -55,11 +55,11 @@ export const StacksNetworks = {
   'stacks:42': {
     name: 'Mocknet',
     network: mocknet,
-    loanContractAddress: process.env.REACT_APP_STACKS_MOCKNET_CONTRACT_ADDRESS,
+    loanContractAddress: process.env.REACT_APP_STACKS_DEVNET_CONTRACT_ADDRESS,
     loanContractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-    managerContractAddress: process.env.REACT_APP_STACKS_MOCKNET_MANAGER_ADDRESS,
+    managerContractAddress: process.env.REACT_APP_STACKS_DEVNET_MANAGER_ADDRESS,
     managerContractName: process.env.REACT_APP_STACKS_MANAGER_NAME,
-    assetContractAddress: process.env.REACT_APP_STACKS_MOCKNET_MANAGER_ADDRESS,
+    assetContractAddress: process.env.REACT_APP_STACKS_DEVNET_MANAGER_ADDRESS,
     assetContractName: process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME,
     assetName: process.env.REACT_APP_STACKS_ASSET_NAME,
     apiBase: 'dev-oracle.dlc.link',

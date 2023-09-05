@@ -11,7 +11,7 @@ export function useLoans() {
       case 'metamask':
         return Object.values(solidityLoanStatuses);
       case 'xverse':
-      case 'hiro':
+      case 'leather':
       case 'walletConnect':
         return Object.values(clarityLoanStatuses);
       default:

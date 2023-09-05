@@ -14,7 +14,7 @@ export default function Observer() {
         case 'metamask':
           startEthereumObserver(blockchain);
           break;
-        case 'hiro':
+        case 'leather':
         case 'xverse':
           startStacksObserver(blockchain);
           break;

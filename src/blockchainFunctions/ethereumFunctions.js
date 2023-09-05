@@ -113,13 +113,7 @@ export async function isAllowedInMetamask(vaultLoan) {
 export async function sendLoanContractToEthereum(loanContract) {
   try {
     protocolContractETH
-      .setupLoan(
-        loanContract.BTCDeposit,
-        loanContract.liquidationRatio,
-        loanContract.liquidationFee,
-        loanContract.attestorCount,
-        { gasLimit: 900000 }
-      )
+      .setupLoan(loanContract.BTCDeposit, loanContract.attestorCount, { gasLimit: 900000 })
       .then((response) => store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit })));
   } catch (error) {
     console.error(error);

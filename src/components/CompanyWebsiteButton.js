@@ -5,7 +5,7 @@ export default function CompanyWebsiteButton() {
     <Button
       variant='ghost'
       as='a'
-      boxSize={['65px', '97.5px']}
+      boxSize={[65, 100]}
       borderRadius='lg'
       href='https://www.dlc.link/'
       _hover={{

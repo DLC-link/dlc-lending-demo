@@ -21,7 +21,7 @@ export function ActionButtons({ loan, canBeLiquidated }) {
 
   switch (walletType) {
     case 'xverse':
-    case 'hiro':
+    case 'leather':
     case 'walletConnect':
       closeAction = () => closeStacksLoan(loan.uuid);
       liquidateAction = () => liquidateStacksLoan(loan.uuid);
@@ -46,13 +46,6 @@ export function ActionButtons({ loan, canBeLiquidated }) {
     case clarityLoanStatuses.READY:
       actionButton = (
         <ButtonContainer>
-          <Text
-            paddingBottom={25}
-            width={200}
-            textAlign={'justify'}
-            as={'i'}>
-            You have 3 minutes to lock in your BTC after setting up the loan, or the offer will expire.
-          </Text>
           <Button
             variant='outline'
             onClick={() => fetchBitcoinContractOfferAndSendToUserWallet(loan)}>
@@ -115,6 +108,8 @@ export function ActionButtons({ loan, canBeLiquidated }) {
     case clarityLoanStatuses.PREREPAID:
     case solidityLoanStatuses.PRELIQUIDATED:
     case clarityLoanStatuses.PRELIQUIDATED:
+    case solidityLoanStatuses.PREFUNDED:
+    case clarityLoanStatuses.PREFUNDED:
       actionButton = (
         <ButtonContainer>
           <Button

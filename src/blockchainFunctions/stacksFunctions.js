@@ -141,8 +141,8 @@ export async function sendLoanContractToStacks(loanContract) {
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -276,8 +276,8 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -323,8 +323,8 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -362,8 +362,8 @@ export async function liquidateStacksLoan(UUID) {
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });
@@ -410,8 +410,8 @@ export async function closeStacksLoan(UUID) {
     blockchain
   );
 
-  //Network override because of the Hiro bug
-  if (blockchain === 'stacks:42' && walletType === 'hiro') {
+  //Network override because of the Leather bug
+  if (blockchain === 'stacks:42' && walletType === 'leather') {
     txOptions.network = new StacksMocknet({
       url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
     });

@@ -4,13 +4,27 @@ import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import PaidIcon from '@mui/icons-material/Paid';
-import { InfoIcon } from '@chakra-ui/icons';
+import { ExternalLinkIcon, InfoIcon } from '@chakra-ui/icons';
 import { useOnMount } from '../hooks/useOnMount';
 import { useState } from 'react';
+import { IconButton } from '@chakra-ui/react';
+import { InfoOutlined } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 
-export default function Status({ status, canBeLiquidated }) {
+export default function Status({ status, canBeLiquidated, txHash }) {
+  const { blockchain } = useSelector((state) => state.account);
   const [text, setText] = useState();
   const [icon, setIcon] = useState();
+
+  const bitcoinNetwork = blockchain === 'stacks:1' || blockchain === 'ethereum:1' ? 'mainnet' : 'testnet';
+
+  const bitcoinExplorerURL = `https://mempool.space/${
+    bitcoinNetwork !== 'mainnet' ? bitcoinNetwork + '/' : ''
+  }tx/${txHash}`;
+
+  const OpenExplorerLink = () => {
+    window.open(bitcoinExplorerURL, '_blank');
+  };
 
   const StatusInfo = ({ children, text }) => {
     return (
@@ -77,6 +91,11 @@ export default function Status({ status, canBeLiquidated }) {
         setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
         setText('Liquidation pending');
         break;
+      case solidityLoanStatuses.PREFUNDED:
+      case clarityLoanStatuses.PREFUNDED:
+        setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Funding pending');
+        break;
       case solidityLoanStatuses.READY:
       case clarityLoanStatuses.READY:
         setIcon(<CurrencyBitcoinIcon sx={{ color: '#04BAB2', height: '20px' }} />);
@@ -109,6 +128,21 @@ export default function Status({ status, canBeLiquidated }) {
       paddingBottom={2.5}
       justifyContent={'space-between'}>
       <StatusInfo text={text}>{icon}</StatusInfo>
+      {(status === solidityLoanStatuses.PREFUNDED || status === clarityLoanStatuses.PREFUNDED) && (
+        <Tooltip
+          label='View transaction in explorer'
+          gutter={35}
+          placement={'top-end'}>
+          <IconButton
+            icon={<ExternalLinkIcon />}
+            variant={'ghost'}
+            boxSize={5}
+            color='#07E8D8'
+            _hover={{ background: 'transparent' }}
+            onClick={() => OpenExplorerLink()}
+          />
+        </Tooltip>
+      )}
       {status !== clarityLoanStatuses.LIQUIDATED && status !== solidityLoanStatuses.LIQUIDATED && (
         <LiquidationIndicator />
       )}
