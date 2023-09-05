@@ -21,7 +21,8 @@ export default function LoansGrid() {
           <SimpleGrid
             columns={[1, 2, 3, 4, 5]}
             spacing={50}
-            padding={50}
+            paddingTop={25}
+            paddingBottom={50}
             marginBottom={50}>
             <SetupLoanButton />
             {loans?.map((loan) => (

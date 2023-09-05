@@ -11,6 +11,16 @@ import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses
 
 import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
 
+export const ButtonContainer = ({ children }) => {
+  return (
+    <VStack
+      spacing={2.5}
+      padding={15}>
+      {children}
+    </VStack>
+  );
+};
+
 export function ActionButtons({ loan, canBeLiquidated }) {
   const dispatch = useDispatch();
   const walletType = useSelector((state) => state.account.walletType);
@@ -30,16 +40,6 @@ export function ActionButtons({ loan, canBeLiquidated }) {
       closeAction = () => closeEthereumLoan(loan.uuid);
       liquidateAction = () => liquidateEthereumLoan(loan.uuid);
   }
-
-  const ButtonContainer = ({ children }) => {
-    return (
-      <VStack
-        spacing={2.5}
-        padding={15}>
-        {children}
-      </VStack>
-    );
-  };
 
   switch (loan.status) {
     case solidityLoanStatuses.READY:

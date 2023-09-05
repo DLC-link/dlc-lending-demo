@@ -110,16 +110,16 @@ export default function DepositModal() {
       <ModalOverlay />
       <ModalContent
         width={350}
-        border='1px'
-        bg='background2'
-        borderColor='accent'>
+        border={'1px'}
+        bg={'background2'}
+        borderColor={'accent'}>
         <VStack justifyContent={'space-evenly'}>
-          <ModalHeader color='white'>Request Loan</ModalHeader>
+          <ModalHeader color={'white'}>Request Loan</ModalHeader>
           <ModalBody>
             <FormControl isInvalid={isCollateralError}>
               <VStack width={350}>
                 <FormLabel
-                  color='white'
+                  color={'white'}
                   textAlign={'left'}
                   width={250}
                   fontWeight={'bold'}

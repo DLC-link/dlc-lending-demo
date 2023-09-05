@@ -12,13 +12,11 @@ import TutorialSwitch from './TutorialSwitch';
 export default function Account() {
   const dispatch = useDispatch();
 
-  const { address } = useSelector((state) => state.account);
+  const { walletType, address } = useSelector((state) => state.account);
   const { tutorialOn, tutorialStep } = useSelector((state) => state.tutorial);
 
   const [showTutorial, setShowTutorial] = useState(false);
   const [walletLogo, setWalletLogo] = useState(undefined);
-
-  const walletType = useSelector((state) => state.account.walletType);
 
   const walletLogos = {
     leather: { src: '/leather_logo.svg', alt: 'Leather Logo', boxSize: [5, 25] },
@@ -123,7 +121,9 @@ export default function Account() {
   };
 
   return (
-    <VStack marginTop={15}>
+    <VStack
+      paddingTop={[1.5, 25]}
+      paddingBottom={25}>
       <HStack>
         <TutorialSwitch tutorialStep={tutorialStep} />
         {address ? <DisconnectMenu /> : <ConnectMenu />}

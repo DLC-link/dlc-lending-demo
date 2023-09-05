@@ -1,37 +1,36 @@
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
   Button,
   FormControl,
-  FormLabel,
-  FormHelperText,
   FormErrorMessage,
+  FormHelperText,
+  FormLabel,
+  HStack,
+  Image,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
   NumberInput,
   NumberInputField,
-  Flex,
   Text,
-  Image,
-  HStack,
   VStack,
 } from '@chakra-ui/react';
 
 import store from '../store/store';
 
 import { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { formatCollateralInUSD, calculateCollateralCoveragePercentageForRepay } from '../utilities/utils';
+import { calculateCollateralCoveragePercentageForRepay, formatCollateralInUSD } from '../utilities/utils';
 
-import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { repayEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { fetchBitcoinValue } from '../store/externalDataSlice';
 
-import { toggleRepayModalVisibility } from '../store/componentSlice';
+import { ButtonContainer } from '../components/ActionButtons';
 import { useOnMount } from '../hooks/useOnMount';
+import { toggleRepayModalVisibility } from '../store/componentSlice';
 
 export default function RepayModal() {
   const dispatch = useDispatch();
@@ -40,7 +39,7 @@ export default function RepayModal() {
   const isRepayModalOpen = useSelector((state) => state.component.isRepayModalOpen);
   const walletType = useSelector((state) => state.account.walletType);
 
-  const [additionalRepayment, setAdditionalRepayment] = useState();
+  const [additionalRepayment, setAdditionalRepayment] = useState(0);
   const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
   const [USDAmount, setUSDAmount] = useState(0);
 
@@ -71,6 +70,7 @@ export default function RepayModal() {
       Number(loan.vaultLoan),
       Number(additionalRepayment)
     );
+
     if (isNaN(collateralCoveragePercentage)) {
       setCollateralToDebtPercentage('-');
     } else {
@@ -108,6 +108,106 @@ export default function RepayModal() {
     }
   };
 
+  const CollateralAmountInfo = () => {
+    return (
+      <>
+        <Text
+          margin={0}
+          width={250}
+          textAlign={'left'}
+          fontSize={'md'}
+          fontWeight={'bold'}
+          color={'header'}>
+          Collateral Amount
+        </Text>
+        <HStack
+          paddingBottom={2.5}
+          width={250}
+          justifyContent={'space-between'}>
+          <Text
+            width={200}
+            fontSize={'md'}
+            color='white'>
+            {loan.vaultCollateral}
+          </Text>
+          <Image
+            src='/btc_logo.png'
+            alt='Bitcoin Logo'
+            boxSize={25}
+          />
+        </HStack>
+        <HStack
+          width={250}
+          justifyContent={'space-between'}>
+          <Text
+            width={125}
+            fontSize={'xs'}
+            fontWeight={'extrabold'}>
+            ${USDAmount}
+          </Text>
+          <Text
+            width={150}
+            textAlign={'right'}
+            fontSize={'xs'}
+            color={'white'}>
+            at 1 <strong>BTC</strong> $&nbsp;
+            {new Intl.NumberFormat().format(bitcoinUSDValue)}
+          </Text>
+        </HStack>
+      </>
+    );
+  };
+
+  const LoanInfo = () => {
+    return (
+      <>
+        <HStack
+          justifyContent={'space-between'}
+          width={250}>
+          <Text
+            width={125}
+            fontSize={'xs'}
+            fontWeight={'extrabold'}
+            color={'white'}>
+            Collateral to debt ratio percentage:
+          </Text>
+
+          {!isCollateralToDebtPercentageError ? (
+            <Text
+              fontSize={'sm'}
+              color={'accent'}>
+              {collateralToDebtPercentage}%
+            </Text>
+          ) : (
+            <Text
+              fontSize={'sm'}
+              color={'warning'}>
+              {collateralToDebtPercentage}%
+            </Text>
+          )}
+        </HStack>
+        <HStack
+          width={250}
+          justifyContent={'space-between'}>
+          <Text
+            width={125}
+            fontSize='xs'
+            fontWeight={'extrabold'}
+            color='white'>
+            Already borrowed:
+          </Text>
+          <Text
+            width={150}
+            textAlign={'right'}
+            fontSize='xs'
+            color='white'>
+            {loan.formattedVaultLoan}
+          </Text>
+        </HStack>
+      </>
+    );
+  };
+
   return (
     <Modal
       isOpen={isRepayModalOpen}
@@ -115,146 +215,81 @@ export default function RepayModal() {
       isCentered>
       <ModalOverlay />
       <ModalContent
-        width='350px'
-        border='1px'
-        bg='background2'
-        color='accent'>
+        width={350}
+        bg={'background2'}
+        border={'1px'}
+        borderColor={'accent'}>
         <VStack>
-          <ModalHeader color='white'>Repay USDC</ModalHeader>
-          <ModalCloseButton
-            _focus={{
-              boxShadow: 'none',
-            }}
-          />
+          <ModalHeader color={'white'}>Repay USDC</ModalHeader>
           <ModalBody>
-            <Text
-              marginTop='15px'
-              marginBottom='15px'
-              marginLeft='40px'
-              color='white'
-              fontSize='md'>
-              Collateral Amount
-            </Text>
-            <HStack
-              marginLeft='40px'
-              spacing={45}>
-              <Text
-                width='200px'
-                color='white'
-                fontSize='md'>
-                {loan.vaultCollateral}
-              </Text>
-              <Image
-                src='/btc_logo.png'
-                alt='Bitcoin Logo'
-                width='25px'
-                height='25px'></Image>
-            </HStack>
-            <Text
-              marginTop='15px'
-              marginLeft='40px'
-              fontSize='x-small'
-              color='white'>
-              ${USDAmount} at 1 BTC = ${new Intl.NumberFormat().format(bitcoinUSDValue)}
-            </Text>
-            <FormControl isInvalid={isLoanError}>
-              <FormLabel
-                marginTop='15px'
-                marginBottom='15px'
-                marginLeft='40px'
-                color='white'>
-                Repay Amount
-              </FormLabel>
-              {!isLoanError ? (
-                <FormHelperText
-                  marginTop='15px'
-                  marginBottom='15px'
-                  marginLeft='40px'
-                  fontSize='x-small'
-                  color='accent'>
-                  Enter the amount of USDC you would like to repay.
-                </FormHelperText>
-              ) : (
-                <FormErrorMessage
-                  marginTop='15px'
-                  marginBottom='15px'
-                  marginLeft='40px'
-                  fontSize='x-small'>
-                  Enter a valid amount of USDC.
-                </FormErrorMessage>
-              )}
-              <HStack
-                marginLeft='40px'
-                marginRight='50px'
-                spacing={45}>
-                <NumberInput focusBorderColor='accent'>
-                  <NumberInputField
-                    max={loan.vaultLoan}
-                    padding='15px'
-                    width='200px'
-                    color='white'
-                    value={additionalRepayment}
-                    onChange={handleRepaymentChange}
-                  />
-                </NumberInput>
-                <Image
-                  src='/usdc_logo.png'
-                  alt='USD Coin Logo'
-                  width='25px'
-                  height='25px'></Image>
-              </HStack>
-            </FormControl>
-            <HStack
-              marginTop='15px'
-              marginBottom='15px'
-              marginLeft='40px'
-              spacing={45}>
-              <Text
-                width='185px'
-                fontSize='sm'
-                color='gray'>
-                Collateral to debt ratio percentage:
-              </Text>
-              {!isCollateralToDebtPercentageError ? (
-                <Text
-                  fontSize='sm'
-                  color='green'>
-                  {collateralToDebtPercentage}%
-                </Text>
-              ) : (
-                <Text
-                  fontSize='sm'
-                  color='red'>
-                  {collateralToDebtPercentage}%
-                </Text>
-              )}
-            </HStack>
-            <HStack
-              marginTop='15px'
-              marginBottom='15px'
-              marginLeft='40px'
-              spacing={45}>
-              <Text
-                width='185px'
-                fontSize='sm'
-                color='gray'>
-                Already borrowed:
-              </Text>
-              <Text
-                fontSize='sm'
-                color='gray'>
-                {loan.formattedVaultLoan}
-              </Text>
-            </HStack>
-            <Flex justifyContent='center'>
-              <Button
-                disabled={isLoanError}
-                variant='outline'
-                type='submit'
-                onClick={() => repayLoanContract()}>
-                REPAY USDC
-              </Button>
-            </Flex>
+            <VStack
+              width={350}
+              spacing={25}>
+              <CollateralAmountInfo />
+              <VStack>
+                <FormControl isInvalid={isLoanError}>
+                  <FormLabel
+                    margin={0}
+                    width={250}
+                    color={'header'}
+                    textAlign={'left'}
+                    fontWeight={'bold'}>
+                    Repay Amount
+                  </FormLabel>
+                  {!isLoanError ? (
+                    <FormHelperText
+                      marginBottom={15}
+                      width={250}
+                      height={25}
+                      textAlign={'left'}
+                      fontSize={'2xs'}
+                      color={'accent'}>
+                      Enter the amount of <strong>USDC</strong> you would like to repay.
+                    </FormHelperText>
+                  ) : (
+                    <FormErrorMessage
+                      marginBottom={15}
+                      width={250}
+                      height={25}
+                      textAlign={'left'}
+                      fontSize={'2xs'}
+                      color={'warning'}>
+                      Enter a valid amount of &nbsp;
+                      <strong>USDC</strong>
+                    </FormErrorMessage>
+                  )}
+                  <HStack
+                    paddingBottom={2.5}
+                    width={250}
+                    justifyContent={'space-between'}>
+                    <NumberInput focusBorderColor={'accent'}>
+                      <NumberInputField
+                        max={loan.vaultLoan}
+                        width={200}
+                        color={'white'}
+                        value={additionalRepayment}
+                        onChange={handleRepaymentChange}
+                      />
+                    </NumberInput>
+                    <Image
+                      src='/usdc_logo.png'
+                      alt='USD Coin Logo'
+                      boxSize={25}
+                    />
+                  </HStack>
+                </FormControl>
+              </VStack>
+              <LoanInfo />
+              <ButtonContainer>
+                <Button
+                  disabled={isLoanError}
+                  variant='outline'
+                  type='submit'
+                  onClick={() => repayLoanContract()}>
+                  REPAY USDC
+                </Button>
+              </ButtonContainer>
+            </VStack>
           </ModalBody>
         </VStack>
       </ModalContent>

@@ -1,6 +1,7 @@
 /*global chrome*/
 
 import {
+  Button,
   Flex,
   Spacer,
   Spinner,
@@ -12,8 +13,6 @@ import {
   Tooltip,
   Tr,
   VStack,
-  useClipboard,
-  Button,
 } from '@chakra-ui/react';
 
 import { useState } from 'react';
@@ -25,12 +24,12 @@ import { motion } from 'framer-motion';
 import { ActionButtons } from './ActionButtons';
 import Status from './Status';
 
+import { keyframes } from '@chakra-ui/react';
 import { useEffect } from 'react';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { calculateCollateralCoveragePercentageForLiquidation, easyTruncateAddress } from '../utilities/utils';
 import TutorialBox from './TutorialBox';
-import { keyframes } from '@chakra-ui/react';
 
 export default function Card({ loan }) {
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);

@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 const VaultBlockchainEvent = {
   READY: 'Vault is ready!',
+  PREFUNDED: 'Processing vault funding!',
   FUNDED: 'Vault is funded!',
   APPROVED: 'USDC spending approved!',
   BORROWED: 'USDC borrowed!',
