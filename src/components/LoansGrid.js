@@ -19,9 +19,9 @@ export default function LoansGrid() {
         alignContent='center'>
         <ScaleFade in={!isLoading}>
           <SimpleGrid
-            columns={[1, 2, 3, 4, 5]}
+            columns={[1, 2, 3]}
             spacing={50}
-            paddingTop={25}
+            paddingTop={50}
             paddingBottom={50}
             marginBottom={50}>
             <SetupLoanButton />

@@ -29,22 +29,34 @@ export const appTheme = extendTheme({
         color: 'white',
       },
       variants: {
-        selector: {
-          fontSize: 'md',
+        wallet: {
+          fontSize: 'sm',
           fontWeight: 'extrabold',
+          color: 'white',
+        },
+        network: {
+          fontSize: 'sm',
+          fontWeight: 'normal',
           color: 'white',
         },
         value: {
           fontWeight: 'extrabold',
         },
         tutorial: {
-          fontSize: 'sm',
+          fontSize: 'xs',
           fontWeight: 'bold',
-          textAlign: 'justify',
+          textAlign: 'left',
+          padding: '5px',
         },
         connect: {
           fontSize: ['xs', 'xl'],
           fontWeight: 'extrabold',
+        },
+        header: {
+          fontSize: 'xl',
+          fontWeight: 'extrabold',
+          padding: '5px',
+          color: 'white',
         },
       },
     },
@@ -85,7 +97,6 @@ export const appTheme = extendTheme({
           _hover: {
             bg: 'secondary1',
             borderColor: 'white',
-            transform: 'translateY(-2.5px)',
           },
         },
         uuid: {
@@ -103,6 +114,21 @@ export const appTheme = extendTheme({
           width: ['175px', '250px'],
           shadow: 'dark-lg',
           bgGradient: 'linear(to-r, primary1, primary2)',
+        },
+        hide: {
+          padding: '0px',
+          margin: '0px',
+          height: '10px',
+          width: '10px',
+          fontSize: '2xs',
+          color: 'white',
+          bg: 'transparent',
+          borderColor: 'accent',
+          transition: 'all .25s ease',
+          _hover: {
+            bg: 'secondary1',
+            borderColor: 'white',
+          },
         },
       },
     },

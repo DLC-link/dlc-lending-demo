@@ -30,7 +30,7 @@ export default function SetupLoanButton() {
 
   const SetupLoanButtonContainer = ({ children }) => (
     <VStack
-      height={350}
+      height={375}
       width={250}
       borderRadius='lg'
       shadow='dark-lg'
@@ -61,7 +61,7 @@ export default function SetupLoanButton() {
   );
 
   return (
-    <VStack>
+    <VStack spacing={5}>
       <SetupLoanButtonContainer>
         <Text fontSize='9xl'>+</Text>
         <Text

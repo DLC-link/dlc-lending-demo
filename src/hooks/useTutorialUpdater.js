@@ -13,8 +13,7 @@ export default function useTutorialStep() {
   const { isFirstTimeUser, tutorialStep } = useSelector((state) => state.tutorial);
 
   const { walletType } = useSelector((state) => state.account);
-  const isDepositModalOpen = useSelector((state) => state.component.isDepositModalOpen);
-  const isSelectWalletModalOpen = useSelector((state) => state.component.isSelectWalletModalOpen);
+  const { isDepositModalOpen, isSelectWalletModalOpen } = useSelector((state) => state.component);
 
   const currentUserAddress = useSelector((state) => state.account.address);
 

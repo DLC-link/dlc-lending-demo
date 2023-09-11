@@ -19,3 +19,25 @@ export const clarityLoanStatuses = {
   LIQUIDATED: 'liquidated',
   PREFUNDED: 'pre-funded',
 };
+
+export const solidityLoanOrder = {
+  NONE: 'None',
+  READY: 'Ready',
+  PREFUNDED: 'PreFunded',
+  FUNDED: 'Funded',
+  PREREPAID: 'PreRepaid',
+  PRELIQUIDATED: 'PreLiquidated',
+  REPAID: 'Repaid',
+  LIQUIDATED: 'Liquidated',
+};
+
+export const clarityLoanOrder = {
+  NONE: 'none',
+  READY: 'ready',
+  PREFUNDED: 'pre-funded',
+  FUNDED: 'funded',
+  PREREPAID: 'pre-repaid',
+  PRELIQUIDATED: 'pre-liquidated',
+  REPAID: 'repaid',
+  LIQUIDATED: 'liquidated',
+};

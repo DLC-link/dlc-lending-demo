@@ -110,12 +110,17 @@ export default function DepositModal() {
       <ModalOverlay />
       <ModalContent
         width={350}
-        border={'1px'}
-        bg={'background2'}
-        borderColor={'accent'}>
-        <VStack justifyContent={'space-evenly'}>
-          <ModalHeader color={'white'}>Request Loan</ModalHeader>
-          <ModalBody>
+        background={'transparent'}>
+        <VStack
+          padding={25}
+          spacing={5}
+          background={'background2'}
+          justifyContent={'space-evenly'}
+          color={'accent'}
+          border={'1px'}
+          borderRadius={'lg'}>
+          <VStack>
+            <Text variant={'header'}>Request Loan</Text>
             <FormControl isInvalid={isCollateralError}>
               <VStack width={350}>
                 <FormLabel
@@ -203,13 +208,13 @@ export default function DepositModal() {
                 width={250}
                 variant='outline'
                 type='submit'
-                onClick={createAndSendLoanContract}>
+                onClick={() => createAndSendLoanContract()}>
                 REQUEST VAULT
               </Button>
-              {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
             </VStack>
-          </ModalBody>
+          </VStack>
         </VStack>
+        {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
       </ModalContent>
     </Modal>
   );

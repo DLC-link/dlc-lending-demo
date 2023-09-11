@@ -1,16 +1,16 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import store from './store';
+import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
+import { forEach } from 'ramda';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
-import { customShiftValue } from '../utilities/utils';
+import { ToastEvent } from '../components/CustomToast';
+import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import {
   formatClarityLoanContract,
   formatSolidityLoanContract,
   updateLoanToFundingInProgress,
 } from '../utilities/loanFormatter';
-import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
-import { ToastEvent } from '../components/CustomToast';
-import { forEach } from 'ramda';
+import { customShiftValue } from '../utilities/utils';
+import store from './store';
 
 const initialState = {
   loans: [],
@@ -18,6 +18,8 @@ const initialState = {
   error: null,
   loansWithBTCTransactions: [],
   toastEvent: null,
+  showHiddenLoans: false,
+  hiddenLoans: [],
 };
 
 export const loansSlice = createSlice({
@@ -42,6 +44,16 @@ export const loansSlice = createSlice({
         txHash: action.payload.txHash,
         status: action.payload.status,
       };
+    },
+    hideLoan: (state, action) => {
+      if (state.hiddenLoans.includes(action.payload)) {
+        state.hiddenLoans = state.hiddenLoans.filter((loan) => loan !== action.payload);
+      } else {
+        state.hiddenLoans.push(action.payload);
+      }
+    },
+    toggleShowHiddenLoans: (state) => {
+      state.showHiddenLoans = !state.showHiddenLoans;
     },
     deleteToastEvent: (state) => {
       state.toastEvent = null;
@@ -128,7 +140,8 @@ export const loansSlice = createSlice({
   },
 });
 
-export const { loanSetupRequested, loanEventReceived, deleteToastEvent } = loansSlice.actions;
+export const { loanSetupRequested, loanEventReceived, hideLoan, toggleShowHiddenLoans, deleteToastEvent } =
+  loansSlice.actions;
 
 export default loansSlice.reducer;
 

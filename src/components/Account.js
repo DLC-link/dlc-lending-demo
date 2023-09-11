@@ -123,7 +123,8 @@ export default function Account() {
   return (
     <VStack
       paddingTop={[1.5, 25]}
-      paddingBottom={25}>
+      paddingBottom={25}
+      spacing={5}>
       <HStack>
         <TutorialSwitch tutorialStep={tutorialStep} />
         {address ? <DisconnectMenu /> : <ConnectMenu />}

@@ -1,12 +1,26 @@
 import { hexToBytes as hexToBytesMS } from 'micro-stacks/common';
 
+import Decimal from 'decimal.js';
+
 export const easyTruncateAddress = (address) => {
   if (!address) return '';
   return address.substring(0, 4) + '...' + address.substring(address.length - 4, address.length);
 };
 
+// export function customShiftValue(value, shift, unshift) {
+//   const poweredShift = new Decimal(10).pow(shift);
+//   const shiftedValue = unshift ? Number(value / poweredShift).toFixed(4) : Number(value * poweredShift).toFixed(4);
+//   const shiftedValueAsNumber = Number(shiftedValue);
+//   return shiftedValueAsNumber;
+// }
+
 export function customShiftValue(value, shift, unshift) {
-  return unshift ? value / 10 ** shift : value * 10 ** shift;
+  const decimalPoweredShift = new Decimal(10 ** shift);
+  const decimalValue = new Decimal(value);
+  const decimalShiftedValue = unshift
+    ? decimalValue.div(decimalPoweredShift).toNumber()
+    : decimalValue.mul(decimalPoweredShift).toNumber();
+  return decimalShiftedValue;
 }
 
 export function fixedTwoDecimalShift(value) {

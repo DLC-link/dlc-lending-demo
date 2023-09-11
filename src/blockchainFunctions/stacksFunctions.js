@@ -74,7 +74,8 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
   };
 };
 
-export async function requestAndDispatchStacksAccountInformation(walletType, blockchain) {
+export async function requestAndDispatchStacksAccountInformation(blockchain) {
+  console.log('blockchain', blockchain);
   const isUserSignedIn = userSession.isUserSignedIn();
 
   let address;
@@ -95,7 +96,7 @@ export async function requestAndDispatchStacksAccountInformation(walletType, blo
   }
 
   const accountInformation = {
-    walletType: walletType,
+    walletType: 'leather',
     address: address,
     blockchain,
   };

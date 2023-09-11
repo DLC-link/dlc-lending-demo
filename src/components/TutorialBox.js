@@ -1,5 +1,6 @@
 import { ArrowDownIcon, ArrowUpIcon } from '@chakra-ui/icons';
-import { VStack, Text } from '@chakra-ui/react';
+
+import { VStack, Text, Spacer } from '@chakra-ui/react';
 import { keyframes } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import { TutorialStep } from '../enums/TutorialSteps';
@@ -41,34 +42,83 @@ export default function TutorialBox() {
   }, [tutorialStep]);
 
   const TutorialTextMap = {
-    ConnectWallet:
-      "Welcome to DLC.Link's Lending Demo! Please connect your wallet to proceed. Note that a Leather account is required for BTC transactions.",
+    ConnectWallet: (
+      <Text>
+        Welcome to
+        <br />
+        <strong>DLC.Link's Lending Demo!</strong>
+        <br />
+        Please connect your wallet to proceed.
+        <br />
+        <br />
+        <i>Note that a Leather account is required for BTC transactions.</i>
+      </Text>
+    ),
+    SelectNetwork: (
+      <Text>
+        Begin by choosing a <strong>wallet</strong> and a <strong>network</strong> for establishing a connection.
+      </Text>
+    ),
 
-    SelectNetwork: 'Begin by choosing a wallet and a network for establishing a connection.',
+    SetupLoan: (
+      <Text>
+        You're now <strong>connected</strong>! Let's set up a <strong>vault</strong> on your chosen network.
+      </Text>
+    ),
 
-    SetupLoan: "You're now connected! Let's set up a vault on your chosen network.",
+    SetCollateral: (
+      <Text>
+        Select the amount of <strong>BTC</strong> to use as collateral. Click the button to send the{' '}
+        <strong>vault</strong> request to the blockchain.
+      </Text>
+    ),
 
-    SetCollateral: `Select the amount of BTC to use as collateral. Click the button to send the vault request to the blockchain.`,
+    WaitForSetup: (
+      <Text>
+        'Your <strong>vault</strong> setup is in progress. Please wait for confirmation.
+      </Text>
+    ),
 
-    WaitForSetup: 'Your vault setup is in progress. Please wait for confirmation.',
+    FundLoan: (
+      <Text>
+        Your <strong>vault</strong> is now ready. To proceed, simply click the button to utilize your{' '}
+        <strong>BTC</strong> as collateral for the <strong>DLC</strong>. <i>Leather</i> will request confirmation.
+      </Text>
+    ),
 
-    FundLoan:
-      'Your vault is now ready. To proceed, simply click the button to utilize your BTC as collateral for the DLC. Leather will request confirmation.',
+    WaitForConfirmation: (
+      <Text>
+        Your <strong>vault</strong> is being funded. Kindly wait for confirmation.
+      </Text>
+    ),
 
-    WaitForConfirmation: 'Your vault is being funded. Kindly wait for confirmation.',
+    BorrowRepay: (
+      <Text>
+        Your <strong>vault</strong> is <strong>funded</strong>, and you can now <strong>borrow</strong> or{' '}
+        <strong>repay</strong> your loan. If you repay your loan, you can <strong>close</strong> the vault. If{' '}
+        <i>collateral to debt ratio</i> falls under the <i>liquidation ratio</i>, you can <strong>liquidate</strong> the{' '}
+        <strong>vault</strong>.
+      </Text>
+    ),
 
-    BorrowRepay:
-      'Your vault is funded, and you can now borrow or repay your loan. If you repay your loan, you can close the vault. If collateral to debt ratio falls under the liquidation ratio, you can liquidate the vault. ',
+    WaitForClose: (
+      <Text>
+        Your <strong>vault</strong> is being <strong>closed</strong>. Please wait for confirmation.
+      </Text>
+    ),
 
-    WaitForClose: 'Your vault is being closed. Please wait for confirmation.',
-
-    EndFlow: "Congratulations! You've successfully closed your vault, and your BTC has been returned to your wallet.",
+    EndFlow: (
+      <Text>
+        <strong>Congratulations!</strong> You've successfully <strong>closed</strong> your <strong>vault</strong>, and
+        your <strong>BTC</strong> has been <strong>returned</strong> to your wallet.
+      </Text>
+    ),
   };
 
   const TutorialContainer = ({ children }) => {
     return (
       <VStack
-        width={225}
+        width={250}
         padding={2.5}
         background={'rgba(0, 9, 51, 0.25)'}
         border={'1px solid #07E8D8'}
@@ -79,12 +129,13 @@ export default function TutorialBox() {
   };
 
   const TutorialInfo = () => {
-    return <Text variant={'tutorial'}>{TutorialTextMap[tutorialStep]}</Text>;
+    return TutorialTextMap[tutorialStep];
   };
 
   const TutorialBoxWithArrowUp = () => {
     return (
       <VStack
+        marginTop={15}
         animation={`
       ${bounceAnimation} infinite 1s
   `}>
@@ -99,6 +150,7 @@ export default function TutorialBox() {
   const TutorialBoxWithArrowDown = () => {
     return (
       <VStack
+        marginBottom={15}
         animation={`
       ${bounceAnimation} infinite 1s
   `}>

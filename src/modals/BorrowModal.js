@@ -213,80 +213,81 @@ export default function BorrowModal() {
       <ModalOverlay />
       <ModalContent
         width={350}
-        bg={'background2'}
-        border={'1px'}
-        borderColor={'accent'}>
-        <VStack>
-          <ModalHeader color={'white'}>Borrow USDC</ModalHeader>
-          <ModalBody>
-            <VStack
-              width={350}
-              spacing={25}>
-              <CollateralAmountInfo />
-              <VStack>
-                <FormControl isInvalid={isLoanError}>
-                  <FormLabel
-                    margin={0}
+        background={'transparent'}>
+        <VStack
+          padding={25}
+          spacing={5}
+          background={'background2'}
+          justifyContent={'space-evenly'}
+          color={'accent'}
+          border={'1px'}
+          borderRadius={'lg'}>
+          <VStack>
+            <Text variant={'header'}>Borrow USDC</Text>
+            <CollateralAmountInfo />
+            <VStack>
+              <FormControl isInvalid={isLoanError}>
+                <FormLabel
+                  margin={0}
+                  width={250}
+                  color={'header'}
+                  textAlign={'left'}
+                  fontWeight={'bold'}>
+                  Borrow Amount
+                </FormLabel>
+                {!isLoanError ? (
+                  <FormHelperText
+                    marginBottom={15}
                     width={250}
-                    color={'header'}
+                    height={25}
                     textAlign={'left'}
-                    fontWeight={'bold'}>
-                    Borrow Amount
-                  </FormLabel>
-                  {!isLoanError ? (
-                    <FormHelperText
-                      marginBottom={15}
-                      width={250}
-                      height={25}
-                      textAlign={'left'}
-                      fontSize={'2xs'}
-                      color={'accent'}>
-                      Enter the amount of <strong>USDC</strong> you would like to borrow.
-                    </FormHelperText>
-                  ) : (
-                    <FormErrorMessage
-                      marginBottom={15}
-                      width={250}
-                      height={25}
-                      textAlign={'left'}
-                      fontSize={'2xs'}
-                      color={'warning'}>
-                      Enter a valid amount of &nbsp;
-                      <strong>USDC</strong>
-                    </FormErrorMessage>
-                  )}
-                  <HStack
-                    paddingBottom={2.5}
+                    fontSize={'2xs'}
+                    color={'accent'}>
+                    Enter the amount of <strong>USDC</strong> you would like to borrow.
+                  </FormHelperText>
+                ) : (
+                  <FormErrorMessage
+                    marginBottom={15}
                     width={250}
-                    justifyContent={'space-between'}>
-                    <NumberInput focusBorderColor={'accent'}>
-                      <NumberInputField
-                        width={200}
-                        color={'white'}
-                        value={additionalLoan}
-                        onChange={handleLoanChange}
-                      />
-                    </NumberInput>
-                    <Image
-                      src='/usdc_logo.png'
-                      alt='USD Coin Logo'
-                      boxSize={25}
+                    height={25}
+                    textAlign={'left'}
+                    fontSize={'2xs'}
+                    color={'warning'}>
+                    Enter a valid amount of &nbsp;
+                    <strong>USDC</strong>
+                  </FormErrorMessage>
+                )}
+                <HStack
+                  paddingBottom={2.5}
+                  width={250}
+                  justifyContent={'space-between'}>
+                  <NumberInput focusBorderColor={'accent'}>
+                    <NumberInputField
+                      width={200}
+                      color={'white'}
+                      value={additionalLoan}
+                      onChange={handleLoanChange}
                     />
-                  </HStack>
-                </FormControl>
-              </VStack>
-              <LoanInfo />
-              <ButtonContainer>
-                <Button
-                  disabled={isLoanError}
-                  variant='outline'
-                  type='submit'
-                  onClick={() => borrowLoanContract()}>
-                  BORROW USDC
-                </Button>
-              </ButtonContainer>
+                  </NumberInput>
+                  <Image
+                    src='/usdc_logo.png'
+                    alt='USD Coin Logo'
+                    boxSize={25}
+                  />
+                </HStack>
+              </FormControl>
             </VStack>
-          </ModalBody>
+            <LoanInfo />
+            <ButtonContainer>
+              <Button
+                disabled={isLoanError}
+                variant='outline'
+                type='submit'
+                onClick={() => borrowLoanContract()}>
+                BORROW USDC
+              </Button>
+            </ButtonContainer>
+          </VStack>
         </VStack>
       </ModalContent>
     </Modal>

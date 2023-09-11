@@ -1,10 +1,12 @@
+import { Divider, Flex, HStack, Image, Slide, Switch, Text, VStack } from '@chakra-ui/react';
 import React from 'react';
-import { Text, HStack, VStack, Divider, Image } from '@chakra-ui/react';
-import { useSelector } from 'react-redux';
-import { selectTotalFundedCollateralAndLoan } from '../store/loansSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectTotalFundedCollateralAndLoan, toggleShowHiddenLoans } from '../store/loansSlice';
 
 export default function Balance() {
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
+  const { showHiddenLoans } = useSelector((state) => state.loans);
+  const dispatch = useDispatch();
 
   const BalanceContainer = ({ children }) => {
     return (
@@ -14,6 +16,19 @@ export default function Balance() {
         borderRadius={'lg'}
         shadow={'dark-lg'}
         justifyContent={'space-evenly'}>
+        {children}
+      </HStack>
+    );
+  };
+
+  const FilterContainer = ({ children }) => {
+    return (
+      <HStack
+        paddingLeft={2.5}
+        paddingRight={2.5}
+        height={25}
+        width={162.5}
+        justifyContent={'space-between'}>
         {children}
       </HStack>
     );
@@ -54,19 +69,30 @@ export default function Balance() {
   };
 
   return (
-    <BalanceContainer>
-      <BalanceTextStack
-        header={'BTC Collateral'}
-        data={fundedCollateralSum.toFixed(4)}
-      />
-      <Divider
-        orientation='vertical'
-        height='50px'
-      />
-      <BalanceTextStack
-        header={'USDC Debt'}
-        data={fundedLoanSum}
-      />
-    </BalanceContainer>
+    <VStack
+      spacing={5}
+      alignItems={'flex-end'}>
+      <BalanceContainer>
+        <BalanceTextStack
+          header={'BTC Collateral'}
+          data={fundedCollateralSum.toFixed(4)}
+        />
+        <Divider
+          orientation='vertical'
+          height='50px'
+        />
+        <BalanceTextStack
+          header={'USDC Debt'}
+          data={fundedLoanSum}
+        />
+      </BalanceContainer>
+      <FilterContainer>
+        <Switch
+          size='sm'
+          isChecked={showHiddenLoans}
+          onChange={() => dispatch(toggleShowHiddenLoans())}></Switch>
+        <Text fontSize={'2xs'}>SHOW HIDDEN VAULTS</Text>
+      </FilterContainer>
+    </VStack>
   );
 }

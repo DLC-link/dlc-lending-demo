@@ -8,7 +8,7 @@ import { ExternalLinkIcon, InfoIcon } from '@chakra-ui/icons';
 import { useOnMount } from '../hooks/useOnMount';
 import { useState } from 'react';
 import { IconButton } from '@chakra-ui/react';
-import { InfoOutlined } from '@mui/icons-material';
+import { HideImageRounded, InfoOutlined } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 
 export default function Status({ status, canBeLiquidated, txHash }) {

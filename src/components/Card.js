@@ -26,17 +26,21 @@ import Status from './Status';
 
 import { keyframes } from '@chakra-ui/react';
 import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { calculateCollateralCoveragePercentageForLiquidation, easyTruncateAddress } from '../utilities/utils';
 import TutorialBox from './TutorialBox';
+import { hideLoan } from '../store/loansSlice';
 
 export default function Card({ loan }) {
+  const dispatch = useDispatch();
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
   const [canBeLiquidated, setCanBeLiquidated] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
   const { tutorialOn, tutorialStep, tutorialLoanUUID } = useSelector((state) => state.tutorial);
+  const { hiddenLoans } = useSelector((state) => state.loans);
 
   const cardInfo = [
     { label: 'UUID', value: loan.uuid && easyTruncateAddress(loan.uuid) },
@@ -89,6 +93,10 @@ export default function Card({ loan }) {
   }
   `;
 
+  const handleHide = () => {
+    dispatch(hideLoan(loan.uuid));
+  };
+
   useOnMount(() => {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
       loan.vaultCollateral,
@@ -116,29 +124,31 @@ export default function Card({ loan }) {
 
   const CardContainer = ({ children }) => {
     return (
-      <VStack
-        height={350}
-        width={250}
-        borderRadius='lg'
-        shadow='dark-lg'
-        padding={2.5}
-        bgGradient='linear(to-br, background1, transparent)'
-        backgroundPosition='right'
-        backgroundSize='200%'
-        transition='background-position 500ms ease'
-        animation={
-          showTutorial
-            ? `
+      <>
+        <VStack
+          height={350}
+          width={250}
+          borderRadius='lg'
+          shadow='dark-lg'
+          padding={2.5}
+          bgGradient='linear(to-br, background1, transparent)'
+          backgroundPosition='right'
+          backgroundSize='200%'
+          transition='background-position 500ms ease'
+          animation={
+            showTutorial
+              ? `
             ${glowAnimation} infinite 1s
         `
-            : ''
-        }
-        justifyContent='center'
-        _hover={{
-          backgroundPosition: 'left',
-        }}>
-        {children}
-      </VStack>
+              : ''
+          }
+          justifyContent='center'
+          _hover={{
+            backgroundPosition: 'left',
+          }}>
+          {children}
+        </VStack>
+      </>
     );
   };
 
@@ -196,21 +206,28 @@ export default function Card({ loan }) {
 
   return (
     <CardAnimation>
-      <CardContainer>
-        <Status
-          status={loan.status}
-          canBeLiquidated={canBeLiquidated}
-          txHash={loan.txHash}
-        />
-        <CardTable />
-        <Spacer />
-        {[solidityLoanStatuses.NONE, clarityLoanStatuses.NONE].includes(loan.status) && <CardSpinner />}
-        <ActionButtons
-          loan={loan}
-          canBeLiquidated={canBeLiquidated}
-        />
-      </CardContainer>
-      {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+      <VStack spacing={5}>
+        <CardContainer>
+          <Status
+            status={loan.status}
+            canBeLiquidated={canBeLiquidated}
+            txHash={loan.txHash}
+          />
+          <CardTable />
+          <Spacer />
+          {[solidityLoanStatuses.NONE, clarityLoanStatuses.NONE].includes(loan.status) && <CardSpinner />}
+          <ActionButtons
+            loan={loan}
+            canBeLiquidated={canBeLiquidated}
+          />
+        </CardContainer>
+        {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+      </VStack>
+      <Button
+        variant={'hide'}
+        onClick={() => handleHide()}>
+        {hiddenLoans.includes(loan.uuid) ? 'show' : 'hide'}
+      </Button>
     </CardAnimation>
   );
 }

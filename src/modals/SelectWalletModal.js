@@ -6,11 +6,9 @@ import {
   MenuItem,
   MenuList,
   Modal,
-  ModalBody,
-  ModalCloseButton,
   ModalContent,
-  ModalHeader,
   ModalOverlay,
+  Spacer,
   Text,
   VStack,
   keyframes,
@@ -32,16 +30,98 @@ export default function SelectWalletModal() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   const stacksBlockchains = [
-    { id: 'stacks:1', name: 'Mainnet' },
+    // { id: 'stacks:1', name: 'Mainnet' },
     { id: 'stacks:2147483648', name: 'Testnet' },
-    { id: 'stacks:42', name: 'Mocknet' },
+    // { id: 'stacks:42', name: 'Mocknet' },
   ];
 
   const ethereumBlockchains = [
-    { id: 'ethereum:11155111', name: 'Sepolia Testnet' },
-    { id: 'ethereum:5', name: 'Goerli Testnet' },
-    { id: 'ethereum:31337', name: 'Localhost' },
+    // { id: 'ethereum:11155111', name: 'Sepolia' },
+    { id: 'ethereum:5', name: 'Goerli' },
   ];
+
+  const walletItems = [
+    {
+      id: 'metamask',
+      name: 'Metamask',
+      logo: '/metamask_logo.svg',
+      blockchains: ethereumBlockchains,
+    },
+    {
+      id: 'leather',
+      name: 'Leather',
+      logo: '/leather_logo.svg',
+      blockchains: stacksBlockchains,
+    },
+    {
+      id: 'xverse',
+      name: 'Xverse',
+      logo: '/xverse_logo.svg',
+      blockchains: stacksBlockchains,
+    },
+  ];
+
+  const WalletMenu = ({ walletItem }) => {
+    return (
+      <Menu>
+        {({ isOpen }) => (
+          <>
+            <MenuButton
+              width={225}
+              variant={'outline'}
+              disabled={walletItem.id === 'xverse'}
+              filter={walletItem.id === 'xverse' ? 'blur(1px)' : ''}
+              animation={
+                showTutorial
+                  ? `
+                      ${glowAnimation} 5 1s
+                  `
+                  : ''
+              }>
+              <HStack>
+                <Image
+                  src={walletItem.logo}
+                  alt={walletItem.name}
+                  width={25}
+                  height={25}
+                />
+                <Spacer />
+                <Text variant='wallet'>{isOpen ? 'Choose Network' : walletItem.name}</Text>
+              </HStack>
+            </MenuButton>
+            <MenuList width={225}>
+              {walletItem.blockchains.map((blockchain, idx) => {
+                return (
+                  <MenuItem
+                    justifyContent={'right'}
+                    disabled={['stacks:1', 'ethereum:31337'].includes(blockchain.id)}
+                    filter={['stacks:1', 'ethereum:31337'].includes(blockchain.id) ? 'blur(1px)' : ''}
+                    key={`chain-${idx}`}
+                    onClick={() => {
+                      switch (walletItem.id) {
+                        case 'metamask':
+                          requestAndDispatchMetaMaskAccountInformation(blockchain.id);
+                          break;
+                        case 'leather':
+                          requestAndDispatchStacksAccountInformation(blockchain.id);
+                          break;
+                        case 'xverse':
+                          break;
+                        default:
+                          break;
+                      }
+                      dispatch(toggleSelectWalletModalVisibility(false));
+                    }}>
+                    <Text variant='network'>{blockchain.name}</Text>
+                  </MenuItem>
+                );
+              })}
+            </MenuList>
+          </>
+        )}
+      </Menu>
+    );
+  };
 
   useEffect(() => {
     const isTutorialStepMatches = tutorialStep === TutorialStep.SELECTNETWORK;
@@ -68,155 +148,26 @@ export default function SelectWalletModal() {
       isCentered>
       <ModalOverlay />
       <ModalContent
-        width='300px'
-        border='1px'
-        bg='background2'
-        color='accent'>
-        <ModalHeader
-          color='white'
-          textAlign='center'>
-          Select Wallet
-        </ModalHeader>
-        <ModalCloseButton
-          _focus={{
-            boxShadow: 'none',
-          }}
-        />
-        <ModalBody padding='25px'>
-          <VStack>
-            {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
-            <Menu>
-              {({ isOpen }) => (
-                <>
-                  <MenuButton
-                    width='100%'
-                    variant='outline'
-                    animation={
-                      showTutorial
-                        ? `
-                                ${glowAnimation} 5 1s
-                            `
-                        : ''
-                    }>
-                    <HStack
-                      w='100%'
-                      justifyContent='center'>
-                      <Image
-                        src='/metamask_logo.svg'
-                        alt='Metamask Logo'
-                        width={25}
-                        height={25}
-                      />
-                      <Text variant='selector'>{isOpen ? 'Choose Network' : 'Metamask'}</Text>
-                    </HStack>
-                  </MenuButton>
-                  <MenuList>
-                    {ethereumBlockchains.map((blockchain, idx) => {
-                      return (
-                        <MenuItem
-                          key={`chain-${idx}`}
-                          onClick={() => {
-                            requestAndDispatchMetaMaskAccountInformation(blockchain.id);
-                            dispatch(toggleSelectWalletModalVisibility(false));
-                          }}>
-                          <Text variant='selector'>{blockchain.name}</Text>
-                        </MenuItem>
-                      );
-                    })}
-                  </MenuList>
-                </>
-              )}
-            </Menu>
-            <Menu>
-              {({ isOpen }) => (
-                <>
-                  <MenuButton
-                    width='100%'
-                    variant='outline'
-                    animation={
-                      showTutorial
-                        ? `
-                                ${glowAnimation} 5 1s
-                            `
-                        : ''
-                    }>
-                    <HStack
-                      w='100%'
-                      justifyContent='center'>
-                      <Image
-                        src='/leather_logo.svg'
-                        alt='Leather Logo'
-                        width={25}
-                        height={25}
-                      />
-                      <Text variant='selector'>{isOpen ? 'Choose Network' : 'Leather'}</Text>
-                    </HStack>
-                  </MenuButton>
-                  <MenuList>
-                    {stacksBlockchains.map((blockchain, idx) => {
-                      return (
-                        <MenuItem
-                          key={`chain-${idx}`}
-                          filter={blockchain.name === 'Mainnet' ? 'blur(1px)' : ''}
-                          isDisabled={blockchain.name === 'Mainnet'}
-                          onClick={async () => {
-                            await requestAndDispatchStacksAccountInformation('leather', blockchain.id);
-                            dispatch(toggleSelectWalletModalVisibility(false));
-                          }}>
-                          <Text variant='selector'>{blockchain.name}</Text>
-                        </MenuItem>
-                      );
-                    })}
-                  </MenuList>
-                </>
-              )}
-            </Menu>
-            <Menu>
-              {({ isOpen }) => (
-                <>
-                  <MenuButton
-                    filter={'blur(1px)'}
-                    disabled={true}
-                    width='100%'
-                    variant='outline'
-                    animation={
-                      showTutorial
-                        ? `
-                                ${glowAnimation} 5 1s
-                            `
-                        : ''
-                    }>
-                    <HStack
-                      w='100%'
-                      justifyContent='center'>
-                      <Image
-                        src='/xverse_logo.png'
-                        alt='Xverse Wallet Logo'
-                        width={25}
-                        height={25}
-                      />
-                      <Text variant='selector'>{isOpen ? 'Choose Network' : 'Xverse Wallet'}</Text>
-                    </HStack>
-                  </MenuButton>
-                  <MenuList>
-                    {stacksBlockchains.map((blockchain, idx) => {
-                      return (
-                        <MenuItem
-                          key={`chain-${idx}`}
-                          onClick={async () => {
-                            await requestAndDispatchStacksAccountInformation('xverse', blockchain.id);
-                            dispatch(toggleSelectWalletModalVisibility(false));
-                          }}>
-                          <Text variant='selector'>{blockchain.name}</Text>
-                        </MenuItem>
-                      );
-                    })}
-                  </MenuList>
-                </>
-              )}
-            </Menu>
-          </VStack>
-        </ModalBody>
+        width={250}
+        background={'transparent'}>
+        {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+        <VStack
+          padding={25}
+          spacing={5}
+          background={'background2'}
+          color={'accent'}
+          border={'1px'}
+          borderRadius={'lg'}>
+          <Text variant={'header'}>Select Wallet</Text>
+          {walletItems.map((walletItem, idx) => {
+            return (
+              <WalletMenu
+                key={`wallet-${idx}`}
+                walletItem={walletItem}
+              />
+            );
+          })}
+        </VStack>
       </ModalContent>
     </Modal>
   );
