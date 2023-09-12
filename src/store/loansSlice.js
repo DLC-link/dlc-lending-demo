@@ -136,7 +136,6 @@ export const loansSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase('account/logout', () => initialState);
   },
 });
 
