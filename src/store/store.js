@@ -1,5 +1,6 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { persistReducer } from 'redux-persist';
+import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import storage from 'redux-persist/lib/storage';
 
@@ -15,6 +16,7 @@ const persistConfig = {
   key: 'root',
   storage: storage,
   blacklist: ['externalData', 'component', 'account'],
+  stateReconciler: autoMergeLevel2,
 };
 
 export const rootReducer = combineReducers({

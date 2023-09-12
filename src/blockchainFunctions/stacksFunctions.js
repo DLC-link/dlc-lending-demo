@@ -75,7 +75,6 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
 };
 
 export async function requestAndDispatchStacksAccountInformation(blockchain) {
-  console.log('blockchain', blockchain);
   const isUserSignedIn = userSession.isUserSignedIn();
 
   let address;
@@ -249,9 +248,7 @@ export async function getStacksLoanByID(ID) {
 
 export async function borrowStacksLoan(UUID, additionalLoan) {
   const { walletType, blockchain } = store.getState().account;
-  console.log('additionalLoan', additionalLoan);
   const amount = customShiftValue(additionalLoan, 6, false);
-  console.log('amount', amount);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];

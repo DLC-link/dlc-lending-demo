@@ -61,7 +61,6 @@ export function startStacksObserver(blockchain) {
     } catch (error) {
       console.error(error);
     }
-    console.log(txInfo);
     if (txInfo.tx_type !== 'contract_call') return;
 
     const loanTXHash = txInfo.tx_id;
@@ -71,9 +70,7 @@ export function startStacksObserver(blockchain) {
       const loanStatus = 'Funded';
       const loan = await getStacksLoanByID(loanID);
       const loanUUID = loan.dlc_uuid.value.value;
-      console.log(loanUUID);
-      console.log(loanStatus);
-      console.log(loanTXHash);
+
       store.dispatch(
         fetchLoan({
           loanUUID: loanUUID,

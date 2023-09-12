@@ -14,7 +14,6 @@ export function customShiftValue(value, shift, unshift) {
     ? decimalValue.div(decimalPoweredShift).toNumber()
     : decimalValue.mul(decimalPoweredShift).toNumber();
 
-  console.log('decimalShiftedValue', decimalShiftedValue);
   return decimalShiftedValue;
 }
 
