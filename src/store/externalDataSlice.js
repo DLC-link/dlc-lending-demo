@@ -1,5 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import Decimal from 'decimal.js';
 
 const initialState = {
   bitcoinUSDValue: undefined,
@@ -37,9 +37,9 @@ export const fetchBitcoinValue = createAsyncThunk('externalData/fetchBitcoinValu
       headers: { Accept: 'application/json' },
     })
       .then((response) => response.json())
-      .then((message) => (bitcoinValue = Number(message.bpi.USD.rate.replace(/[^0-9.-]+/g, ''))));
+      .then((message) => (bitcoinValue = new Decimal(message.bpi.USD.rate.replace(/[^0-9.-]+/g, ''))));
   } catch (error) {
     console.error(error);
   }
-  return bitcoinValue;
+  return bitcoinValue.toNumber().toFixed(2);
 });

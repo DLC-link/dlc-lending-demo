@@ -14,7 +14,7 @@ import { toggleInfoModalVisibility } from '../store/componentSlice';
 import { loanSetupRequested, loanEventReceived } from '../store/loansSlice';
 
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
-import { fixedTwoDecimalShift } from '../utilities/utils';
+import { fixedTwoDecimalShift, isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
 import { ToastEvent } from '../components/CustomToast';
 
 let protocolContractETH;
@@ -91,7 +91,7 @@ export async function isAllowedInMetamask(vaultLoan) {
   const desiredAmount = BigInt('1000000000000000000000000');
   const allowedAmount = await usdcETH.allowance(address, protocolContractAddress);
 
-  if (fixedTwoDecimalShift(vaultLoan) > parseInt(allowedAmount)) {
+  if (isVaultLoanGreaterThanAllowedAmount(Number(vaultLoan), Number(allowedAmount))) {
     try {
       await usdcETH.approve(protocolContractAddress, desiredAmount).then((response) =>
         store.dispatch(

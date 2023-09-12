@@ -7,28 +7,30 @@ export const easyTruncateAddress = (address) => {
   return address.substring(0, 4) + '...' + address.substring(address.length - 4, address.length);
 };
 
-// export function customShiftValue(value, shift, unshift) {
-//   const poweredShift = new Decimal(10).pow(shift);
-//   const shiftedValue = unshift ? Number(value / poweredShift).toFixed(4) : Number(value * poweredShift).toFixed(4);
-//   const shiftedValueAsNumber = Number(shiftedValue);
-//   return shiftedValueAsNumber;
-// }
-
 export function customShiftValue(value, shift, unshift) {
   const decimalPoweredShift = new Decimal(10 ** shift);
   const decimalValue = new Decimal(value);
   const decimalShiftedValue = unshift
     ? decimalValue.div(decimalPoweredShift).toNumber()
     : decimalValue.mul(decimalPoweredShift).toNumber();
+
+  console.log('decimalShiftedValue', decimalShiftedValue);
   return decimalShiftedValue;
 }
 
-export function fixedTwoDecimalShift(value) {
-  return customShiftValue(value, 2, true).toFixed(2);
-}
-
-export function fixedTwoDecimalUnshift(value) {
-  return customShiftValue(value, 2, false);
+export function isVaultLoanGreaterThanAllowedAmount(vaultLoan, allowedAmount) {
+  console.log('vaultLoan', vaultLoan);
+  console.log('allowedAmount', allowedAmount);
+  const shiftedVaultLoanAmount = customShiftValue(vaultLoan, 2, true).toFixed(2);
+  const decimalShiftedVaultLoan = new Decimal(shiftedVaultLoanAmount);
+  const decimalAllowedAmount = new Decimal(allowedAmount);
+  console.log('decimalShiftedVaultLoan', decimalShiftedVaultLoan);
+  console.log('decimalAllowedAmount', decimalAllowedAmount);
+  console.log(
+    'decimalShiftedVaultLoan.greaterThan(decimalAllowedAmount)',
+    decimalShiftedVaultLoan.greaterThan(decimalAllowedAmount)
+  );
+  return decimalShiftedVaultLoan.greaterThan(decimalAllowedAmount);
 }
 
 export function toJson(value) {
@@ -45,15 +47,22 @@ export function calculateCollateralCoveragePercentageForBorrow(
   existingDebt,
   additionalLoan
 ) {
-  const collateralValueInUSD = collateralAmount * bitcoinUSDValue;
-  const totalDebt = existingDebt + additionalLoan;
-
-  if (isNaN(collateralValueInUSD) || isNaN(totalDebt) || totalDebt <= 0) {
-    return NaN;
+  if (
+    (collateralAmount === undefined || bitcoinUSDValue === undefined || existingDebt === undefined,
+    additionalLoan === undefined)
+  ) {
+    return '-';
   }
+  const decimalCollateralAmount = new Decimal(collateralAmount);
+  const decimalBitcoinUSDValue = new Decimal(bitcoinUSDValue);
+  const decimalExistingDebt = new Decimal(existingDebt);
+  const decimalAdditionalLoan = new Decimal(additionalLoan);
 
-  const collateralToDebtRatio = collateralValueInUSD / totalDebt;
-  const ratioPercentage = Math.round(collateralToDebtRatio * 100);
+  const decimalCollateralValueInUSD = decimalCollateralAmount.mul(decimalBitcoinUSDValue);
+  const decimalTotalUSDDebt = decimalExistingDebt.add(decimalAdditionalLoan);
+
+  const decimalCollateralToDebtRatio = decimalCollateralValueInUSD.div(decimalTotalUSDDebt);
+  const ratioPercentage = decimalCollateralToDebtRatio.mul(100).toNumber().toFixed(2);
 
   return ratioPercentage;
 }
@@ -64,36 +73,48 @@ export function calculateCollateralCoveragePercentageForRepay(
   existingDebt,
   additionalRepayment
 ) {
-  const collateralValueInUSD = collateralAmount * bitcoinUSDValue;
-  const totalUSDDebt = existingDebt - additionalRepayment;
-
-  if (isNaN(collateralValueInUSD) || isNaN(totalUSDDebt) || totalUSDDebt <= 0) {
-    return NaN;
+  if (
+    (collateralAmount === undefined || bitcoinUSDValue === undefined || existingDebt === undefined,
+    additionalRepayment === undefined)
+  ) {
+    return '-';
   }
+  const decimalCollateralAmount = new Decimal(collateralAmount);
+  const decimalBitcoinUSDValue = new Decimal(bitcoinUSDValue);
+  const decimalExistingDebt = new Decimal(existingDebt);
+  const decimalAdditionalRepayment = new Decimal(additionalRepayment);
 
-  const collateralToDebtRatio = collateralValueInUSD / totalUSDDebt;
-  const ratioPercentage = Math.round(collateralToDebtRatio * 100);
+  const decimalCollateralValueInUSD = decimalCollateralAmount.mul(decimalBitcoinUSDValue);
+  const decimalTotalUSDDebt = decimalExistingDebt.sub(decimalAdditionalRepayment);
+
+  const decimalCollateralToDebtRatio = decimalCollateralValueInUSD.div(decimalTotalUSDDebt);
+  const ratioPercentage = decimalCollateralToDebtRatio.mul(100).toNumber().toFixed(2);
 
   return ratioPercentage;
 }
 
 export function calculateCollateralCoveragePercentageForLiquidation(collateralAmount, bitcoinValue, totalDebt) {
-  const collateralValueInUSD = collateralAmount * bitcoinValue;
-
-  if (isNaN(collateralValueInUSD) || isNaN(totalDebt) || totalDebt <= 0) {
-    return NaN;
+  if (collateralAmount === undefined || bitcoinValue === undefined || totalDebt === undefined) {
+    return '-';
   }
+  const decimalCollateralAmount = new Decimal(collateralAmount);
+  const decimalBitcoinValue = new Decimal(bitcoinValue);
+  const decimalTotalDebt = new Decimal(totalDebt);
 
-  const collateralToDebtRatio = collateralValueInUSD / totalDebt;
-  const ratioPercentage = Math.round(collateralToDebtRatio * 100);
+  const decimalCollateralValueInUSD = decimalCollateralAmount.mul(decimalBitcoinValue);
+
+  const decimalCollateralToDebtRatio = decimalCollateralValueInUSD.div(decimalTotalDebt);
+  const ratioPercentage = decimalCollateralToDebtRatio.mul(100).toNumber().toFixed(2);
 
   return ratioPercentage;
 }
 
 export function formatCollateralInUSD(collateralAmount, bitcoinValue) {
-  return new Intl.NumberFormat().format(bitcoinValue * collateralAmount);
-}
+  if (collateralAmount === undefined || bitcoinValue === undefined) {
+    return '-';
+  }
+  const decimalCollateralAmount = new Decimal(collateralAmount);
+  const decimalBitcoinValue = new Decimal(bitcoinValue);
 
-export function formatBitcoinInUSDAmount(bitcoinValue) {
-  return Number(bitcoinValue.bpi.USD.rate.replace(/[^0-9.-]+/g, ''));
+  return new Intl.NumberFormat().format(decimalCollateralAmount.mul(decimalBitcoinValue).toNumber().toFixed(2));
 }

@@ -1,5 +1,5 @@
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
-import { customShiftValue, fixedTwoDecimalShift } from './utils';
+import { customShiftValue } from './utils';
 import { cvToValue } from '@stacks/transactions';
 
 export function formatClarityLoanContract(loanContract) {
@@ -8,7 +8,7 @@ export function formatClarityLoanContract(loanContract) {
   const owner = loanContract.owner.value;
   const vaultCollateral = customShiftValue(parseInt(loanContract['vault-collateral'].value), 8, true);
   const formattedVaultCollateral = `${vaultCollateral} BTC`;
-  const vaultLoan = customShiftValue(parseInt(loanContract['vault-loan'].value), 6, true);
+  const vaultLoan = customShiftValue(parseInt(loanContract['vault-loan'].value), 6, true).toFixed(2);
   const formattedVaultLoan = `$ ${vaultLoan}`;
   const liquidationFee = parseInt(loanContract['liquidation-fee'].value);
   const formattedLiquidationFee = `${liquidationFee} %`;
@@ -39,9 +39,9 @@ export function formatSolidityLoanContract(loanContract) {
   const formattedVaultCollateral = `${vaultCollateral} BTC`;
   const vaultLoan = customShiftValue(parseInt(loanContract.vaultLoan._hex), 18, true).toFixed(2);
   const formattedVaultLoan = `$ ${vaultLoan}`;
-  const liquidationFee = fixedTwoDecimalShift(parseInt(loanContract.liquidationFee._hex));
+  const liquidationFee = customShiftValue(parseInt(loanContract.liquidationFee._hex, 2, true).toFixed(2));
   const formattedLiquidationFee = `${liquidationFee} %`;
-  const liquidationRatio = fixedTwoDecimalShift(parseInt(loanContract.liquidationRatio._hex));
+  const liquidationRatio = customShiftValue(parseInt(loanContract.liquidationRatio._hex), 2, true).toFixed(2);
   const formattedLiquidationRatio = `${liquidationRatio} %`;
   const attestorList = loanContract.attestorList;
   return {
