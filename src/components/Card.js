@@ -17,7 +17,6 @@ import {
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useOnMount } from '../hooks/useOnMount';
 
 import { motion } from 'framer-motion';
 
@@ -29,9 +28,9 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
+import { hideLoan } from '../store/loansSlice';
 import { calculateCollateralCoveragePercentageForLiquidation, easyTruncateAddress } from '../utilities/utils';
 import TutorialBox from './TutorialBox';
-import { hideLoan } from '../store/loansSlice';
 
 export default function Card({ loan }) {
   const dispatch = useDispatch();
@@ -97,7 +96,7 @@ export default function Card({ loan }) {
     dispatch(hideLoan(loan.uuid));
   };
 
-  useOnMount(() => {
+  useEffect(() => {
     const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
       loan.vaultCollateral,
       bitcoinUSDValue,
@@ -105,7 +104,7 @@ export default function Card({ loan }) {
     );
     const isLiquidable = collateralCoveragePercentage < 140;
     setCanBeLiquidated(isLiquidable);
-  });
+  }, [bitcoinUSDValue, loan.vaultCollateral, loan.vaultLoan]);
 
   const CardAnimation = ({ children }) => {
     return (
