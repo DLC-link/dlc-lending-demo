@@ -55,7 +55,8 @@ export const appTheme = extendTheme({
         header: {
           fontSize: 'xl',
           fontWeight: 'extrabold',
-          padding: '5px',
+          paddingTop: '5px',
+          paddingBottom: '15px',
           color: 'white',
         },
       },

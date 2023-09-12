@@ -20,7 +20,7 @@ export default function LoansGrid() {
         <ScaleFade in={!isLoading}>
           <SimpleGrid
             columns={[1, 2, 3]}
-            spacing={50}
+            spacing={95}
             paddingTop={50}
             paddingBottom={50}
             marginBottom={50}>

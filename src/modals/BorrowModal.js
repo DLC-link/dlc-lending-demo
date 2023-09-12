@@ -68,7 +68,8 @@ export default function BorrowModal() {
       Number(loan.vaultLoan),
       Number(additionalLoan)
     );
-    if (isNaN(collateralCoveragePercentage)) {
+
+    if (isNaN(collateralCoveragePercentage) || !isFinite(collateralCoveragePercentage)) {
       setCollateralToDebtPercentage('-');
     } else {
       setCollateralToDebtPercentage(collateralCoveragePercentage);
@@ -234,7 +235,8 @@ export default function BorrowModal() {
                   Borrow Amount
                 </FormLabel>
                 {!isLoanError ? (
-                  <FormHelperText
+                  <Text
+                    marginTop={15}
                     marginBottom={15}
                     width={250}
                     height={25}
@@ -242,9 +244,10 @@ export default function BorrowModal() {
                     fontSize={'2xs'}
                     color={'accent'}>
                     Enter the amount of <strong>USDC</strong> you would like to borrow.
-                  </FormHelperText>
+                  </Text>
                 ) : (
-                  <FormErrorMessage
+                  <Text
+                    marginTop={15}
                     marginBottom={15}
                     width={250}
                     height={25}
@@ -253,7 +256,7 @@ export default function BorrowModal() {
                     color={'warning'}>
                     Enter a valid amount of &nbsp;
                     <strong>USDC</strong>
-                  </FormErrorMessage>
+                  </Text>
                 )}
                 <HStack
                   paddingBottom={2.5}

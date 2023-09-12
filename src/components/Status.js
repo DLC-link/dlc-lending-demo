@@ -43,7 +43,11 @@ export default function Status({ status, canBeLiquidated, txHash }) {
   const LiquidationIndicator = () => {
     return canBeLiquidated ? (
       <Tooltip
-        label={'Loan health: The collateral to debt ratio is lower than the liquidation ratio.'}
+        label={
+          <Text>
+            Loan health: The collateral to debt ratio is <strong>lower</strong> than the liquidation ratio.
+          </Text>
+        }
         fontSize={'10px'}
         textAlign={'justify'}
         padding={2.5}
@@ -58,7 +62,11 @@ export default function Status({ status, canBeLiquidated, txHash }) {
       </Tooltip>
     ) : (
       <Tooltip
-        label={'Loan health: Good'}
+        label={
+          <Text>
+            Loan health: <strong>Good</strong>
+          </Text>
+        }
         fontSize={'10px'}
         textAlign={'justify'}
         padding={2.5}

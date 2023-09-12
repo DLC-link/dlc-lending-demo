@@ -1,8 +1,6 @@
 import {
   Button,
   FormControl,
-  FormErrorMessage,
-  FormHelperText,
   FormLabel,
   HStack,
   Image,
@@ -71,7 +69,7 @@ export default function RepayModal() {
       Number(additionalRepayment)
     );
 
-    if (isNaN(collateralCoveragePercentage)) {
+    if (isNaN(collateralCoveragePercentage) || !isFinite(collateralCoveragePercentage)) {
       setCollateralToDebtPercentage('-');
     } else {
       setCollateralToDebtPercentage(collateralCoveragePercentage);
@@ -88,7 +86,7 @@ export default function RepayModal() {
 
   const updateLoanError = () => {
     const shouldDisplayLoanError =
-      additionalRepayment < 1 || additionalRepayment === undefined || additionalRepayment > loan.vaultLoan;
+      additionalRepayment < 1 || additionalRepayment === undefined || additionalRepayment > Number(loan.vaultLoan);
     setLoanError(shouldDisplayLoanError);
   };
 
@@ -237,7 +235,8 @@ export default function RepayModal() {
                     Repay Amount
                   </FormLabel>
                   {!isLoanError ? (
-                    <FormHelperText
+                    <Text
+                      marginTop={15}
                       marginBottom={15}
                       width={250}
                       height={25}
@@ -245,9 +244,10 @@ export default function RepayModal() {
                       fontSize={'2xs'}
                       color={'accent'}>
                       Enter the amount of <strong>USDC</strong> you would like to repay.
-                    </FormHelperText>
+                    </Text>
                   ) : (
-                    <FormErrorMessage
+                    <Text
+                      marginTop={15}
                       marginBottom={15}
                       width={250}
                       height={25}
@@ -256,7 +256,7 @@ export default function RepayModal() {
                       color={'warning'}>
                       Enter a valid amount of &nbsp;
                       <strong>USDC</strong>
-                    </FormErrorMessage>
+                    </Text>
                   )}
                   <HStack
                     paddingBottom={2.5}
@@ -264,7 +264,7 @@ export default function RepayModal() {
                     justifyContent={'space-between'}>
                     <NumberInput focusBorderColor={'accent'}>
                       <NumberInputField
-                        max={loan.vaultLoan}
+                        max={Number(loan.vaultLoan)}
                         width={200}
                         color={'white'}
                         value={additionalRepayment}

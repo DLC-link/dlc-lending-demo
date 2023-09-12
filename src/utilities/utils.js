@@ -9,7 +9,7 @@ export const easyTruncateAddress = (address) => {
 
 export function customShiftValue(value, shift, unshift) {
   const decimalPoweredShift = new Decimal(10 ** shift);
-  const decimalValue = new Decimal(value);
+  const decimalValue = new Decimal(Number(value));
   const decimalShiftedValue = unshift
     ? decimalValue.div(decimalPoweredShift).toNumber()
     : decimalValue.mul(decimalPoweredShift).toNumber();
@@ -19,17 +19,10 @@ export function customShiftValue(value, shift, unshift) {
 }
 
 export function isVaultLoanGreaterThanAllowedAmount(vaultLoan, allowedAmount) {
-  console.log('vaultLoan', vaultLoan);
-  console.log('allowedAmount', allowedAmount);
-  const shiftedVaultLoanAmount = customShiftValue(vaultLoan, 2, true).toFixed(2);
-  const decimalShiftedVaultLoan = new Decimal(shiftedVaultLoanAmount);
-  const decimalAllowedAmount = new Decimal(allowedAmount);
-  console.log('decimalShiftedVaultLoan', decimalShiftedVaultLoan);
-  console.log('decimalAllowedAmount', decimalAllowedAmount);
-  console.log(
-    'decimalShiftedVaultLoan.greaterThan(decimalAllowedAmount)',
-    decimalShiftedVaultLoan.greaterThan(decimalAllowedAmount)
-  );
+  const shiftedVaultLoanAmount = customShiftValue(Number(vaultLoan), 2, true).toFixed(2);
+  const decimalShiftedVaultLoan = new Decimal(Number(shiftedVaultLoanAmount));
+  const decimalAllowedAmount = new Decimal(Number(allowedAmount));
+
   return decimalShiftedVaultLoan.greaterThan(decimalAllowedAmount);
 }
 
@@ -48,11 +41,18 @@ export function calculateCollateralCoveragePercentageForBorrow(
   additionalLoan
 ) {
   if (
-    (collateralAmount === undefined || bitcoinUSDValue === undefined || existingDebt === undefined,
-    additionalLoan === undefined)
+    Number.isNaN(collateralAmount) ||
+    collateralAmount == null ||
+    Number.isNaN(bitcoinUSDValue) ||
+    bitcoinUSDValue == null ||
+    Number.isNaN(existingDebt) ||
+    existingDebt == null ||
+    Number.isNaN(additionalLoan) ||
+    additionalLoan == null
   ) {
-    return '-';
+    return;
   }
+
   const decimalCollateralAmount = new Decimal(collateralAmount);
   const decimalBitcoinUSDValue = new Decimal(bitcoinUSDValue);
   const decimalExistingDebt = new Decimal(existingDebt);
@@ -74,10 +74,15 @@ export function calculateCollateralCoveragePercentageForRepay(
   additionalRepayment
 ) {
   if (
-    (collateralAmount === undefined || bitcoinUSDValue === undefined || existingDebt === undefined,
-    additionalRepayment === undefined)
+    Number.isNaN(collateralAmount) ||
+    collateralAmount == null ||
+    Number.isNaN(bitcoinUSDValue) ||
+    bitcoinUSDValue == null ||
+    Number.isNaN(existingDebt) ||
+    existingDebt == null ||
+    Number.isNaN(additionalRepayment)
   ) {
-    return '-';
+    return;
   }
   const decimalCollateralAmount = new Decimal(collateralAmount);
   const decimalBitcoinUSDValue = new Decimal(bitcoinUSDValue);
@@ -94,8 +99,15 @@ export function calculateCollateralCoveragePercentageForRepay(
 }
 
 export function calculateCollateralCoveragePercentageForLiquidation(collateralAmount, bitcoinValue, totalDebt) {
-  if (collateralAmount === undefined || bitcoinValue === undefined || totalDebt === undefined) {
-    return '-';
+  if (
+    Number.isNaN(collateralAmount) ||
+    collateralAmount === undefined ||
+    Number.isNaN(bitcoinValue) ||
+    bitcoinValue === undefined ||
+    Number.isNaN(totalDebt) ||
+    totalDebt === undefined
+  ) {
+    return;
   }
   const decimalCollateralAmount = new Decimal(collateralAmount);
   const decimalBitcoinValue = new Decimal(bitcoinValue);
@@ -110,11 +122,16 @@ export function calculateCollateralCoveragePercentageForLiquidation(collateralAm
 }
 
 export function formatCollateralInUSD(collateralAmount, bitcoinValue) {
-  if (collateralAmount === undefined || bitcoinValue === undefined) {
-    return '-';
+  if (
+    Number.isNaN(collateralAmount) ||
+    collateralAmount == null ||
+    Number.isNaN(bitcoinValue) ||
+    bitcoinValue == null
+  ) {
+    return;
   }
-  const decimalCollateralAmount = new Decimal(collateralAmount);
-  const decimalBitcoinValue = new Decimal(bitcoinValue);
+  const decimalCollateralAmount = new Decimal(Number(collateralAmount));
+  const decimalBitcoinValue = new Decimal(Number(bitcoinValue));
 
   return new Intl.NumberFormat().format(decimalCollateralAmount.mul(decimalBitcoinValue).toNumber().toFixed(2));
 }

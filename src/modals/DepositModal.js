@@ -1,41 +1,37 @@
 import {
-  VStack,
-  HStack,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
   Button,
   FormControl,
-  FormLabel,
-  FormHelperText,
   FormErrorMessage,
+  FormHelperText,
+  FormLabel,
+  HStack,
+  Image,
+  Modal,
+  ModalContent,
+  ModalOverlay,
   NumberInput,
   NumberInputField,
-  Flex,
   Text,
-  Image,
-  Spacer,
+  VStack,
+  keyframes,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { customShiftValue, formatCollateralInUSD } from '../utilities/utils';
+import { useDispatch, useSelector } from 'react-redux';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
-import { fetchBitcoinPrice } from '../blockchainFunctions/bitcoinFunctions';
-import { useSelector } from 'react-redux';
-import { toggleDepositModalVisibility } from '../store/componentSlice';
-import { useDispatch } from 'react-redux';
-import { TutorialStep } from '../enums/TutorialSteps';
 import TutorialBox from '../components/TutorialBox';
-import { keyframes } from '@chakra-ui/react';
+import { TutorialStep } from '../enums/TutorialSteps';
+import { useOnMount } from '../hooks/useOnMount';
+import { toggleDepositModalVisibility } from '../store/componentSlice';
+import { fetchBitcoinValue } from '../store/externalDataSlice';
+import { customShiftValue, formatCollateralInUSD } from '../utilities/utils';
+
 export default function DepositModal() {
   const [collateralAmount, setCollateralAmount] = useState(undefined);
   const [isCollateralError, setCollateralError] = useState(true);
+  const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
   const [bitCoinInUSDAsString, setBitCoinInUSDAsString] = useState();
-  const [bitCoinInUSDAsNumber, setBitCoinInUSDAsNumber] = useState();
-  const [USDAmount, setUSDAmount] = useState(0);
+  const [USDAmount, setUSDAmount] = useState('-');
   const [showTutorial, setShowTutorial] = useState(false);
 
   const walletType = useSelector((state) => state.account.walletType);
@@ -43,24 +39,23 @@ export default function DepositModal() {
   const dispatch = useDispatch();
   const { tutorialStep } = useSelector((state) => state.tutorial);
 
-  useEffect(() => {
-    async function fetchData() {
-      await fetchBitcoinPrice().then((bitcoinPrice) => {
-        setBitCoinInUSDAsNumber(bitcoinPrice);
-        setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinPrice));
-      });
-    }
-    fetchData();
-  }, [isDepositModalOpen === true]);
+  useOnMount(() => {
+    const updateBitcoinUSDValue = async () => {
+      dispatch(fetchBitcoinValue());
+    };
+    updateBitcoinUSDValue();
+    setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinUSDValue));
+  });
 
   useEffect(() => {
     setShowTutorial(tutorialStep === TutorialStep.SETCOLLATERAL);
   }, [tutorialStep]);
 
   useEffect(() => {
-    setUSDAmount(formatCollateralInUSD(collateralAmount, bitCoinInUSDAsNumber));
+    const collateralInUSD = formatCollateralInUSD(collateralAmount, bitcoinUSDValue);
+    setUSDAmount(collateralInUSD == 0 ? '-' : collateralInUSD);
     setCollateralError(collateralAmount < 0.0001 || collateralAmount === undefined);
-  }, [collateralAmount, bitCoinInUSDAsNumber]);
+  }, [collateralAmount, bitcoinUSDValue]);
 
   const handleCollateralChange = (collateralAmount) => setCollateralAmount(collateralAmount.target.value);
 
@@ -132,23 +127,24 @@ export default function DepositModal() {
                   Collateral Amount
                 </FormLabel>
                 {!isCollateralError ? (
-                  <FormHelperText
+                  <Text
                     fontSize={'2xs'}
                     textAlign={'left'}
                     width={250}
                     height={25}
                     color='accent'>
                     Enter the amount of <strong>BTC</strong> you would like to deposit.
-                  </FormHelperText>
+                  </Text>
                 ) : (
-                  <FormErrorMessage
+                  <Text
                     fontSize={'2xs'}
                     textAlign={'left'}
                     width={250}
-                    height={25}>
+                    height={25}
+                    color={'warning'}>
                     Enter a valid amount of&nbsp;
                     <strong>BTC</strong>
-                  </FormErrorMessage>
+                  </Text>
                 )}
                 <HStack
                   width={250}
@@ -156,8 +152,8 @@ export default function DepositModal() {
                   paddingBottom={2.5}>
                   <NumberInput focusBorderColor='accent'>
                     <NumberInputField
-                      width='200px'
-                      color='white'
+                      width={200}
+                      color={'white'}
                       value={collateralAmount}
                       onChange={handleCollateralChange}
                     />
@@ -165,23 +161,23 @@ export default function DepositModal() {
                   <Image
                     src='/btc_logo.png'
                     alt='Bitcoin Logo'
-                    width='25px'
-                    height='25px'></Image>
+                    boxSize={25}
+                  />
                 </HStack>
                 <HStack
                   justifyContent={'space-between'}
                   width={250}>
                   <Text
-                    fontSize='xs'
-                    color='white'
+                    fontSize={'xs'}
+                    color={'white'}
                     fontWeight={'extrabold'}
                     width={125}>
                     ${USDAmount}
                   </Text>
                   <Text
                     textAlign={'right'}
-                    fontSize='xs'
-                    color='white'
+                    fontSize={'xs'}
+                    color={'white'}
                     width={150}>
                     at 1 <strong>BTC</strong> $&nbsp;
                     {bitCoinInUSDAsString}
@@ -190,13 +186,6 @@ export default function DepositModal() {
               </VStack>
             </FormControl>
             <VStack justifyContent='center'>
-              <Text
-                width={250}
-                textAlign={'justify'}
-                paddingTop={5}
-                color={'#FF4500'}>
-                You have 3 minutes to lock in your BTC after setting up the loan, or the offer will expire.
-              </Text>
               <Button
                 animation={
                   showTutorial
@@ -206,8 +195,8 @@ export default function DepositModal() {
                     : ''
                 }
                 width={250}
-                variant='outline'
-                type='submit'
+                variant={'outline'}
+                type={'submit'}
                 onClick={() => createAndSendLoanContract()}>
                 REQUEST VAULT
               </Button>
