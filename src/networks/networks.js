@@ -20,7 +20,7 @@ export const EthereumNetworks = {
     dlcManagerAddress: process.env.REACT_APP_SEPOLIA_DLC_MANAGER_ADDRESS,
   },
   'ethereum:31337': {
-    name: 'Localhost',
+    name: 'Hardhat',
     protocolContractAddress: process.env.REACT_APP_LOCALHOST_PROTOCOL_CONTRACT_ADDRESS,
     usdcAddress: process.env.REACT_APP_LOCALHOST_USDC_ADDRESS,
     dlcManagerAddress: process.env.REACT_APP_LOCALHOST_DLC_MANAGER_ADDRESS,
