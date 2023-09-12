@@ -23,9 +23,11 @@ export const tutorialSlice = createSlice({
     setTutorialOn: (state, action) => {
       state.tutorialOn = action.payload;
     },
+    restartTutorial: (state) => {
+      state.tutorialLoanUUID = '-';    }
   },
 });
 
-export const { toggleFirstTimeUser, setTutorialStep, setTutorialLoanUUID, setTutorialOn } = tutorialSlice.actions;
+export const { toggleFirstTimeUser, setTutorialStep, setTutorialLoanUUID, setTutorialOn, restartTutorial } = tutorialSlice.actions;
 
 export default tutorialSlice.reducer;

@@ -20,6 +20,17 @@ export const appTheme = extendTheme({
         warning: {
           border: '1px solid #FF4500',
         },
+        tutorial: {
+          fontSize: 'sm',
+          textAlign: 'justify',
+          width: 135,
+          padding: 2.5,
+          placement: 'bottom-end',
+          background: 'transparent',
+          border: '1px solid #07E8D8',
+          borderRadius: 'lg',
+          shadow: 'dark-lg',
+        },
       },
     },
     Text: {
@@ -121,6 +132,20 @@ export const appTheme = extendTheme({
           margin: '0px',
           height: '10px',
           width: '10px',
+          fontSize: '2xs',
+          color: 'white',
+          bg: 'transparent',
+          borderColor: 'accent',
+          transition: 'all .25s ease',
+          _hover: {
+            bg: 'secondary1',
+            borderColor: 'white',
+          },
+        },
+        restart: {
+          padding: '0px',
+          margin: '0px',
+          boxSize: 25,
           fontSize: '2xs',
           color: 'white',
           bg: 'transparent',

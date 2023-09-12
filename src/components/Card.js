@@ -219,14 +219,14 @@ export default function Card({ loan }) {
             loan={loan}
             canBeLiquidated={canBeLiquidated}
           />
-        </CardContainer>
-        {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+        </CardContainer>{' '}
       </VStack>
       <Button
-        variant={'hide'}
-        onClick={() => handleHide()}>
-        {hiddenLoans.includes(loan.uuid) ? 'show' : 'hide'}
-      </Button>
+          variant={'hide'}
+          onClick={() => handleHide()}>
+          {hiddenLoans.includes(loan.uuid) ? 'show' : 'hide'}
+        </Button>
+        {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
     </CardAnimation>
   );
 }
