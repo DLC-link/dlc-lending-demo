@@ -95,8 +95,8 @@ export default function SelectWalletModal() {
                 return (
                   <MenuItem
                     justifyContent={'right'}
-                    disabled={['stacks:1', 'ethereum:31337'].includes(blockchain.id)}
-                    filter={['stacks:1', 'ethereum:31337'].includes(blockchain.id) ? 'blur(1px)' : ''}
+                    disabled={['stacks:1'].includes(blockchain.id)}
+                    filter={['stacks:1'].includes(blockchain.id) ? 'blur(1px)' : ''}
                     key={`chain-${idx}`}
                     onClick={() => {
                       switch (walletItem.id) {
