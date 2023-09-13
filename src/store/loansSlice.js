@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
+import Decimal from 'decimal.js';
 import { forEach } from 'ramda';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
@@ -158,12 +159,14 @@ export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans,
   });
 
   const fundedCollateralSum = fundedLoans.reduce((acc, loan) => {
-    return acc + loan.vaultCollateral;
-  }, 0);
-
+    const decimalVaultCollateral = new Decimal(loan.vaultCollateral);
+    return acc.plus(decimalVaultCollateral);
+  }, new Decimal(0)).toNumber();
+  
   const fundedLoanSum = fundedLoans.reduce((acc, loan) => {
-    return acc + loan.vaultLoan;
-  }, 0);
+    const decimalVaultLoan = new Decimal(loan.vaultLoan);
+    return acc.plus(decimalVaultLoan);
+  }, new Decimal(0)).toNumber();
 
   return {
     fundedCollateralSum,
