@@ -38,6 +38,7 @@ export default function SelectWalletModal() {
   const ethereumBlockchains = [
     // { id: 'ethereum:11155111', name: 'Sepolia' },
     { id: 'ethereum:5', name: 'Goerli' },
+    { id: 'ethereum:31337', name: 'Hardhat' },
   ];
 
   const walletItems = [
