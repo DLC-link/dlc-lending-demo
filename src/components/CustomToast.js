@@ -47,21 +47,14 @@ export default function CustomToast({ txHash, status }) {
   const { blockchain } = useSelector((state) => state.account);
 
   const ethereumExplorerURLs = {
-    'ethereum:5': `https://goerli.etherscan.io/tx/${txHash}`,
     'ethereum:11155111': `https://sepolia.etherscan.io/tx/${txHash}`,
   };
 
   const stacksExplorerURLs = {
     'stacks:2147483648': `https://explorer.stacks.co/txid/${txHash}`,
-    'stacks:1': `https://explorer.stacks.co/txid/${txHash}`,
-    'stacks:42': `https://explorer.stacks.co/txid/${txHash}`,
   };
 
-  const bitcoinNetwork = blockchain === 'stacks:1' || blockchain === 'ethereum:1' ? 'mainnet' : 'testnet';
-
-  const bitcoinExplorerURL = `https://mempool.space/${
-    bitcoinNetwork !== 'mainnet' ? bitcoinNetwork + '/' : ''
-  }tx/${txHash}`;
+  const bitcoinExplorerURL = `http://stx-btc1.dlc.link:8001/tx/${txHash}`;
 
   const explorerURLs = {
     ...ethereumExplorerURLs,
