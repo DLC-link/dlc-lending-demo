@@ -21,6 +21,9 @@ export const tutorialSlice = createSlice({
       state.tutorialLoanUUID = action.payload;
     },
     setTutorialOn: (state, action) => {
+      if (action.payload === false) {
+        state.isFirstTimeUser = false;
+      }
       state.tutorialOn = action.payload;
     },
     restartTutorial: (state) => {
