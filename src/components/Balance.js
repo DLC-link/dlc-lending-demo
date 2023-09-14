@@ -2,6 +2,9 @@ import { Divider, Flex, HStack, IconButton, Image, Slide, Switch, Text, VStack }
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectTotalFundedCollateralAndLoan, toggleShowHiddenLoans } from '../store/loansSlice';
+import { fetchOutstandingDebt } from '../store/externalDataSlice';
+
+import { useEffect, useState } from 'react';
 
 export default function Balance() {
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
@@ -9,6 +12,10 @@ export default function Balance() {
 
   const { showHiddenLoans } = useSelector((state) => state.loans);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchOutstandingDebt());
+  }, []);
 
   const BalanceContainer = ({ children }) => {
     return (

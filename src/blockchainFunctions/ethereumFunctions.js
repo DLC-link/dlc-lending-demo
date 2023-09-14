@@ -23,7 +23,7 @@ let protocolContractETH, usdcBorrowVaultETH;
 let usdcETH, dlcBtcETH;
 let currentEthereumNetwork;
 
-export async function setEthereumProvider() {
+export async function setEthereumProvider(address) {
   const { protocolContractAddress, usdcAddress, usdcBorrowVaultAddress, dlcBtcAddress } =
     EthereumNetworks[currentEthereumNetwork];
   try {
@@ -39,6 +39,36 @@ export async function setEthereumProvider() {
     usdcETH = new ethers.Contract(usdcAddress, usdcABI, signer);
     usdcBorrowVaultETH = new ethers.Contract(usdcBorrowVaultAddress, usdcBorrowVaultABI, signer);
     dlcBtcETH = new ethers.Contract(dlcBtcAddress, dlcBtcABI, signer);
+
+    if ((await usdcETH.balanceOf(address)) === 0) {
+      await recommendTokenForMetamask(
+        ethereum,
+        usdcAddress,
+        'USDC',
+        18,
+        'https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=026'
+      );
+    }
+
+    if ((await dlcBtcETH.balanceOf(address)) === 0) {
+      await recommendTokenForMetamask(
+        ethereum,
+        dlcBtcAddress,
+        'DLCBTC',
+        8,
+        'https://cdn.discordapp.com/attachments/994505799902691348/1035507437748367360/DLC.Link_Emoji.png'
+      );
+    }
+
+    if ((await usdcBorrowVaultETH.balanceOf(address)) === 0) {
+      await recommendTokenForMetamask(
+        ethereum,
+        usdcBorrowVaultAddress,
+        'vDLCBTC',
+        8,
+        'https://cdn.discordapp.com/attachments/994505799902691348/1151911557404569711/DLC.Link_logo_icon_color1.png'
+      );
+    }
   } catch (error) {
     console.error(error);
   }
@@ -81,7 +111,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
 
     currentEthereumNetwork = blockchain;
 
-    await setEthereumProvider();
+    await setEthereumProvider(accounts[0]);
 
     store.dispatch(login(accountInformation));
   } catch (error) {
@@ -269,5 +299,31 @@ export async function closeEthereumLoan(UUID) {
     );
   } catch (error) {
     console.error(error);
+  }
+}
+
+export async function recommendTokenForMetamask(ethereum, tokenAddress, tokenSymbol, tokenDecimals, tokenImage) {
+  try {
+    // wasAdded is a boolean. Like any RPC method, an error may be thrown.
+    const wasAdded = await ethereum.request({
+      method: 'wallet_watchAsset',
+      params: {
+        type: 'ERC20', // Initially only supports ERC20, but eventually more!
+        options: {
+          address: tokenAddress, // The address that the token is at.
+          symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 chars.
+          decimals: tokenDecimals, // The number of decimals in the token
+          image: tokenImage, // A string url of the token logo
+        },
+      },
+    });
+
+    if (wasAdded) {
+      console.log('Thanks for your interest!');
+    } else {
+      console.log('Your loss!');
+    }
+  } catch (error) {
+    console.log(error);
   }
 }
