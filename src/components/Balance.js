@@ -15,7 +15,7 @@ export default function Balance() {
 
   useEffect(() => {
     dispatch(fetchOutstandingDebt());
-  }, []);
+  }, [outstandingDebt, dispatch]);
 
   const BalanceContainer = ({ children }) => {
     return (
