@@ -12,18 +12,24 @@ export const EthereumNetworks = {
     protocolContractAddress: process.env.REACT_APP_GOERLI_PROTOCOL_CONTRACT_ADDRESS,
     usdcAddress: process.env.REACT_APP_GOERLI_USDC_ADDRESS,
     dlcManagerAddress: process.env.REACT_APP_GOERLI_DLC_MANAGER_ADDRESS,
+    usdcBorrowVaultAddress: process.env.REACT_APP_GOERLI_USDC_BORROW_VAULT_ADDRESS,
+    dlcBtcAddress: process.env.REACT_APP_GOERLI_DLC_BTC_ADDRESS,
   },
   'ethereum:11155111': {
     name: 'Sepolia Testnet',
     protocolContractAddress: process.env.REACT_APP_SEPOLIA_PROTOCOL_CONTRACT_ADDRESS,
     usdcAddress: process.env.REACT_APP_SEPOLIA_USDC_ADDRESS,
     dlcManagerAddress: process.env.REACT_APP_SEPOLIA_DLC_MANAGER_ADDRESS,
+    usdcBorrowVaultAddress: process.env.REACT_APP_SEPOLIA_USDC_BORROW_VAULT_ADDRESS,
+    dlcBtcAddress: process.env.REACT_APP_SEPOLIA_DLC_BTC_ADDRESS,
   },
   'ethereum:31337': {
     name: 'Localhost',
     protocolContractAddress: process.env.REACT_APP_LOCALHOST_PROTOCOL_CONTRACT_ADDRESS,
     usdcAddress: process.env.REACT_APP_LOCALHOST_USDC_ADDRESS,
     dlcManagerAddress: process.env.REACT_APP_LOCALHOST_DLC_MANAGER_ADDRESS,
+    usdcBorrowVaultAddress: process.env.REACT_APP_LOCALHOST_USDC_BORROW_VAULT_ADDRESS,
+    dlcBtcAddress: process.env.REACT_APP_LOCALHOST_DLC_BTC_ADDRESS,
   },
 };
 

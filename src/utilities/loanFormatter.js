@@ -35,14 +35,14 @@ export function formatSolidityLoanContract(loanContract) {
   const uuid = loanContract.dlcUUID;
   const status = Object.values(solidityLoanStatuses)[loanContract.status];
   const owner = loanContract.owner;
-  const vaultCollateral = customShiftValue(parseInt(loanContract.vaultCollateral._hex), 8, true);
+  const vaultCollateral = customShiftValue(parseInt(loanContract.depositAmount._hex), 8, true);
   const formattedVaultCollateral = `${vaultCollateral} BTC`;
-  const vaultLoan = customShiftValue(parseInt(loanContract.vaultLoan._hex), 18, true).toFixed(2);
-  const formattedVaultLoan = `$ ${vaultLoan}`;
-  const liquidationFee = customShiftValue(parseInt(loanContract.liquidationFee._hex, 2, true).toFixed(2));
-  const formattedLiquidationFee = `${liquidationFee} %`;
-  const liquidationRatio = customShiftValue(parseInt(loanContract.liquidationRatio._hex), 2, true).toFixed(2);
-  const formattedLiquidationRatio = `${liquidationRatio} %`;
+  // const vaultLoan = customShiftValue(parseInt(loanContract.vaultLoan._hex), 18, true).toFixed(2);
+  // const formattedVaultLoan = `$ ${vaultLoan}`;
+  // const liquidationFee = customShiftValue(parseInt(loanContract.liquidationFee._hex, 2, true).toFixed(2));
+  // const formattedLiquidationFee = `${liquidationFee} %`;
+  // const liquidationRatio = customShiftValue(parseInt(loanContract.liquidationRatio._hex), 2, true).toFixed(2);
+  // const formattedLiquidationRatio = `${liquidationRatio} %`;
   const attestorList = loanContract.attestorList;
   return {
     uuid,
@@ -50,12 +50,12 @@ export function formatSolidityLoanContract(loanContract) {
     owner,
     vaultCollateral,
     formattedVaultCollateral,
-    vaultLoan,
-    formattedVaultLoan,
-    liquidationFee,
-    formattedLiquidationFee,
-    liquidationRatio,
-    formattedLiquidationRatio,
+    // vaultLoan,
+    // formattedVaultLoan,
+    // liquidationFee,
+    // formattedLiquidationFee,
+    // liquidationRatio,
+    // formattedLiquidationRatio,
     attestorList,
   };
 }

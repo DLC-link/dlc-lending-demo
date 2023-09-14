@@ -6,6 +6,8 @@ import store from '../store/store';
 
 import { abi as usdcABI } from '../abis/usdcABI';
 import { abi as protocolContractABI } from '../abis/protocolContractABI';
+import { abi as usdcBorrowVaultABI } from '../abis/usdcBorrowVaultABI';
+import { abi as dlcBtcABI } from '../abis/dlcBtcABI';
 
 import { EthereumNetworks } from '../networks/networks';
 
@@ -17,12 +19,13 @@ import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { fixedTwoDecimalShift, isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
 import { ToastEvent } from '../components/CustomToast';
 
-let protocolContractETH;
-let usdcETH;
+let protocolContractETH, usdcBorrowVaultETH;
+let usdcETH, dlcBtcETH;
 let currentEthereumNetwork;
 
 export async function setEthereumProvider() {
-  const { protocolContractAddress, usdcAddress } = EthereumNetworks[currentEthereumNetwork];
+  const { protocolContractAddress, usdcAddress, usdcBorrowVaultAddress, dlcBtcAddress } =
+    EthereumNetworks[currentEthereumNetwork];
   try {
     const { ethereum } = window;
     const provider = new ethers.providers.Web3Provider(ethereum);
@@ -34,6 +37,8 @@ export async function setEthereumProvider() {
     }
     protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
     usdcETH = new ethers.Contract(usdcAddress, usdcABI, signer);
+    usdcBorrowVaultETH = new ethers.Contract(usdcBorrowVaultAddress, usdcBorrowVaultABI, signer);
+    dlcBtcETH = new ethers.Contract(dlcBtcAddress, dlcBtcABI, signer);
   } catch (error) {
     console.error(error);
   }
@@ -84,16 +89,35 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
   }
 }
 
-export async function isAllowedInMetamask(vaultLoan) {
-  const { protocolContractAddress } = EthereumNetworks[currentEthereumNetwork];
+export async function fetchUserTokenBalance(assetName) {
+  let contractMap = {
+    DLCBTC: dlcBtcETH,
+    USDC: usdcETH,
+  };
+  const balance = await contractMap[assetName].balanceOf(store.getState().account.address);
+  return balance;
+}
+
+export async function fetchOutstandingDebtFromVault() {
+  const balance = await usdcBorrowVaultETH.borrowedAmount(store.getState().account.address);
+  return balance;
+}
+
+export async function fetchVaultReservesFromChain() {
+  const { usdcBorrowVaultAddress } = EthereumNetworks[currentEthereumNetwork];
+  const balance = await usdcETH.balanceOf(usdcBorrowVaultAddress);
+  return ethers.utils.formatEther(balance);
+}
+
+export async function isAllowanceSet(amount, assetContract, protocolContractAddress) {
   const address = store.getState().account.address;
 
   const desiredAmount = BigInt('1000000000000000000000000');
-  const allowedAmount = await usdcETH.allowance(address, protocolContractAddress);
+  const allowedAmount = await assetContract.allowance(address, protocolContractAddress);
 
-  if (isVaultLoanGreaterThanAllowedAmount(Number(vaultLoan), Number(allowedAmount))) {
+  if (isVaultLoanGreaterThanAllowedAmount(Number(amount), Number(allowedAmount))) {
     try {
-      await usdcETH.approve(protocolContractAddress, desiredAmount).then((response) =>
+      await assetContract.approve(protocolContractAddress, desiredAmount).then((response) =>
         store.dispatch(
           loanEventReceived({
             txHash: response.hash,
@@ -113,7 +137,9 @@ export async function isAllowedInMetamask(vaultLoan) {
 export async function sendLoanContractToEthereum(loanContract) {
   try {
     protocolContractETH
-      .setupLoan(loanContract.BTCDeposit, loanContract.attestorCount, { gasLimit: 900000 })
+      .setupDeposit(loanContract.BTCDeposit, loanContract.attestorCount, {
+        gasLimit: 900000,
+      })
       .then((response) => store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit })));
   } catch (error) {
     console.error(error);
@@ -124,7 +150,7 @@ export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
   let formattedLoans = [];
   try {
-    const loanContracts = await protocolContractETH.getAllLoansForAddress(address);
+    const loanContracts = await protocolContractETH.getAllDepositsForAddress(address);
     formattedLoans = formatAllLoanContracts(loanContracts, 'solidity');
   } catch (error) {
     console.error(error);
@@ -135,7 +161,7 @@ export async function getAllEthereumLoansForAddress() {
 export async function getEthereumLoan(loanID) {
   let loan;
   try {
-    loan = await protocolContractETH.getLoan(loanID);
+    loan = await protocolContractETH.getDeposit(loanID);
   } catch (error) {
     console.error(error);
   }
@@ -145,19 +171,25 @@ export async function getEthereumLoan(loanID) {
 export async function getEthereumLoanByUUID(UUID) {
   let loan;
   try {
-    loan = await protocolContractETH.getLoanByUUID(UUID);
+    loan = await protocolContractETH.getDepositByUUID(UUID);
   } catch (error) {
     console.error(error);
   }
   return loan;
 }
 
-export async function borrowEthereumLoan(UUID, additionalLoan) {
-  const loan = await getEthereumLoanByUUID(UUID);
-  if (await isAllowedInMetamask(ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))) {
+// we have to pass in the calculated necessary assets
+export async function depositToVault(assetDeposit) {
+  const { usdcBorrowVaultAddress } = EthereumNetworks[currentEthereumNetwork];
+
+  console.log('depositToVault:', assetDeposit);
+  console.log('depositToVault sent:', ethers.utils.parseUnits(assetDeposit.toString(), 'ether'));
+  if (await isAllowanceSet(assetDeposit, dlcBtcETH, usdcBorrowVaultAddress)) {
     try {
-      await protocolContractETH
-        .borrow(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))
+      await usdcBorrowVaultETH
+        ._deposit(assetDeposit, {
+          gasLimit: 900000,
+        })
         .then((response) =>
           store.dispatch(
             loanEventReceived({
@@ -171,6 +203,25 @@ export async function borrowEthereumLoan(UUID, additionalLoan) {
     }
   }
 }
+// export async function borrowEthereumLoan(UUID, additionalLoan) {
+//   const loan = await getEthereumLoanByUUID(UUID);
+//   if (await isAllowedInMetamask(ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))) {
+//     try {
+//       await protocolContractETH
+//         .borrow(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))
+//         .then((response) =>
+//           store.dispatch(
+//             loanEventReceived({
+//               txHash: response.hash,
+//               status: ToastEvent.BORROWREQUESTED,
+//             })
+//           )
+//         );
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   }
+// }
 
 export async function repayEthereumLoan(UUID, additionalRepayment) {
   const loan = await getEthereumLoanByUUID(UUID);
