@@ -6,10 +6,10 @@ import { ToastEvent } from '../components/CustomToast';
 import { customShiftValue } from '../utilities/utils';
 
 const routerWalletURLMap = {
-  metamask: process.env.REACT_APP_DEVNET_ETHEREUM_WALLET_DOMAIN,
-  leather: process.env.REACT_APP_DEVNET_STACKS_WALLET_DOMAIN,
-  xverse: process.env.REACT_APP_DEVNET_STACKS_WALLET_DOMAIN,
-  walletConnect: process.env.REACT_APP_DEVNET_STACKS_WALLET_DOMAIN,
+  metamask: process.env.REACT_APP_ETHEREUM_WALLET_DOMAIN,
+  leather: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
+  xverse: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
+  walletConnect: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
   };
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
