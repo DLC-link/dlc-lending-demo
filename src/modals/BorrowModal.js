@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 
 import store from '../store/store';
+import { ethers } from 'ethers';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -65,9 +66,16 @@ export default function BorrowModal() {
   }, [additionalLoan, dlcBtcBalance, bitcoinUSDValue, isOverBalance, isVaultBalanceHighEnough]);
 
   useEffect(() => {
-    const assetsToDeposit = (Number(additionalLoan) / Number(bitcoinUSDValue)) * 100000000;
-    setAssetsToDeposit(assetsToDeposit.toFixed(0));
-    setIsOverBalance(assetsToDeposit > dlcBtcBalance);
+    const _assetsToDeposit = (Number(additionalLoan) / Number(bitcoinUSDValue)) * 100000000;
+    console.log(
+      Number(additionalLoan),
+      Number(bitcoinUSDValue),
+      _assetsToDeposit,
+      _assetsToDeposit.toFixed(0),
+      dlcBtcBalance
+    );
+    setAssetsToDeposit(_assetsToDeposit.toFixed(0));
+    setIsOverBalance(_assetsToDeposit > customShiftValue(dlcBtcBalance, 8));
     setIsVaultBalanceHighEnough(additionalLoan < parseInt(vaultReserves));
   }, [additionalLoan, bitcoinUSDValue, dlcBtcBalance, vaultReserves]);
 
@@ -101,7 +109,7 @@ export default function BorrowModal() {
           fontSize={'md'}
           fontWeight={'bold'}
           color={'header'}>
-          Available DLCBTC to Deposit
+          Available DLCBTC for Deposit
         </Text>
         <HStack
           paddingBottom={2.5}
@@ -111,7 +119,7 @@ export default function BorrowModal() {
             width={200}
             fontSize={'md'}
             color='white'>
-            {dlcBtcBalance} sats
+            {dlcBtcBalance}
           </Text>
           <Image
             src='/btc_logo.png'
@@ -157,7 +165,7 @@ export default function BorrowModal() {
           <Text
             fontSize={'sm'}
             color={!isOverBalance ? 'accent' : 'warning'}>
-            {assetsToDeposit}
+            {ethers.utils.formatUnits(assetsToDeposit, 8)}
           </Text>
         </HStack>
         <HStack
@@ -175,7 +183,7 @@ export default function BorrowModal() {
             textAlign={'right'}
             fontSize='xs'
             color='white'>
-            $ {new Intl.NumberFormat().format(customShiftValue(outstandingDebt, 8, true).toFixed(2))}
+            $ {new Intl.NumberFormat().format(outstandingDebt)}
           </Text>
         </HStack>
         <HStack

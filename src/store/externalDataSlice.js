@@ -95,7 +95,7 @@ export const fetchDlcBtcBalance = createAsyncThunk('externalData/fetchDlcBtcBala
   } catch (error) {
     console.error(error);
   }
-  return balance.toNumber();
+  return balance;
 });
 
 export const fetchOutstandingDebt = createAsyncThunk('externalData/fetchOutstandingDebt', async () => {
@@ -105,14 +105,13 @@ export const fetchOutstandingDebt = createAsyncThunk('externalData/fetchOutstand
   } catch (error) {
     console.error(error);
   }
-  return balance.toNumber();
+  return balance;
 });
 
 export const fetchVaultReserves = createAsyncThunk('externalData/fetchVaultReserves', async () => {
   let balance = undefined;
   try {
     balance = await fetchVaultReservesFromChain();
-    console.log(balance);
   } catch (error) {
     console.error(error);
   }

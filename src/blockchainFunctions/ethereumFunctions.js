@@ -91,16 +91,16 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
 
 export async function fetchUserTokenBalance(assetName) {
   let contractMap = {
-    DLCBTC: dlcBtcETH,
-    USDC: usdcETH,
+    DLCBTC: { contract: dlcBtcETH, decimals: 8 },
+    USDC: { contract: usdcETH, decimals: 18 },
   };
-  const balance = await contractMap[assetName].balanceOf(store.getState().account.address);
-  return balance;
+  const balance = await contractMap[assetName].contract.balanceOf(store.getState().account.address);
+  return ethers.utils.formatUnits(balance, contractMap[assetName].decimals);
 }
 
 export async function fetchOutstandingDebtFromVault() {
   const balance = await usdcBorrowVaultETH.borrowedAmount(store.getState().account.address);
-  return balance;
+  return ethers.utils.formatEther(balance);
 }
 
 export async function fetchVaultReservesFromChain() {
@@ -183,7 +183,6 @@ export async function depositToVault(assetDeposit) {
   const { usdcBorrowVaultAddress } = EthereumNetworks[currentEthereumNetwork];
 
   console.log('depositToVault:', assetDeposit);
-  console.log('depositToVault sent:', ethers.utils.parseUnits(assetDeposit.toString(), 'ether'));
   if (await isAllowanceSet(assetDeposit, dlcBtcETH, usdcBorrowVaultAddress)) {
     try {
       await usdcBorrowVaultETH

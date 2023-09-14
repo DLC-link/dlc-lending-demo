@@ -5,6 +5,8 @@ import { selectTotalFundedCollateralAndLoan, toggleShowHiddenLoans } from '../st
 
 export default function Balance() {
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
+  const outstandingDebt = useSelector((state) => state.externalData.outstandingDebt);
+
   const { showHiddenLoans } = useSelector((state) => state.loans);
   const dispatch = useDispatch();
 
@@ -83,7 +85,7 @@ export default function Balance() {
         />
         <BalanceTextStack
           header={'USDC Debt'}
-          data={fundedLoanSum}
+          data={new Intl.NumberFormat().format(outstandingDebt)}
         />
       </BalanceContainer>
       <FilterContainer>
