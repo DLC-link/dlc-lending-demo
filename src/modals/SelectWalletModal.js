@@ -31,13 +31,13 @@ export default function SelectWalletModal() {
 
   const stacksBlockchains = [
     // { id: 'stacks:1', name: 'Mainnet' },
-    { id: 'stacks:2147483648', name: 'Testnet' },
+    // { id: 'stacks:2147483648', name: 'Testnet' },
     // { id: 'stacks:42', name: 'Mocknet' },
   ];
 
   const ethereumBlockchains = [
-    // { id: 'ethereum:11155111', name: 'Sepolia' },
-    { id: 'ethereum:5', name: 'Goerli' },
+    { id: 'ethereum:11155111', name: 'Sepolia' },
+    // { id: 'ethereum:5', name: 'Goerli' },
     { id: 'ethereum:31337', name: 'Hardhat' },
   ];
 
@@ -70,8 +70,8 @@ export default function SelectWalletModal() {
             <MenuButton
               width={225}
               variant={'outline'}
-              disabled={walletItem.id === 'xverse'}
-              filter={walletItem.id === 'xverse' ? 'blur(1px)' : ''}
+              disabled={walletItem.id === 'xverse' || walletItem.id === 'leather'}
+              filter={walletItem.id === 'xverse' || walletItem.id === 'leather' ? 'blur(1px)' : ''}
               animation={
                 showTutorial
                   ? `

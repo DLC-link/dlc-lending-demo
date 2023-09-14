@@ -40,7 +40,7 @@ export async function setEthereumProvider(address) {
     usdcBorrowVaultETH = new ethers.Contract(usdcBorrowVaultAddress, usdcBorrowVaultABI, signer);
     dlcBtcETH = new ethers.Contract(dlcBtcAddress, dlcBtcABI, signer);
 
-    if ((await usdcETH.balanceOf(address)) === 0) {
+    if (Number(await usdcETH.balanceOf(address)) === 0) {
       await recommendTokenForMetamask(
         ethereum,
         usdcAddress,
@@ -50,7 +50,7 @@ export async function setEthereumProvider(address) {
       );
     }
 
-    if ((await dlcBtcETH.balanceOf(address)) === 0) {
+    if (Number(await dlcBtcETH.balanceOf(address)) === 0) {
       await recommendTokenForMetamask(
         ethereum,
         dlcBtcAddress,
@@ -60,7 +60,7 @@ export async function setEthereumProvider(address) {
       );
     }
 
-    if ((await usdcBorrowVaultETH.balanceOf(address)) === 0) {
+    if (Number(await usdcBorrowVaultETH.balanceOf(address)) === 0) {
       await recommendTokenForMetamask(
         ethereum,
         usdcBorrowVaultAddress,
