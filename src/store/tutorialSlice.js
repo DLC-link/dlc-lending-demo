@@ -22,7 +22,7 @@ export const tutorialSlice = createSlice({
     },
     setTutorialOn: (state, action) => {
       if (action.payload === false) {
-        state.isFirstTimeUser === false;
+        state.isFirstTimeUser = false;
       }
       state.tutorialOn = action.payload;
     },
