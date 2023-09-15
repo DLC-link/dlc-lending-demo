@@ -46,23 +46,6 @@ export const ToastEvent = {
 export default function CustomToast({ txHash, status }) {
   const { walletType } = useSelector((state) => state.account);
 
-<<<<<<< HEAD
-  const ethereumExplorerURLs = {
-    'ethereum:11155111': `https://sepolia.etherscan.io/tx/${txHash}`,
-  };
-
-  const stacksExplorerURLs = {
-    'stacks:2147483648': `https://explorer.stacks.co/txid/${txHash}`,
-  };
-
-  const bitcoinExplorerURL = `http://stx-btc1.dlc.link:8001/tx/${txHash}`;
-
-  const explorerURLs = {
-    ...ethereumExplorerURLs,
-    ...stacksExplorerURLs,
-    ...bitcoinExplorerURL,
-  };
-=======
   const ethereumExplorerURL = `${process.env.REACT_APP_ETHEREUM_EXPLORER_API_URL}${txHash}`;
 
   const stacksExplorerURL = `${process.env.REACT_APP_STACKS_EXPLORER_API_URL}${txHash}`;
@@ -81,7 +64,6 @@ export default function CustomToast({ txHash, status }) {
     default:
       throw new Error('Unknown wallet type!');
   }
->>>>>>> main
 
   const isSuccessfulEvent = ![
     ToastEvent.ACCEPTFAILED,
