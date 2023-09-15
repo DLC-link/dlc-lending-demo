@@ -20,14 +20,14 @@ import { NonFungibleConditionCode } from '@stacks/transactions';
 import { makeContractNonFungiblePostCondition } from '@stacks/transactions';
 import store from '../store/store';
 
-import { StacksNetworks } from '../networks/networks';
+import { StacksNetwork } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 
 const getAllAttestors = async () => {
-  const { managerContractAddress, managerContractName, apiBase } = StacksNetworks;
+  const { managerContractAddress, managerContractName, apiBase } = StacksNetwork;
   const attestorNFT = 'dlc-attestors';
 
   const getAllAttestorsURL = `https://${apiBase}/extended/v1/tokens/nft/holdings?asset_identifiers=${managerContractAddress}.${managerContractName}::${attestorNFT}&principal=${managerContractAddress}.${managerContractName}`;
@@ -46,7 +46,7 @@ const selectRandomAttestors = async (attestorList, attestorCount) => {
 };
 
 const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus ) => {
-  const { loanContractAddress, loanContractName, network } = StacksNetworks;
+  const { loanContractAddress, loanContractName, network } = StacksNetwork;
 
   return {
     contractAddress: loanContractAddress,
@@ -240,7 +240,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.BORROWREQUESTED;
-  const { assetContractAddress, assetContractName, assetName, loanContractAddress, loanContractName } = StacksNetworks;
+  const { assetContractAddress, assetContractName, assetName, loanContractAddress, loanContractName } = StacksNetwork;
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
@@ -288,7 +288,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.REPAYREQUESTED;
-  const { assetContractAddress, assetContractName, assetName } = StacksNetworks;
+  const { assetContractAddress, assetContractName, assetName } = StacksNetwork;
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
@@ -374,7 +374,7 @@ export async function closeStacksLoan(UUID) {
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.CLOSEREQUESTED;
   const openDLCNFT = 'open-dlc';
-  const { managerContractAddress, managerContractName } = StacksNetworks;
+  const { managerContractAddress, managerContractName } = StacksNetwork;
 
   const contractNonFungiblePostConditionForClose = [
     makeContractNonFungiblePostCondition(

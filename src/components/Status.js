@@ -12,15 +12,10 @@ import { HideImageRounded, InfoOutlined } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 
 export default function Status({ status, canBeLiquidated, txHash }) {
-  const { blockchain } = useSelector((state) => state.account);
   const [text, setText] = useState();
   const [icon, setIcon] = useState();
 
-  const bitcoinNetwork = blockchain === 'stacks:1' || blockchain === 'ethereum:1' ? 'mainnet' : 'testnet';
-
-  const bitcoinExplorerURL = `https://mempool.space/${
-    bitcoinNetwork !== 'mainnet' ? bitcoinNetwork + '/' : ''
-  }tx/${txHash}`;
+  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${txHash}`;
 
   const OpenExplorerLink = () => {
     window.open(bitcoinExplorerURL, '_blank');
