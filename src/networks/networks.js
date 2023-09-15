@@ -16,6 +16,8 @@ export const EthereumNetwork = {
     protocolContractAddress: process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS,
     usdcAddress: process.env.REACT_APP_ETHEREUM_USDC_ADDRESS,
     dlcManagerAddress: process.env.REACT_APP_ETHEREUM_DLC_MANAGER_ADDRESS,
+    usdcBorrowVaultAddress: process.env.REACT_APP_ETHEREUM_USDC_BORROW_VAULT_ADDRESS,
+    dlcBtcAddress: process.env.REACT_APP_ETHEREUM_DLC_BTC_ADDRESS,
 };
 
 export const StacksNetwork =  {

@@ -30,7 +30,9 @@ export default function SelectWalletModal() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   const stacksBlockchains = [
-    { id: 'stacks:2147483648', name: 'Testnet' },
+    // { id: 'stacks:1', name: 'Mainnet' },
+    // { id: 'stacks:2147483648', name: 'Testnet' },
+    // { id: 'stacks:42', name: 'Mocknet' },
   ];
 
   const ethereumBlockchains = [
@@ -67,8 +69,8 @@ export default function SelectWalletModal() {
             <MenuButton
               width={225}
               variant={'outline'}
-              disabled={walletItem.id === 'xverse'}
-              filter={walletItem.id === 'xverse' ? 'blur(1px)' : ''}
+              disabled={walletItem.id === 'xverse' || walletItem.id === 'leather'}
+              filter={walletItem.id === 'xverse' || walletItem.id === 'leather' ? 'blur(1px)' : ''}
               animation={
                 showTutorial
                   ? `

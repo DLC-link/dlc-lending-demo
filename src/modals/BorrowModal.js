@@ -1,8 +1,6 @@
 import {
   Button,
   FormControl,
-  FormErrorMessage,
-  FormHelperText,
   FormLabel,
   HStack,
   Image,
@@ -16,15 +14,21 @@ import {
 } from '@chakra-ui/react';
 
 import store from '../store/store';
+import { ethers } from 'ethers';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { calculateCollateralCoveragePercentageForBorrow, formatCollateralInUSD } from '../utilities/utils';
+import { formatCollateralInUSD, customShiftValue } from '../utilities/utils';
 
-import { borrowEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { depositToVault } from '../blockchainFunctions/ethereumFunctions';
 import { borrowStacksLoan } from '../blockchainFunctions/stacksFunctions';
-import { fetchBitcoinValue } from '../store/externalDataSlice';
+import {
+  fetchBitcoinValue,
+  fetchDlcBtcBalance,
+  fetchOutstandingDebt,
+  fetchVaultReserves,
+} from '../store/externalDataSlice';
 
 import { ButtonContainer } from '../components/ActionButtons';
 import { useOnMount } from '../hooks/useOnMount';
@@ -36,57 +40,47 @@ export default function BorrowModal() {
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
   const isBorrowModalOpen = useSelector((state) => state.component.isBorrowModalOpen);
   const walletType = useSelector((state) => state.account.walletType);
+  const dlcBtcBalance = useSelector((state) => state.externalData.dlcBtcBalance);
+  const outstandingDebt = useSelector((state) => state.externalData.outstandingDebt);
+  const vaultReserves = useSelector((state) => state.externalData.vaultReserves);
 
   const [additionalLoan, setAdditionalLoan] = useState(0);
-  const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
+  // const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
   const [USDAmount, setUSDAmount] = useState(0);
 
   const [isLoanError, setLoanError] = useState(false);
-  const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
+  const [isOverBalance, setIsOverBalance] = useState(false);
+  const [assetsToDeposit, setAssetsToDeposit] = useState(0);
+  const [isVaultBalanceHighEnough, setIsVaultBalanceHighEnough] = useState(false);
 
   useOnMount(() => {
-    const updateBitcoinUSDValue = async () => {
-      dispatch(fetchBitcoinValue());
-    };
-    updateBitcoinUSDValue();
+    dispatch(fetchBitcoinValue());
+    dispatch(fetchDlcBtcBalance());
+    dispatch(fetchOutstandingDebt());
+    dispatch(fetchVaultReserves());
   });
 
   useEffect(() => {
-    setUSDAmount(formatCollateralInUSD(loan.vaultCollateral, bitcoinUSDValue));
-    updateCollateralToDebtPercentage();
-    updateLoanError();
-  }, [additionalLoan, collateralToDebtPercentage, isCollateralToDebtPercentageError]);
+    setUSDAmount(formatCollateralInUSD(dlcBtcBalance, bitcoinUSDValue));
+    setLoanError(additionalLoan < 1 || additionalLoan === undefined || isOverBalance || !isVaultBalanceHighEnough);
+  }, [additionalLoan, dlcBtcBalance, bitcoinUSDValue, isOverBalance, isVaultBalanceHighEnough]);
+
+  useEffect(() => {
+    const _assetsToDeposit = (Number(additionalLoan) / Number(bitcoinUSDValue)) * 100000000;
+    console.log(
+      Number(additionalLoan),
+      Number(bitcoinUSDValue),
+      _assetsToDeposit,
+      _assetsToDeposit.toFixed(0),
+      dlcBtcBalance
+    );
+    setAssetsToDeposit(_assetsToDeposit.toFixed(0));
+    setIsOverBalance(_assetsToDeposit > customShiftValue(dlcBtcBalance, 8));
+    setIsVaultBalanceHighEnough(additionalLoan < parseInt(vaultReserves));
+  }, [additionalLoan, bitcoinUSDValue, dlcBtcBalance, vaultReserves]);
 
   const handleLoanChange = (additionalLoan) => {
     setAdditionalLoan(additionalLoan.target.value);
-  };
-
-  const updateCollateralToDebtPercentage = () => {
-    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForBorrow(
-      Number(loan.vaultCollateral),
-      Number(bitcoinUSDValue),
-      Number(loan.vaultLoan),
-      Number(additionalLoan)
-    );
-
-    if (isNaN(collateralCoveragePercentage) || !isFinite(collateralCoveragePercentage)) {
-      setCollateralToDebtPercentage('-');
-    } else {
-      setCollateralToDebtPercentage(collateralCoveragePercentage);
-    }
-
-    const isBelowMinimumRatio = collateralCoveragePercentage < 140;
-
-    if (isBelowMinimumRatio) {
-      setCollateralToDebtPercentageError(true);
-    } else {
-      setCollateralToDebtPercentageError(false);
-    }
-  };
-
-  const updateLoanError = () => {
-    const shouldDisplayLoanError = additionalLoan < 1 || additionalLoan === undefined;
-    setLoanError(shouldDisplayLoanError);
   };
 
   const borrowLoanContract = async () => {
@@ -97,7 +91,7 @@ export default function BorrowModal() {
         borrowStacksLoan(loan.uuid, additionalLoan);
         break;
       case 'metamask':
-        borrowEthereumLoan(loan.uuid, additionalLoan);
+        depositToVault(assetsToDeposit);
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -115,7 +109,7 @@ export default function BorrowModal() {
           fontSize={'md'}
           fontWeight={'bold'}
           color={'header'}>
-          Collateral Amount
+          Available DLCBTC for Deposit
         </Text>
         <HStack
           paddingBottom={2.5}
@@ -125,7 +119,7 @@ export default function BorrowModal() {
             width={200}
             fontSize={'md'}
             color='white'>
-            {loan.vaultCollateral}
+            {dlcBtcBalance}
           </Text>
           <Image
             src='/btc_logo.png'
@@ -166,21 +160,13 @@ export default function BorrowModal() {
             fontSize={'xs'}
             fontWeight={'extrabold'}
             color={'white'}>
-            Collateral to debt ratio percentage:
+            DLCBTC to Deposit:
           </Text>
-          {!isCollateralToDebtPercentageError ? (
-            <Text
-              fontSize={'sm'}
-              color={'accent'}>
-              {collateralToDebtPercentage}%
-            </Text>
-          ) : (
-            <Text
-              fontSize={'sm'}
-              color={'warning'}>
-              {collateralToDebtPercentage}%
-            </Text>
-          )}
+          <Text
+            fontSize={'sm'}
+            color={!isOverBalance ? 'accent' : 'warning'}>
+            {ethers.utils.formatUnits(assetsToDeposit, 8)}
+          </Text>
         </HStack>
         <HStack
           width={250}
@@ -190,14 +176,32 @@ export default function BorrowModal() {
             fontSize='xs'
             fontWeight={'extrabold'}
             color='white'>
-            Already borrowed:
+            Already borrowed (user):
           </Text>
           <Text
             width={150}
             textAlign={'right'}
             fontSize='xs'
             color='white'>
-            {loan.formattedVaultLoan}
+            $ {new Intl.NumberFormat().format(outstandingDebt)}
+          </Text>
+        </HStack>
+        <HStack
+          width={250}
+          justifyContent={'space-between'}>
+          <Text
+            width={125}
+            fontSize='xs'
+            fontWeight={'extrabold'}
+            color='white'>
+            Vault USDC Reserves:
+          </Text>
+          <Text
+            width={150}
+            textAlign={'right'}
+            fontSize='xs'
+            color={isVaultBalanceHighEnough ? 'white' : 'warning'}>
+            $ {new Intl.NumberFormat().format(parseInt(vaultReserves))}
           </Text>
         </HStack>
       </>
@@ -285,7 +289,7 @@ export default function BorrowModal() {
                 variant='outline'
                 type='submit'
                 onClick={() => borrowLoanContract()}>
-                BORROW USDC
+                Deposit & Borrow
               </Button>
             </ButtonContainer>
           </VStack>

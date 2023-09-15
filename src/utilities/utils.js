@@ -129,6 +129,7 @@ export function formatCollateralInUSD(collateralAmount, bitcoinValue) {
   ) {
     return;
   }
+  // const shiftedCollateralAmount = customShiftValue(Number(collateralAmount), 8, true);
   const decimalCollateralAmount = new Decimal(Number(collateralAmount));
   const decimalBitcoinValue = new Decimal(Number(bitcoinValue));
 
