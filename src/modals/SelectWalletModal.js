@@ -30,8 +30,8 @@ export default function SelectWalletModal() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   const stacksBlockchain = {
-    id: process.env.REACT_APP_ETHEREUM_NETWORK_ID,
-    name: process.env.REACT_APP_ETHEREUM_NETWORK_NAME,
+    id: process.env.REACT_APP_STACKS_NETWORK_ID,
+    name: process.env.REACT_APP_STACKS_NETWORK_NAME,
   };
 
   const ethereumBlockchain = {
