@@ -7,7 +7,7 @@ import store from '../store/store';
 import { abi as usdcABI } from '../abis/usdcABI';
 import { abi as protocolContractABI } from '../abis/protocolContractABI';
 
-import { EthereumNetworks } from '../networks/networks';
+import { EthereumNetwork } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { toggleInfoModalVisibility } from '../store/componentSlice';
@@ -22,7 +22,7 @@ let usdcETH;
 let currentEthereumNetwork;
 
 export async function setEthereumProvider() {
-  const { protocolContractAddress, usdcAddress } = EthereumNetworks[currentEthereumNetwork];
+  const { protocolContractAddress, usdcAddress } = EthereumNetwork;
   try {
     const { ethereum } = window;
     const provider = new ethers.providers.Web3Provider(ethereum);
@@ -85,7 +85,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
 }
 
 export async function isAllowedInMetamask(vaultLoan) {
-  const { protocolContractAddress } = EthereumNetworks[currentEthereumNetwork];
+  const { protocolContractAddress } = EthereumNetwork;
   const address = store.getState().account.address;
 
   const desiredAmount = BigInt('1000000000000000000000000');
@@ -124,6 +124,7 @@ export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
   let formattedLoans = [];
   try {
+    console.log('protocolContractETH', protocolContractETH)
     const loanContracts = await protocolContractETH.getAllLoansForAddress(address);
     formattedLoans = formatAllLoanContracts(loanContracts, 'solidity');
   } catch (error) {

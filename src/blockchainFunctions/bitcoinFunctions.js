@@ -10,7 +10,7 @@ const routerWalletURLMap = {
   leather: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
   xverse: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
   walletConnect: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
-  };
+};
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   const { walletType } = store.getState().account;

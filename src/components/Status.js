@@ -15,8 +15,7 @@ export default function Status({ status, canBeLiquidated, txHash }) {
   const [text, setText] = useState();
   const [icon, setIcon] = useState();
 
-  const bitcoinExplorerURL = `http://stx-btc1.dlc.link:8001/tx/${txHash}`;
-
+  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${txHash}`;
 
   const OpenExplorerLink = () => {
     window.open(bitcoinExplorerURL, '_blank');

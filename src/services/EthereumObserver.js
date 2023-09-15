@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { EthereumNetworks } from '../networks/networks';
+import { EthereumNetwork } from '../networks/networks';
 import { abi as protocolContractABI } from '../abis/protocolContractABI';
 import { abi as usdcABI } from '../abis/usdcABI';
 import store from '../store/store';
@@ -13,7 +13,7 @@ export function startEthereumObserver(blockchain) {
   let usdcETH;
 
   try {
-    const { protocolContractAddress, usdcAddress } = EthereumNetworks[blockchain];
+    const { protocolContractAddress, usdcAddress } = EthereumNetwork;
     const { ethereum } = window;
 
     ethereumProvider = new ethers.providers.Web3Provider(ethereum);
