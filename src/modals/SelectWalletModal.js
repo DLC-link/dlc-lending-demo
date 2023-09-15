@@ -29,16 +29,18 @@ export default function SelectWalletModal() {
 
   const [showTutorial, setShowTutorial] = useState(false);
 
-  const stacksBlockchains = [
-    // { id: 'stacks:1', name: 'Mainnet' },
-    // { id: 'stacks:2147483648', name: 'Testnet' },
-    // { id: 'stacks:42', name: 'Mocknet' },
-  ];
+  const stacksBlockchain = {
+    id: process.env.REACT_APP_ETHEREUM_NETWORK_ID,
+    name: process.env.REACT_APP_ETHEREUM_NETWORK_NAME,
+  };
 
-  const ethereumBlockchains = [
-    { id: 'ethereum:11155111', name: 'Sepolia' },
-    { id: 'ethereum:31337', name: 'Hardhat' },
-  ];
+  const ethereumBlockchain = {
+    id: process.env.REACT_APP_ETHEREUM_NETWORK_ID,
+    name: process.env.REACT_APP_ETHEREUM_NETWORK_NAME,
+  };
+  const stacksBlockchains = [{ stacksBlockchain }];
+
+  const ethereumBlockchains = [ethereumBlockchain, { id: 'ethereum:31337', name: 'Hardhat' }];
 
   const walletItems = [
     {
