@@ -7,14 +7,14 @@ import store from '../store/store';
 import { abi as usdcABI } from '../abis/usdcABI';
 import { abi as protocolContractABI } from '../abis/protocolContractABI';
 
-import { EthereumNetworks } from '../networks/networks';
+import { EthereumNetwork } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { toggleInfoModalVisibility } from '../store/componentSlice';
 import { loanSetupRequested, loanEventReceived } from '../store/loansSlice';
 
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
-import { fixedTwoDecimalShift, isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
+import { isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
 import { ToastEvent } from '../components/CustomToast';
 
 let protocolContractETH;
@@ -22,7 +22,7 @@ let usdcETH;
 let currentEthereumNetwork;
 
 export async function setEthereumProvider() {
-  const { protocolContractAddress, usdcAddress } = EthereumNetworks[currentEthereumNetwork];
+  const { protocolContractAddress, usdcAddress } = EthereumNetwork;
   try {
     const { ethereum } = window;
     const provider = new ethers.providers.Web3Provider(ethereum);
@@ -85,7 +85,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
 }
 
 export async function isAllowedInMetamask(vaultLoan) {
-  const { protocolContractAddress } = EthereumNetworks[currentEthereumNetwork];
+  const { protocolContractAddress } = EthereumNetwork;
   const address = store.getState().account.address;
 
   const desiredAmount = BigInt('1000000000000000000000000');
@@ -122,6 +122,7 @@ export async function sendLoanContractToEthereum(loanContract) {
 
 export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
+  console.log('protocolContractETH: ', protocolContractETH);
   let formattedLoans = [];
   try {
     const loanContracts = await protocolContractETH.getAllLoansForAddress(address);

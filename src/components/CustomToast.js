@@ -44,30 +44,26 @@ export const ToastEvent = {
 };
 
 export default function CustomToast({ txHash, status }) {
-  const { blockchain } = useSelector((state) => state.account);
+  const { walletType } = useSelector((state) => state.account);
 
-  const ethereumExplorerURLs = {
-    'ethereum:5': `https://goerli.etherscan.io/tx/${txHash}`,
-    'ethereum:11155111': `https://sepolia.etherscan.io/tx/${txHash}`,
-  };
+  const ethereumExplorerURL = `${process.env.REACT_APP_ETHEREUM_EXPLORER_API_URL}${txHash}`;
 
-  const stacksExplorerURLs = {
-    'stacks:2147483648': `https://explorer.stacks.co/txid/${txHash}`,
-    'stacks:1': `https://explorer.stacks.co/txid/${txHash}`,
-    'stacks:42': `https://explorer.stacks.co/txid/${txHash}`,
-  };
+  const stacksExplorerURL = `${process.env.REACT_APP_STACKS_EXPLORER_API_URL}${txHash}`;
 
-  const bitcoinNetwork = blockchain === 'stacks:1' || blockchain === 'ethereum:1' ? 'mainnet' : 'testnet';
+  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${txHash}`;
 
-  const bitcoinExplorerURL = `https://mempool.space/${
-    bitcoinNetwork !== 'mainnet' ? bitcoinNetwork + '/' : ''
-  }tx/${txHash}`;
-
-  const explorerURLs = {
-    ...ethereumExplorerURLs,
-    ...stacksExplorerURLs,
-    ...bitcoinExplorerURL,
-  };
+  let explorerURL;
+  switch(walletType) {
+    case 'metamask':
+      explorerURL = ethereumExplorerURL;
+      break;
+    case 'leather':
+    case 'xverse':
+      explorerURL = stacksExplorerURL;
+      break;
+    default:
+      throw new Error('Unknown wallet type!');
+  }
 
   const isSuccessfulEvent = ![
     ToastEvent.ACCEPTFAILED,
@@ -82,7 +78,7 @@ export default function CustomToast({ txHash, status }) {
       ? undefined
       : status === ToastEvent.ACCEPTSUCCEEDED
       ? bitcoinExplorerURL
-      : explorerURLs[blockchain];
+      : explorerURL;
 
   const CustomToastContainer = ({ children }) => {
     return (
