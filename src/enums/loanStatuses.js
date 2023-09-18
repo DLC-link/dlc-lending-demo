@@ -2,10 +2,8 @@ export const solidityLoanStatuses = {
   NONE: 'None',
   READY: 'Ready',
   FUNDED: 'Funded',
-  PREREPAID: 'PreRepaid',
-  REPAID: 'Repaid',
-  PRELIQUIDATED: 'PreLiquidated',
-  LIQUIDATED: 'Liquidated',
+  PRECLOSED: 'PreClosed',
+  CLOSED: 'Closed',
   PREFUNDED: 'PreFunded',
 };
 

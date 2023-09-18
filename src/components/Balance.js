@@ -4,14 +4,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectTotalFundedCollateralAndLoan, toggleShowHiddenLoans } from '../store/loansSlice';
 import { fetchOutstandingDebt } from '../store/externalDataSlice';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function Balance() {
+  const dispatch = useDispatch();
+
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
   const outstandingDebt = useSelector((state) => state.externalData.outstandingDebt);
-
-  const { showHiddenLoans } = useSelector((state) => state.loans);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(fetchOutstandingDebt());
@@ -30,22 +29,9 @@ export default function Balance() {
     );
   };
 
-  const FilterContainer = ({ children }) => {
-    return (
-      <HStack
-        paddingLeft={2.5}
-        paddingRight={2.5}
-        height={25}
-        width={162.5}
-        justifyContent={'space-between'}>
-        {children}
-      </HStack>
-    );
-  };
-
   const BalanceTextStack = ({ header, data }) => {
     return (
-      <VStack width={125}>
+      <VStack width={150}>
         <Text
           fontSize={'sm'}
           fontWeight={'bold'}
@@ -53,7 +39,7 @@ export default function Balance() {
           {header}
         </Text>
         <HStack>
-          {header === 'BTC Collateral' ? (
+          {header === 'BTC Locked In DLCs' ? (
             <Image
               src='/btc_logo.png'
               alt='Bitcoin Logo'
@@ -78,12 +64,9 @@ export default function Balance() {
   };
 
   return (
-    <VStack
-      spacing={5}
-      alignItems={'flex-end'}>
       <BalanceContainer>
         <BalanceTextStack
-          header={'BTC Collateral'}
+          header={'BTC Locked In DLCs'}
           data={fundedCollateralSum.toFixed(4)}
         />
         <Divider
@@ -91,17 +74,9 @@ export default function Balance() {
           height='50px'
         />
         <BalanceTextStack
-          header={'USDC Debt'}
+          header={'Available dlcBTC'}
           data={new Intl.NumberFormat().format(outstandingDebt)}
         />
       </BalanceContainer>
-      <FilterContainer>
-        <Switch
-          size='sm'
-          isChecked={showHiddenLoans}
-          onChange={() => dispatch(toggleShowHiddenLoans())}></Switch>
-        <Text fontSize={'2xs'}>SHOW HIDDEN VAULTS</Text>
-      </FilterContainer>
-    </VStack>
   );
 }

@@ -21,12 +21,10 @@ export const ButtonContainer = ({ children }) => {
   );
 };
 
-export function ActionButtons({ loan, canBeLiquidated }) {
-  const dispatch = useDispatch();
+export function ActionButtons({ loan }) {
   const walletType = useSelector((state) => state.account.walletType);
 
   let closeAction;
-  let liquidateAction;
   let actionButton;
 
   switch (walletType) {
@@ -34,11 +32,9 @@ export function ActionButtons({ loan, canBeLiquidated }) {
     case 'leather':
     case 'walletConnect':
       closeAction = () => closeStacksLoan(loan.uuid);
-      liquidateAction = () => liquidateStacksLoan(loan.uuid);
       break;
     case 'metamask':
       closeAction = () => closeEthereumLoan(loan.uuid);
-      liquidateAction = () => liquidateEthereumLoan(loan.uuid);
   }
 
   switch (loan.status) {
@@ -58,56 +54,19 @@ export function ActionButtons({ loan, canBeLiquidated }) {
     case clarityLoanStatuses.FUNDED:
       actionButton = (
         <ButtonContainer>
-          <Button
-            variant='outline'
-            margin={0}
-            padding={0}
-            onClick={() => dispatch(toggleBorrowModalVisibility({ isOpen: true, loan: loan }))}>
-            BORROW
-          </Button>
-          {loan.vaultLoan > 0 ? (
-            <Button
-              variant='outline'
-              onClick={() => dispatch(toggleRepayModalVisibility({ isOpen: true, loan: loan }))}>
-              REPAY
-            </Button>
-          ) : (
             <Button
               variant='outline'
               onClick={() => closeAction()}>
               CLOSE
             </Button>
-          )}
-          {canBeLiquidated && (
-            <Tooltip
-              label='Liquidate the loan and redeem the collateral value for BTC.'
-              fontSize={'10px'}
-              textAlign={'justify'}
-              padding={2.5}
-              placement={'bottom'}
-              width={200}
-              background={'transparent'}
-              border={'1px solid #FF4500'}
-              borderRadius={'lg'}
-              shadow={'dark-lg'}
-              gutter={35}>
-              <Button
-                variant='outline'
-                onClick={() => liquidateAction()}>
-                LIQUIDATE
-              </Button>
-            </Tooltip>
-          )}
         </ButtonContainer>
       );
       break;
     case solidityLoanStatuses.NONE:
     case clarityLoanStatuses.NONE:
       break;
-    case solidityLoanStatuses.PREREPAID:
-    case clarityLoanStatuses.PREREPAID:
-    case solidityLoanStatuses.PRELIQUIDATED:
-    case clarityLoanStatuses.PRELIQUIDATED:
+    case solidityLoanStatuses.PRECLOSED:
+    case clarityLoanStatuses.PRECLOSED:
     case solidityLoanStatuses.PREFUNDED:
     case clarityLoanStatuses.PREFUNDED:
       actionButton = (
@@ -123,11 +82,6 @@ export function ActionButtons({ loan, canBeLiquidated }) {
           />
         </ButtonContainer>
       );
-      break;
-    case solidityLoanStatuses.REPAID:
-    case clarityLoanStatuses.REPAID:
-    case solidityLoanStatuses.LIQUIDATED:
-    case clarityLoanStatuses.LIQUIDATED:
       break;
     default:
       break;

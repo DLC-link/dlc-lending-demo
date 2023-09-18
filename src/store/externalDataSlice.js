@@ -11,6 +11,7 @@ const initialState = {
   dlcBtcBalance: 0,
   outstandingDebt: 0,
   vaultReserves: 0,
+  vDlcBtcBalance: 0,
   status: 'idle',
   error: null,
 };
@@ -68,6 +69,18 @@ export const externalDataSlice = createSlice({
       .addCase(fetchVaultReserves.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
+      })
+      .addCase(fetchVdlcBtcBalance.pending, (state, action) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchVdlcBtcBalance.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.error = null;
+        state.vDlcBtcBalance = action.payload;
+      })
+      .addCase(fetchVdlcBtcBalance.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
       });
   },
 });
@@ -112,6 +125,16 @@ export const fetchVaultReserves = createAsyncThunk('externalData/fetchVaultReser
   let balance = undefined;
   try {
     balance = await fetchVaultReservesFromChain();
+  } catch (error) {
+    console.error(error);
+  }
+  return balance;
+});
+
+export const fetchVdlcBtcBalance = createAsyncThunk('externalData/fetchVdlcBtcBalance', async () => {
+  let balance = undefined;
+  try {
+    balance = await fetchUserTokenBalance('vDLCBTC');
   } catch (error) {
     console.error(error);
   }

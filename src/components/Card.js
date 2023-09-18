@@ -44,7 +44,6 @@ export default function Card({ loan }) {
   const cardInfo = [
     { label: 'UUID', value: loan.uuid && easyTruncateAddress(loan.uuid) },
     { label: 'Collateral', value: loan.formattedVaultCollateral },
-    { label: 'Borrowed', value: loan.formattedVaultLoan },
   ];
 
   useEffect(() => {
@@ -209,15 +208,14 @@ export default function Card({ loan }) {
         <CardContainer>
           <Status
             status={loan.status}
-            canBeLiquidated={canBeLiquidated}
-            txHash={loan.txHash}
+            fundingTXHash={loan.fundingTXHash}
+            closingTXHash={loan.closingTXHash}
           />
           <CardTable />
           <Spacer />
           {[solidityLoanStatuses.NONE, clarityLoanStatuses.NONE].includes(loan.status) && <CardSpinner />}
           <ActionButtons
             loan={loan}
-            canBeLiquidated={canBeLiquidated}
           />
         </CardContainer>{' '}
       </VStack>

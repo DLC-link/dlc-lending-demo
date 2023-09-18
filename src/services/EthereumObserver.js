@@ -8,6 +8,8 @@ import store from '../store/store';
 import { fetchLoan, loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 import { solidityLoanStatuses } from '../enums/loanStatuses';
+import { getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
+import { fetchOutstandingDebt } from '../store/externalDataSlice';
 
 export function startEthereumObserver(blockchain) {
   let ethereumProvider;
@@ -16,6 +18,7 @@ export function startEthereumObserver(blockchain) {
 
   try {
     const { protocolContractAddress, usdcAddress, usdcBorrowVaultAddress, dlcBtcAddress } = EthereumNetwork;
+    const { address } = store.getState().account;
     const { ethereum } = window;
 
     ethereumProvider = new ethers.providers.Web3Provider(ethereum);
@@ -33,7 +36,12 @@ export function startEthereumObserver(blockchain) {
       const loanUUID = args[1];
       const loanStatus = Object.values(solidityLoanStatuses)[args[2]];
       const loanTXHash = args[args.length - 1].transactionHash;
+      
+      const loanOwner = getEthereumLoanByUUID(loanUUID).owner;
+      console.log('StatusUpdate')
 
+      if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
+ 
       store.dispatch(
         fetchLoan({
           loanUUID: loanUUID,
@@ -45,9 +53,11 @@ export function startEthereumObserver(blockchain) {
     });
 
     usdcBorrowVaultETH.on('Deposit', (...args) => {
-      const loanUUID = args[1];
-      const loanStatus = Object.values(solidityLoanStatuses)[args[4]];
+      const loanOwner = args[1];
       const loanTXHash = args[args.length - 1].transactionHash;
+      console.log('Deposit')
+
+      if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
 
       store.dispatch(
         loanEventReceived({
@@ -55,6 +65,8 @@ export function startEthereumObserver(blockchain) {
           txHash: loanTXHash,
         })
       );
+
+      store.dispatch(fetchOutstandingDebt());
     });
 
     // protocolContractETH.on('RepayEvent', (...args) => {
@@ -90,8 +102,7 @@ export function startEthereumObserver(blockchain) {
     usdcETH.on('Approval', (...args) => {
       const loanOwner = args[0];
       const loanTXHash = args[args.length - 1].transactionHash;
-
-      const address = store.getState().account.address;
+      console.log('Approval')
 
       if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
 

@@ -123,6 +123,7 @@ export async function fetchUserTokenBalance(assetName) {
   let contractMap = {
     DLCBTC: { contract: dlcBtcETH, decimals: 8 },
     USDC: { contract: usdcETH, decimals: 18 },
+    vDLCBTC: { contract: usdcBorrowVaultETH, decimals: 8 },
   };
   const balance = await contractMap[assetName].contract.balanceOf(store.getState().account.address);
   return ethers.utils.formatUnits(balance, contractMap[assetName].decimals);

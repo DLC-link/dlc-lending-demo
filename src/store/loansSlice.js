@@ -96,14 +96,6 @@ export const loansSlice = createSlice({
               case clarityLoanStatuses.FUNDED:
                 toastStatus = ToastEvent.FUNDED;
                 break;
-              case solidityLoanStatuses.LIQUIDATED:
-              case clarityLoanStatuses.LIQUIDATED:
-                toastStatus = ToastEvent.LIQUIDATED;
-                break;
-              case solidityLoanStatuses.PRELIQUIDATED:
-              case clarityLoanStatuses.PRELIQUIDATED:
-                toastStatus = ToastEvent.PRELIQUIDATED;
-                break;
               case solidityLoanStatuses.PRECLOSED:
               case clarityLoanStatuses.PRECLOSED:
                 toastStatus = ToastEvent.PREREPAID;
@@ -115,12 +107,6 @@ export const loansSlice = createSlice({
             break;
           case 'RepayEvent':
             toastStatus = ToastEvent.REPAID;
-            break;
-          case 'DoesNotNeedLiquidation':
-            toastStatus = ToastEvent.INVALIDLIQUIDATION;
-            break;
-          case 'LiquidationEvent':
-            toastStatus = ToastEvent.PRELIQUIDATED;
             break;
         }
 
@@ -191,14 +177,12 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   }
 
   forEach((loan) => {
-    if (loan.status === clarityLoanStatuses.READY || loan.status === solidityLoanStatuses.READY) {
       const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
         (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
       );
       if (matchingLoanWithBTCTransaction) {
         updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
       }
-    }
   }, loans);
 
   return loans;
@@ -233,12 +217,12 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
       throw new Error('Unsupported wallet type!');
   }
 
-  if (loanStatus === solidityLoanStatuses.READY || loanStatus === clarityLoanStatuses.READY) {
-    const fetchedLoans = await getAllLoansForAddress();
-    fetchedLoanUUIDs = fetchedLoans.map((loan) => loan.uuid);
-  }
+  // if (loanStatus === solidityLoanStatuses.READY || loanStatus === clarityLoanStatuses.READY) {
+  //   const fetchedLoans = await getAllLoansForAddress();
+  //   fetchedLoanUUIDs = fetchedLoans.map((loan) => loan.uuid);
+  // }
 
-  if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) return;
+  // if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) return;
 
   const loan = await getLoanByUUID(loanUUID);
   const formattedLoan = formatLoanContract(loan);

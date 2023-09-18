@@ -7,6 +7,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchLoans } from '../store/loansSlice';
 import { fetchBitcoinValue } from '../store/externalDataSlice';
 import { useOnMount } from '../hooks/useOnMount';
+import Filter from './Filter';
+import StableCoinBalance from './StableCoinBalance';
 
 export default function LoansScreen() {
   const dispatch = useDispatch();
@@ -25,7 +27,9 @@ export default function LoansScreen() {
   return (
     <>
       <Collapse in={address}>
-        <VStack marginBottom='50px'>
+        <VStack
+          marginBottom='50px'
+          spacing={50}>
           <HStack>
             <IconButton
               variant='outline'
@@ -50,6 +54,10 @@ export default function LoansScreen() {
             </Text>
           </HStack>
           <Balance />
+          <StableCoinBalance />
+          <HStack width={925}>
+            <Filter />
+          </HStack>
         </VStack>
         <LoansGrid isLoading={isLoading} />
       </Collapse>
