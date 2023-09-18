@@ -1,4 +1,4 @@
-import { Button, HStack, Image, Table, TableContainer, Td, Text, Thead, Tr } from '@chakra-ui/react';
+import { Button, HStack, Image, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from '@chakra-ui/react';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOutstandingDebt, fetchVdlcBtcBalance } from '../store/externalDataSlice';
@@ -94,47 +94,52 @@ export default function StableCoinBalance() {
       <TableContainer width={925}>
         <Table>
           <Thead>
-            <Td>
-              <Text
-                fontSize={'xs'}
-                fontWeight={'bold'}
-                color={'white'}>
-                Vault
-              </Text>
-            </Td>
-            <Td>
-              <Text
-                fontSize={'xs'}
-                fontWeight={'bold'}
-                color={'white'}>
-                Vault Reserves
-              </Text>
-            </Td>
-            <Td>
-              <Text
-                fontSize={'xs'}
-                fontWeight={'bold'}
-                color={'white'}>
-                Borrowed USDC
-              </Text>
-            </Td>
-            <Td>
-              <Text
-                fontSize={'xs'}
-                fontWeight={'bold'}
-                color={'white'}>
-                Deposited dlcBTC
-              </Text>
-            </Td>
-            <Td></Td>
-            <Td></Td>
+            <Tr>
+              <Td>
+                <Text
+                  fontSize={'xs'}
+                  fontWeight={'bold'}
+                  color={'white'}>
+                  Vault
+                </Text>
+              </Td>
+              <Td>
+                <Text
+                  fontSize={'xs'}
+                  fontWeight={'bold'}
+                  color={'white'}>
+                  Vault Reserves
+                </Text>
+              </Td>
+              <Td>
+                <Text
+                  fontSize={'xs'}
+                  fontWeight={'bold'}
+                  color={'white'}>
+                  Borrowed USDC
+                </Text>
+              </Td>
+              <Td>
+                <Text
+                  fontSize={'xs'}
+                  fontWeight={'bold'}
+                  color={'white'}>
+                  Deposited dlcBTC
+                </Text>
+              </Td>
+              <Td></Td>
+              <Td></Td>
+            </Tr>
           </Thead>
-          {vaults.map((vault) => (
-            <AssetTableRow
-              depositToken={vault.depositToken}
-              borrowToken={vault.borrowToken}
-            />
-          ))}
+          <Tbody>
+            {vaults.map((vault, index) => (
+              <AssetTableRow
+                key={index}
+                depositToken={vault.depositToken}
+                borrowToken={vault.borrowToken}
+              />
+            ))}
+          </Tbody>
         </Table>
       </TableContainer>
     </AssetTableContainer>

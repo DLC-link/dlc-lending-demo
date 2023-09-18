@@ -36,11 +36,6 @@ export function startEthereumObserver(blockchain) {
       const loanUUID = args[1];
       const loanStatus = Object.values(solidityLoanStatuses)[args[2]];
       const loanTXHash = args[args.length - 1].transactionHash;
-      
-      const loanOwner = getEthereumLoanByUUID(loanUUID).owner;
-      console.log('StatusUpdate')
-
-      if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
  
       store.dispatch(
         fetchLoan({
@@ -55,6 +50,7 @@ export function startEthereumObserver(blockchain) {
     usdcBorrowVaultETH.on('Deposit', (...args) => {
       const loanOwner = args[1];
       const loanTXHash = args[args.length - 1].transactionHash;
+
       console.log('Deposit')
 
       if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
@@ -102,6 +98,7 @@ export function startEthereumObserver(blockchain) {
     usdcETH.on('Approval', (...args) => {
       const loanOwner = args[0];
       const loanTXHash = args[args.length - 1].transactionHash;
+
       console.log('Approval')
 
       if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
