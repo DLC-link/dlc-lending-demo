@@ -15,7 +15,7 @@ export const componentSlice = createSlice({
       state.isDepositModalOpen = action.payload;
     },
     toggleBorrowModalVisibility: (state, action) => {
-      state.loanForModal = action.payload.loan;
+      // state.loanForModal = action.payload.loan;
       state.isBorrowModalOpen = action.payload.isOpen;
     },
     toggleRepayModalVisibility: (state, action) => {
@@ -32,11 +32,11 @@ export const componentSlice = createSlice({
 });
 
 export const {
-    toggleDepositModalVisibility,
-    toggleBorrowModalVisibility,
-    toggleRepayModalVisibility,
-    toggleSelectWalletModalVisibility,
-    toggleInfoModalVisibility,
+  toggleDepositModalVisibility,
+  toggleBorrowModalVisibility,
+  toggleRepayModalVisibility,
+  toggleSelectWalletModalVisibility,
+  toggleInfoModalVisibility,
 } = componentSlice.actions;
 
 export default componentSlice.reducer;

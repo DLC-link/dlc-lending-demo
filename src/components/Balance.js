@@ -47,8 +47,8 @@ export default function Balance() {
             />
           ) : (
             <Image
-              src='/usdc_logo.png'
-              alt='USDC Logo'
+              src='https://cdn.discordapp.com/attachments/994505799902691348/1035507437748367360/DLC.Link_Emoji.png'
+              alt='dlcBTC Logo'
               boxSize={15}
             />
           )}
@@ -64,19 +64,19 @@ export default function Balance() {
   };
 
   return (
-      <BalanceContainer>
-        <BalanceTextStack
-          header={'BTC Locked In DLCs'}
-          data={fundedCollateralSum.toFixed(4)}
-        />
-        <Divider
-          orientation='vertical'
-          height='50px'
-        />
-        <BalanceTextStack
-          header={'Available dlcBTC'}
-          data={new Intl.NumberFormat().format(outstandingDebt)}
-        />
-      </BalanceContainer>
+    <BalanceContainer>
+      <BalanceTextStack
+        header={'BTC Locked In DLCs'}
+        data={fundedCollateralSum.toFixed(4)}
+      />
+      <Divider
+        orientation='vertical'
+        height='50px'
+      />
+      <BalanceTextStack
+        header={'Available dlcBTC'}
+        data={new Intl.NumberFormat().format(outstandingDebt)}
+      />
+    </BalanceContainer>
   );
 }

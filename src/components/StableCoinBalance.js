@@ -1,11 +1,11 @@
 import { Button, HStack, Image, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from '@chakra-ui/react';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchOutstandingDebt, fetchVdlcBtcBalance } from '../store/externalDataSlice';
+import { fetchVaultReserves, fetchOutstandingDebt, fetchVdlcBtcBalance } from '../store/externalDataSlice';
 
 import { useEffect } from 'react';
 import { useLoans } from '../hooks/useLoans';
-import { fetchVaultReserves } from '../store/externalDataSlice';
+import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
 
 export default function StableCoinBalance() {
   const dispatch = useDispatch();
@@ -13,14 +13,14 @@ export default function StableCoinBalance() {
 
   const { outstandingDebt, vaultReserves, vDlcBtcBalance } = useSelector((state) => state.externalData);
 
-  const vaults = [{ depositToken: 'BTC', borrowToken: 'USDC' }];
+  const vaults = [{ depositToken: 'dlcBTC', borrowToken: 'USDC' }];
 
   const getCorrespondingAssetIcon = (asset) => {
     switch (asset) {
-      case 'BTC':
+      case 'dlcBTC':
         return (
           <Image
-            src='/btc_logo.png'
+            src='https://cdn.discordapp.com/attachments/994505799902691348/1035507437748367360/DLC.Link_Emoji.png'
             alt='Bitcoin Logo'
             boxSize={15}
           />
@@ -81,10 +81,22 @@ export default function StableCoinBalance() {
           <Text>{vDlcBtcBalance}</Text>
         </Td>
         <Td>
-          <Button variant={'deposit-withdraw'}>DEPOSIT</Button>
+          <Button
+            variant={'deposit-withdraw'}
+            onClick={() =>
+              dispatch(toggleBorrowModalVisibility({ depositToken: 'dlcBTC', borrowToken: 'USDC', isOpen: true }))
+            }>
+            BORROW
+          </Button>
         </Td>
         <Td>
-          <Button variant={'deposit-withdraw'}>WITHDRAW</Button>
+          <Button
+            variant={'deposit-withdraw'}
+            onClick={() =>
+              dispatch(toggleRepayModalVisibility({ depositToken: 'dlcBTC', borrowToken: 'USDC', isOpen: true }))
+            }>
+            REPAY
+          </Button>
         </Td>
       </Tr>
     );

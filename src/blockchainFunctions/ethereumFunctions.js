@@ -24,8 +24,7 @@ let usdcETH, dlcBtcETH;
 let currentEthereumNetwork;
 
 export async function setEthereumProvider(address) {
-  const { protocolContractAddress, usdcAddress, usdcBorrowVaultAddress, dlcBtcAddress } =
-    EthereumNetwork;
+  const { protocolContractAddress, usdcAddress, usdcBorrowVaultAddress, dlcBtcAddress } = EthereumNetwork;
   try {
     const { ethereum } = window;
     const provider = new ethers.providers.Web3Provider(ethereum);
@@ -234,25 +233,6 @@ export async function depositToVault(assetDeposit) {
     }
   }
 }
-// export async function borrowEthereumLoan(UUID, additionalLoan) {
-//   const loan = await getEthereumLoanByUUID(UUID);
-//   if (await isAllowedInMetamask(ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))) {
-//     try {
-//       await protocolContractETH
-//         .borrow(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))
-//         .then((response) =>
-//           store.dispatch(
-//             loanEventReceived({
-//               txHash: response.hash,
-//               status: ToastEvent.BORROWREQUESTED,
-//             })
-//           )
-//         );
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   }
-// }
 
 export async function repayEthereumLoan(UUID, additionalRepayment) {
   const loan = await getEthereumLoanByUUID(UUID);
@@ -289,18 +269,20 @@ export async function liquidateEthereumLoan(UUID) {
 }
 
 export async function closeEthereumLoan(UUID) {
-  const loan = await getEthereumLoanByUUID(UUID);
-  try {
-    protocolContractETH.closeLoan(parseInt(loan.id._hex)).then((response) =>
-      store.dispatch(
-        loanEventReceived({
-          txHash: response.hash,
-          status: ToastEvent.CLOSEREQUESTED,
-        })
-      )
-    );
-  } catch (error) {
-    console.error(error);
+  const deposit = await getEthereumLoanByUUID(UUID);
+  if (await isAllowanceSet(deposit.depositAmount, dlcBtcETH, protocolContractETH.address)) {
+    try {
+      protocolContractETH.closeDeposit(parseInt(deposit.id._hex)).then((response) =>
+        store.dispatch(
+          loanEventReceived({
+            txHash: response.hash,
+            status: ToastEvent.CLOSEREQUESTED,
+          })
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
