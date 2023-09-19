@@ -9,8 +9,6 @@ import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions
 
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 
-import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
-
 export const ButtonContainer = ({ children }) => {
   return (
     <VStack
@@ -54,11 +52,11 @@ export function ActionButtons({ loan }) {
     case clarityLoanStatuses.FUNDED:
       actionButton = (
         <ButtonContainer>
-            <Button
-              variant='outline'
-              onClick={() => closeAction()}>
-              CLOSE
-            </Button>
+          <Button
+            variant='outline'
+            onClick={() => closeAction()}>
+            CLOSE
+          </Button>
         </ButtonContainer>
       );
       break;
