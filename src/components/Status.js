@@ -7,19 +7,9 @@ import { useState } from 'react';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { useOnMount } from '../hooks/useOnMount';
 
-export default function Status({ status, fundingTXHash, closingTXHash }) {
+export default function Status({ status }) {
   const [text, setText] = useState();
   const [icon, setIcon] = useState();
-
-  const [shouldIncludeFundingTX, setShouldIncludeFundingTX] = useState(false);
-  const [shouldIncludeClosingTX, setShouldIncludeClosingTX] = useState(false);
-
-  const bitcoinFundingTXExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${fundingTXHash}`;
-  const bitcoinClosingTXExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${closingTXHash}`;
-
-  const OpenExplorerLink = (bitcoinExplorerURL) => {
-    window.open(bitcoinExplorerURL, '_blank');
-  };
 
   const StatusInfo = ({ children, text }) => {
     return (
@@ -32,24 +22,6 @@ export default function Status({ status, fundingTXHash, closingTXHash }) {
           {text}
         </Text>
       </HStack>
-    );
-  };
-
-  const ExternalLinkButton = ({ label, bitcoinExplorerURL }) => {
-    return (
-      <Tooltip
-        label={label}
-        gutter={35}
-        placement={'top-end'}>
-        <IconButton
-          icon={<ExternalLinkIcon />}
-          variant={'ghost'}
-          boxSize={5}
-          color='#07E8D8'
-          _hover={{ background: 'transparent' }}
-          onClick={() => OpenExplorerLink(bitcoinExplorerURL)}
-        />
-      </Tooltip>
     );
   };
 
@@ -69,27 +41,21 @@ export default function Status({ status, fundingTXHash, closingTXHash }) {
       case clarityLoanStatuses.PREFUNDED:
         setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
         setText('Funding pending');
-        setShouldIncludeFundingTX(true);
         break;
       case solidityLoanStatuses.FUNDED:
       case clarityLoanStatuses.FUNDED:
         setIcon(<CurrencyBitcoinIcon sx={{ color: '#04BAB2', height: '20px' }} />);
         setText('Funded');
-        setShouldIncludeFundingTX(true);
         break;
       case solidityLoanStatuses.PRECLOSED:
       case clarityLoanStatuses.PRECLOSED:
         setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
         setText('Repayment pending');
-        setShouldIncludeFundingTX(true);
-        setShouldIncludeClosingTX(true);
         break;
       case solidityLoanStatuses.CLOSED:
       case clarityLoanStatuses.CLOSED:
         setIcon(<PaidIcon sx={{ color: '#04BAB2', height: '20px' }} />);
         setText('Closed');
-        setShouldIncludeFundingTX(true);
-        setShouldIncludeClosingTX(true);
         break;
       default:
         break;
@@ -103,26 +69,6 @@ export default function Status({ status, fundingTXHash, closingTXHash }) {
       paddingBottom={2.5}
       justifyContent={'space-between'}>
       <StatusInfo text={text}>{icon}</StatusInfo>
-      {shouldIncludeFundingTX && (
-        <ExternalLinkButton
-          label={
-            <Text>
-              View <strong>funding</strong> transaction
-            </Text>
-          }
-          bitcoinExplorerURL={bitcoinFundingTXExplorerURL}
-        />
-      )}
-      {shouldIncludeClosingTX && (
-        <ExternalLinkButton
-          label={
-            <Text>
-              View <strong>closing</strong> transaction
-            </Text>
-          }
-          bitcoinExplorerURL={bitcoinClosingTXExplorerURL}
-        />
-      )}
     </HStack>
   );
 }

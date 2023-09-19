@@ -23,40 +23,125 @@ import { motion } from 'framer-motion';
 import { ActionButtons } from './ActionButtons';
 import Status from './Status';
 
-import { keyframes } from '@chakra-ui/react';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { IconButton, keyframes } from '@chakra-ui/react';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { hideLoan } from '../store/loansSlice';
-import { calculateCollateralCoveragePercentageForLiquidation, easyTruncateAddress } from '../utilities/utils';
+import { easyTruncateAddress } from '../utilities/utils';
 import TutorialBox from './TutorialBox';
+
+const tutorialStepsForCards = [
+  TutorialStep.WAITFORSETUP,
+  TutorialStep.FUNDLOAN,
+  TutorialStep.WAITFORCONFIRMATION,
+  TutorialStep.BORROWREPAY,
+  TutorialStep.WAITFORCLOSE,
+  TutorialStep.ENDFLOW,
+];
+
+const OpenExplorerLink = (bitcoinExplorerURL) => {
+  window.open(bitcoinExplorerURL, '_blank');
+};
+
+const ExternalLinkButton = ({ label, bitcoinExplorerURL }) => {
+  return (
+    <Tooltip
+      label={label}
+      gutter={label === 'Funding TX' ? 150 : 180}
+      placement={'top-end'}>
+      <IconButton
+        padding={0}
+        margin={0}
+        icon={<ExternalLinkIcon />}
+        variant={'ghost'}
+        boxSize={5}
+        color='#07E8D8'
+        _hover={{ background: 'transparent' }}
+        onClick={() => OpenExplorerLink(bitcoinExplorerURL)}
+      />
+    </Tooltip>
+  );
+};
 
 export default function Card({ loan }) {
   const dispatch = useDispatch();
-  const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
-  const [canBeLiquidated, setCanBeLiquidated] = useState(false);
+
   const [showTutorial, setShowTutorial] = useState(false);
+  const [includeFundingTX, setIncludeFundingTX] = useState(false);
+  const [includeClosingTX, setIncludeClosingTX] = useState(false);
 
   const { tutorialOn, tutorialStep, tutorialLoanUUID } = useSelector((state) => state.tutorial);
   const { hiddenLoans } = useSelector((state) => state.loans);
 
+  const bitcoinFundingTXExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${loan.fundingTXHash}`;
+  const bitcoinClosingTXExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${loan.closingTXHash}`;
+
   const cardInfo = [
     { label: 'UUID', value: loan.uuid && easyTruncateAddress(loan.uuid) },
     { label: 'Collateral', value: loan.formattedVaultCollateral },
+    {
+      label: 'Funding TX',
+      value: (
+        <ExternalLinkButton
+          label={'View funding transaction'}
+          bitcoinExplorerURL={bitcoinFundingTXExplorerURL}
+        />
+      ),
+    },
+    {
+      label: 'Closing TX',
+      value: (
+        <ExternalLinkButton
+          label={'View closing transaction'}
+          bitcoinExplorerURL={bitcoinClosingTXExplorerURL}
+        />
+      ),
+    },
   ];
 
   useEffect(() => {
-    const isTutorialLoanUUIDMatches = tutorialLoanUUID === loan.uuid;
+    console.log(
+      'shoud include',
+      [
+        solidityLoanStatuses.PREFUNDED,
+        solidityLoanStatuses.FUNDED,
+        solidityLoanStatuses.PRECLOSED,
+        solidityLoanStatuses.CLOSED,
+      ].includes(loan.status)
+    );
+    if (
+      [
+        solidityLoanStatuses.PREFUNDED,
+        clarityLoanStatuses.PREFUNDED,
+        solidityLoanStatuses.FUNDED,
+        clarityLoanStatuses.FUNDED,
+        solidityLoanStatuses.PRECLOSED,
+        clarityLoanStatuses.PRECLOSED,
+        solidityLoanStatuses.CLOSED,
+      ].includes(loan.status)
+    ) {
+      console.log('setting include funding tx');
+      setIncludeFundingTX(true);
+    }
+    if (
+      [
+        solidityLoanStatuses.PRECLOSED,
+        clarityLoanStatuses.PRECLOSED,
+        solidityLoanStatuses.CLOSED,
+        clarityLoanStatuses.CLOSED,
+      ].includes(loan.status)
+    ) {
+      console.log('setting include closing tx');
+      setIncludeClosingTX(true);
+    }
+  }, [loan]);
 
-    const isTutorialStepMatches = [
-      TutorialStep.WAITFORSETUP,
-      TutorialStep.FUNDLOAN,
-      TutorialStep.WAITFORCONFIRMATION,
-      TutorialStep.BORROWREPAY,
-      TutorialStep.WAITFORCLOSE,
-      TutorialStep.ENDFLOW,
-    ].includes(tutorialStep);
+  useEffect(() => {
+    const isTutorialLoanUUIDMatches = tutorialLoanUUID === loan.uuid;
+    const isTutorialStepMatches = tutorialStepsForCards.includes(tutorialStep);
 
     const shouldShowTutorial = tutorialOn && isTutorialLoanUUIDMatches && isTutorialStepMatches;
 
@@ -95,16 +180,6 @@ export default function Card({ loan }) {
     dispatch(hideLoan(loan.uuid));
   };
 
-  useEffect(() => {
-    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForLiquidation(
-      loan.vaultCollateral,
-      bitcoinUSDValue,
-      loan.vaultLoan
-    );
-    const isLiquidable = collateralCoveragePercentage < 140;
-    setCanBeLiquidated(isLiquidable);
-  }, [bitcoinUSDValue, loan.vaultCollateral, loan.vaultLoan]);
-
   const CardAnimation = ({ children }) => {
     return (
       <motion.div
@@ -122,31 +197,29 @@ export default function Card({ loan }) {
 
   const CardContainer = ({ children }) => {
     return (
-      <>
-        <VStack
-          height={350}
-          width={250}
-          borderRadius='lg'
-          shadow='dark-lg'
-          padding={2.5}
-          bgGradient='linear(to-br, background1, transparent)'
-          backgroundPosition='right'
-          backgroundSize='200%'
-          transition='background-position 500ms ease'
-          animation={
-            showTutorial
-              ? `
+      <VStack
+        height={300}
+        width={250}
+        borderRadius='lg'
+        shadow='dark-lg'
+        padding={2.5}
+        bgGradient='linear(to-br, background1, transparent)'
+        backgroundPosition='right'
+        backgroundSize='200%'
+        transition='background-position 500ms ease'
+        animation={
+          showTutorial
+            ? `
             ${glowAnimation} infinite 1s
         `
-              : ''
-          }
-          justifyContent='center'
-          _hover={{
-            backgroundPosition: 'left',
-          }}>
-          {children}
-        </VStack>
-      </>
+            : ''
+        }
+        justifyContent='center'
+        _hover={{
+          backgroundPosition: 'left',
+        }}>
+        {children}
+      </VStack>
     );
   };
 
@@ -158,30 +231,39 @@ export default function Card({ loan }) {
           size={'sm'}
           maxWidth={'100%'}>
           <Tbody>
-            {cardInfo.map((row, index) => (
-              <Tr
-                key={index}
-                width={'100%'}>
-                <Td width={45}>
-                  <Text>{row.label}</Text>
-                </Td>
-                <Td width={170}>
-                  {row.label === 'UUID' ? (
-                    <Button
-                      variant={'uuid'}
-                      onClick={() => navigator.clipboard.writeText(loan.uuid)}>
-                      <Tooltip
-                        label={'Click to copy UUID'}
-                        placement={'top'}>
-                        <Text variant='value'>{row.value}</Text>
-                      </Tooltip>
-                    </Button>
-                  ) : (
-                    <Text variant={'value'}>{row.value}</Text>
-                  )}
-                </Td>
-              </Tr>
-            ))}
+            {cardInfo.map((row, index) => {
+              if (row.label === 'Funding TX' && !includeFundingTX) {
+                return null;
+              }
+              if (row.label === 'Closing TX' && !includeClosingTX) {
+                return null;
+              }
+              return (
+                <Tr
+                  key={index}
+                  width={'100%'}
+                  height={35}>
+                  <Td width={45}>
+                    <Text>{row.label}</Text>
+                  </Td>
+                  <Td width={170}>
+                    {row.label === 'UUID' ? (
+                      <Button
+                        variant={'uuid'}
+                        onClick={() => navigator.clipboard.writeText(loan.uuid)}>
+                        <Tooltip
+                          label={'Click to copy UUID'}
+                          placement={'top'}>
+                          <Text variant='value'>{row.value}</Text>
+                        </Tooltip>
+                      </Button>
+                    ) : (
+                      <Text variant={'value'}>{row.value}</Text>
+                    )}
+                  </Td>
+                </Tr>
+              );
+            })}
           </Tbody>
         </Table>
       </TableContainer>
@@ -204,27 +286,19 @@ export default function Card({ loan }) {
 
   return (
     <CardAnimation>
-      <VStack spacing={5}>
-        <CardContainer>
-          <Status
-            status={loan.status}
-            fundingTXHash={loan.fundingTXHash}
-            closingTXHash={loan.closingTXHash}
-          />
-          <CardTable />
-          <Spacer />
-          {[solidityLoanStatuses.NONE, clarityLoanStatuses.NONE].includes(loan.status) && <CardSpinner />}
-          <ActionButtons
-            loan={loan}
-          />
-        </CardContainer>{' '}
-      </VStack>
+      <CardContainer>
+        <Status status={loan.status} />
+        <CardTable />
+        <Spacer />
+        {[solidityLoanStatuses.NONE, clarityLoanStatuses.NONE].includes(loan.status) && <CardSpinner />}
+        <ActionButtons loan={loan} />
+      </CardContainer>{' '}
       <Button
-          variant={'hide'}
-          onClick={() => handleHide()}>
-          {hiddenLoans.includes(loan.uuid) ? 'show' : 'hide'}
-        </Button>
-        {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+        variant={'hide'}
+        onClick={() => handleHide()}>
+        {hiddenLoans.includes(loan.uuid) ? 'show' : 'hide'}
+      </Button>
+      {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
     </CardAnimation>
   );
 }

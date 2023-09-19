@@ -178,7 +178,6 @@ export async function sendLoanContractToEthereum(loanContract) {
 
 export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
-  console.log('protocolContractETH: ', protocolContractETH);
   let formattedLoans = [];
   try {
     const loanContracts = await protocolContractETH.getAllDepositsForAddress(address);
@@ -213,7 +212,6 @@ export async function getEthereumLoanByUUID(UUID) {
 export async function depositToVault(assetDeposit) {
   const { usdcBorrowVaultAddress } = EthereumNetwork;
 
-  console.log('depositToVault:', assetDeposit);
   if (await isAllowanceSet(assetDeposit, dlcBtcETH, usdcBorrowVaultAddress)) {
     try {
       await usdcBorrowVaultETH

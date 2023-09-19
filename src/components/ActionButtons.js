@@ -1,15 +1,14 @@
-import React from 'react';
-import { VStack, Button, Tooltip, Text } from '@chakra-ui/react';
+import { Button, Progress, Text, VStack } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
 
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { fetchBitcoinContractOfferAndSendToUserWallet } from '../blockchainFunctions/bitcoinFunctions';
-import { closeStacksLoan, liquidateStacksLoan } from '../blockchainFunctions/stacksFunctions';
-import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { closeEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { closeStacksLoan } from '../blockchainFunctions/stacksFunctions';
+import useConfirmationChecker from '../hooks/useConfirmationChecker';
 
-import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
-
-import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
+import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 
 export const ButtonContainer = ({ children }) => {
   return (
@@ -18,6 +17,63 @@ export const ButtonContainer = ({ children }) => {
       padding={15}>
       {children}
     </VStack>
+  );
+};
+
+const ConfirmationProgress = (loan) => {
+  const transactionConfirmations = useConfirmationChecker(loan);
+
+  const [shouldBeIndeterminate, setShouldBeIndeterminate] = useState(false);
+  const [confirmationText, setConfirmationText] = useState(
+    <Text>
+      <strong>0</strong>/6 confirmations
+    </Text>
+  );
+
+  useEffect(() => {
+    if (transactionConfirmations === 0 || transactionConfirmations > 6 || isNaN(transactionConfirmations)) {
+      setShouldBeIndeterminate(true);
+    } else {
+      setShouldBeIndeterminate(false);
+    }
+
+    setConfirmationText(
+      <Text>
+        <strong>{transactionConfirmations}</strong>/6 confirmations
+      </Text>
+    );
+  }, [transactionConfirmations]);
+
+  return (
+    <ButtonContainer>
+      <VStack padding={2.5}>
+        {transactionConfirmations <= 6 ? (
+          <Text
+            fontSize={'xs'}
+            fontWeight={'regular'}
+            color={'white'}>
+            {confirmationText}
+          </Text>
+        ) : (
+          <Text
+            fontSize={'xs'}
+            fontWeight={'regular'}
+            color={'white'}>
+            processing...
+          </Text>
+        )}
+        <Progress
+          isIndeterminate={shouldBeIndeterminate}
+          value={transactionConfirmations}
+          max={6}
+          hasStripe={true}
+          isAnimated={true}
+          colorScheme='teal'
+          size={'sm'}
+          width={200}
+        />
+      </VStack>
+    </ButtonContainer>
   );
 };
 
@@ -54,11 +110,11 @@ export function ActionButtons({ loan }) {
     case clarityLoanStatuses.FUNDED:
       actionButton = (
         <ButtonContainer>
-            <Button
-              variant='outline'
-              onClick={() => closeAction()}>
-              CLOSE
-            </Button>
+          <Button
+            variant='outline'
+            onClick={() => closeAction()}>
+            CLOSE
+          </Button>
         </ButtonContainer>
       );
       break;
@@ -69,19 +125,7 @@ export function ActionButtons({ loan }) {
     case clarityLoanStatuses.PRECLOSED:
     case solidityLoanStatuses.PREFUNDED:
     case clarityLoanStatuses.PREFUNDED:
-      actionButton = (
-        <ButtonContainer>
-          <Button
-            variant='outline'
-            isLoading
-            loadingText='PENDING'
-            color='gray'
-            _hover={{
-              shadow: 'none',
-            }}
-          />
-        </ButtonContainer>
-      );
+      actionButton = <ConfirmationProgress loan={loan} />;
       break;
     default:
       break;
