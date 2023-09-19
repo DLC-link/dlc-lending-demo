@@ -111,6 +111,7 @@ export const fetchDlcBtcBalance = createAsyncThunk('externalData/fetchDlcBtcBala
   return balance;
 });
 
+// NOTE: this is only one vaults debt, not the total debt of the user across all vaults
 export const fetchOutstandingDebt = createAsyncThunk('externalData/fetchOutstandingDebt', async () => {
   let balance = undefined;
   try {
