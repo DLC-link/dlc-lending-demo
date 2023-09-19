@@ -139,6 +139,11 @@ export async function fetchVaultReservesFromChain() {
   return ethers.utils.formatEther(balance);
 }
 
+export async function fetchVaultDepositBalanceFromChain() {
+  const balance = await usdcBorrowVaultETH.totalAssets();
+  return ethers.utils.formatUnits(balance, 8);
+}
+
 export async function isAllowanceSet(amount, assetContract, protocolContractAddress) {
   const address = store.getState().account.address;
 
@@ -232,12 +237,10 @@ export async function depositToVault(assetDeposit) {
   }
 }
 
-export async function repayEthereumLoan(UUID, additionalRepayment) {
-  const loan = await getEthereumLoanByUUID(UUID);
-  try {
-    protocolContractETH
-      .repay(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalRepayment.toString(), 'ether'))
-      .then((response) =>
+export async function withdrawFromVault(assetsToWithdraw) {
+  if (await isAllowanceSet(assetsToWithdraw, usdcETH, usdcBorrowVaultETH.address)) {
+    try {
+      await usdcBorrowVaultETH._withdraw(assetsToWithdraw, store.getState().account.address).then((response) =>
         store.dispatch(
           loanEventReceived({
             txHash: response.hash,
@@ -245,8 +248,9 @@ export async function repayEthereumLoan(UUID, additionalRepayment) {
           })
         )
       );
-  } catch (error) {
-    console.error(error);
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 

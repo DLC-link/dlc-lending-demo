@@ -16,15 +16,20 @@ import {
 } from '@chakra-ui/react';
 
 import store from '../store/store';
+import { ethers } from 'ethers';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { calculateCollateralCoveragePercentageForRepay, formatCollateralInUSD } from '../utilities/utils';
+import {
+  calculateCollateralCoveragePercentageForRepay,
+  formatCollateralInUSD,
+  customShiftValue,
+} from '../utilities/utils';
 
-import { repayEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
-import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
-import { fetchBitcoinValue } from '../store/externalDataSlice';
+import { withdrawFromVault } from '../blockchainFunctions/ethereumFunctions';
+// import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
+import { fetchBitcoinValue, fetchVdlcBtcBalance, fetchVaultDepositBalance } from '../store/externalDataSlice';
 
 import { ButtonContainer } from '../components/ActionButtons';
 import { useOnMount } from '../hooks/useOnMount';
@@ -32,73 +37,90 @@ import { toggleRepayModalVisibility } from '../store/componentSlice';
 
 export default function RepayModal() {
   const dispatch = useDispatch();
-  const loan = useSelector((state) => state.component.loanForModal);
+  // const loan = useSelector((state) => state.component.loanForModal);
+  const vault = useSelector((state) => state.component.vaultForModal);
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
   const isRepayModalOpen = useSelector((state) => state.component.isRepayModalOpen);
   const walletType = useSelector((state) => state.account.walletType);
+  const vDlcBtcBalance = useSelector((state) => state.externalData.vDlcBtcBalance);
+  const vaultDepositBalance = useSelector((state) => state.externalData.vaultAssetBalance);
 
   const [additionalRepayment, setAdditionalRepayment] = useState(0);
   const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
   const [USDAmount, setUSDAmount] = useState(0);
+  const [isOverBalance, setIsOverBalance] = useState(false);
+  const [assetsToWithdraw, setAssetsToWithdraw] = useState(0);
+  const [isVaultDepositsBalanceHighEnough, setIsVaultDepositsBalanceHighEnough] = useState(true);
+  const outstandingDebt = useSelector((state) => state.externalData.outstandingDebt);
 
   const [isLoanError, setLoanError] = useState(false);
   const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
 
   useOnMount(() => {
-    const updateBitcoinUSDValue = async () => {
-      dispatch(fetchBitcoinValue());
-    };
-    updateBitcoinUSDValue();
+    dispatch(fetchBitcoinValue());
+    dispatch(fetchVdlcBtcBalance());
+    dispatch(fetchVaultDepositBalance());
   });
 
   useEffect(() => {
-    setUSDAmount(formatCollateralInUSD(loan.vaultCollateral, bitcoinUSDValue));
-    updateCollateralToDebtPercentage();
-    updateLoanError();
-  }, [additionalRepayment, collateralToDebtPercentage, isCollateralToDebtPercentageError]);
+    setUSDAmount(formatCollateralInUSD(vDlcBtcBalance, bitcoinUSDValue));
+    // updateCollateralToDebtPercentage();
+    setLoanError(
+      additionalRepayment < 1 || additionalRepayment === undefined || isOverBalance || !isVaultDepositsBalanceHighEnough
+    );
+  }, [
+    additionalRepayment,
+    bitcoinUSDValue,
+    vDlcBtcBalance,
+    collateralToDebtPercentage,
+    isCollateralToDebtPercentageError,
+    isOverBalance,
+    isVaultDepositsBalanceHighEnough,
+  ]);
+
+  useEffect(() => {
+    const _assetsToWithdraw = (Number(additionalRepayment) / Number(bitcoinUSDValue)) * 100000000;
+    setAssetsToWithdraw(_assetsToWithdraw.toFixed(0));
+    setIsOverBalance(_assetsToWithdraw > customShiftValue(vDlcBtcBalance, 8));
+    setIsVaultDepositsBalanceHighEnough(_assetsToWithdraw < customShiftValue(vaultDepositBalance, 8));
+  }, [additionalRepayment, bitcoinUSDValue, vDlcBtcBalance, vaultDepositBalance]);
 
   const handleRepaymentChange = (additionalRepayment) => {
     setAdditionalRepayment(additionalRepayment.target.value);
   };
 
-  const updateCollateralToDebtPercentage = () => {
-    const collateralCoveragePercentage = calculateCollateralCoveragePercentageForRepay(
-      Number(loan.vaultCollateral),
-      Number(bitcoinUSDValue),
-      Number(loan.vaultLoan),
-      Number(additionalRepayment)
-    );
+  // const updateCollateralToDebtPercentage = () => {
+  //   const collateralCoveragePercentage = calculateCollateralCoveragePercentageForRepay(
+  //     Number(loan.vaultCollateral),
+  //     Number(bitcoinUSDValue),
+  //     Number(loan.vaultLoan),
+  //     Number(additionalRepayment)
+  //   );
 
-    if (isNaN(collateralCoveragePercentage) || !isFinite(collateralCoveragePercentage)) {
-      setCollateralToDebtPercentage('-');
-    } else {
-      setCollateralToDebtPercentage(collateralCoveragePercentage);
-    }
+  //   if (isNaN(collateralCoveragePercentage) || !isFinite(collateralCoveragePercentage)) {
+  //     setCollateralToDebtPercentage('-');
+  //   } else {
+  //     setCollateralToDebtPercentage(collateralCoveragePercentage);
+  //   }
 
-    const isBelowMinimumRatio = collateralCoveragePercentage < 140;
+  //   const isBelowMinimumRatio = collateralCoveragePercentage < 140;
 
-    if (isBelowMinimumRatio) {
-      setCollateralToDebtPercentageError(true);
-    } else {
-      setCollateralToDebtPercentageError(false);
-    }
-  };
-
-  const updateLoanError = () => {
-    const shouldDisplayLoanError =
-      additionalRepayment < 1 || additionalRepayment === undefined || additionalRepayment > Number(loan.vaultLoan);
-    setLoanError(shouldDisplayLoanError);
-  };
+  //   if (isBelowMinimumRatio) {
+  //     setCollateralToDebtPercentageError(true);
+  //   } else {
+  //     setCollateralToDebtPercentageError(false);
+  //   }
+  // };
 
   const repayLoanContract = async () => {
     store.dispatch(toggleRepayModalVisibility({ isOpen: false }));
     switch (walletType) {
       case 'leather':
       case 'xverse':
-        repayStacksLoan(loan.uuid, additionalRepayment);
+        // repayStacksLoan(loan.uuid, additionalRepayment);
         break;
       case 'metamask':
-        repayEthereumLoan(loan.uuid, additionalRepayment);
+        withdrawFromVault(assetsToWithdraw); // FIXME:
         break;
       default:
         console.error('Unsupported wallet type!');
@@ -116,7 +138,7 @@ export default function RepayModal() {
           fontSize={'md'}
           fontWeight={'bold'}
           color={'header'}>
-          Collateral Amount
+          dlcBTC Balance in Vault
         </Text>
         <HStack
           paddingBottom={2.5}
@@ -126,10 +148,10 @@ export default function RepayModal() {
             width={200}
             fontSize={'md'}
             color='white'>
-            {loan.vaultCollateral}
+            {vDlcBtcBalance}
           </Text>
           <Image
-            src='/btc_logo.png'
+            src='https://cdn.discordapp.com/attachments/994505799902691348/1151911557404569711/DLC.Link_logo_icon_color1.png'
             alt='Bitcoin Logo'
             boxSize={25}
           />
@@ -159,7 +181,7 @@ export default function RepayModal() {
   const LoanInfo = () => {
     return (
       <>
-        <HStack
+        {/* <HStack
           justifyContent={'space-between'}
           width={250}>
           <Text
@@ -169,20 +191,29 @@ export default function RepayModal() {
             color={'white'}>
             Collateral to debt ratio percentage:
           </Text>
-
-          {!isCollateralToDebtPercentageError ? (
-            <Text
-              fontSize={'sm'}
-              color={'accent'}>
-              {collateralToDebtPercentage}%
-            </Text>
-          ) : (
-            <Text
-              fontSize={'sm'}
-              color={'warning'}>
-              {collateralToDebtPercentage}%
-            </Text>
-          )}
+          <Text
+            fontSize={'sm'}
+            color={!isCollateralToDebtPercentageError ? 'accent' : 'warning'}>
+            {collateralToDebtPercentage}%
+          </Text>
+        </HStack> */}
+        <HStack
+          width={250}
+          justifyContent={'space-between'}>
+          <Text
+            width={125}
+            fontSize='xs'
+            fontWeight={'extrabold'}
+            color='white'>
+            Currently outstanding:
+          </Text>
+          <Text
+            width={150}
+            textAlign={'right'}
+            fontSize='xs'
+            color='white'>
+            $ {new Intl.NumberFormat().format(outstandingDebt)}
+          </Text>
         </HStack>
         <HStack
           width={250}
@@ -192,14 +223,32 @@ export default function RepayModal() {
             fontSize='xs'
             fontWeight={'extrabold'}
             color='white'>
-            Already borrowed:
+            dlcBTC to be withdrawn:
           </Text>
           <Text
             width={150}
             textAlign={'right'}
             fontSize='xs'
             color='white'>
-            {loan.formattedVaultLoan}
+            {ethers.utils.formatUnits(assetsToWithdraw, 8)}
+          </Text>
+        </HStack>
+        <HStack
+          width={250}
+          justifyContent={'space-between'}>
+          <Text
+            width={125}
+            fontSize='xs'
+            fontWeight={'extrabold'}
+            color='white'>
+            dlcBTC remaining in vault after withdrawal:
+          </Text>
+          <Text
+            width={150}
+            textAlign={'right'}
+            fontSize='xs'
+            color='white'>
+            {vDlcBtcBalance - ethers.utils.formatUnits(assetsToWithdraw, 8)}
           </Text>
         </HStack>
       </>
@@ -264,7 +313,7 @@ export default function RepayModal() {
                     justifyContent={'space-between'}>
                     <NumberInput focusBorderColor={'accent'}>
                       <NumberInputField
-                        max={Number(loan.vaultLoan)}
+                        max={Number(12)}
                         width={200}
                         color={'white'}
                         value={additionalRepayment}

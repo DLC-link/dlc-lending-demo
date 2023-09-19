@@ -4,6 +4,7 @@ import {
   fetchUserTokenBalance,
   fetchOutstandingDebtFromVault,
   fetchVaultReservesFromChain,
+  fetchVaultDepositBalanceFromChain,
 } from '../blockchainFunctions/ethereumFunctions';
 
 const initialState = {
@@ -11,6 +12,7 @@ const initialState = {
   dlcBtcBalance: 0,
   outstandingDebt: 0,
   vaultReserves: 0,
+  vaultAssetBalance: 0,
   vDlcBtcBalance: 0,
   status: 'idle',
   error: null,
@@ -70,6 +72,18 @@ export const externalDataSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
+      .addCase(fetchVaultDepositBalance.pending, (state, action) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchVaultDepositBalance.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.error = null;
+        state.vaultAssetBalance = action.payload;
+      })
+      .addCase(fetchVaultDepositBalance.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
       .addCase(fetchVdlcBtcBalance.pending, (state, action) => {
         state.status = 'loading';
       })
@@ -126,6 +140,16 @@ export const fetchVaultReserves = createAsyncThunk('externalData/fetchVaultReser
   let balance = undefined;
   try {
     balance = await fetchVaultReservesFromChain();
+  } catch (error) {
+    console.error(error);
+  }
+  return balance;
+});
+
+export const fetchVaultDepositBalance = createAsyncThunk('externalData/fetchVaultDepositBalance', async () => {
+  let balance = undefined;
+  try {
+    balance = await fetchVaultDepositBalanceFromChain();
   } catch (error) {
     console.error(error);
   }

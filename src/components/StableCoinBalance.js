@@ -13,7 +13,7 @@ export default function StableCoinBalance() {
 
   const { outstandingDebt, vaultReserves, vDlcBtcBalance } = useSelector((state) => state.externalData);
 
-  const vaults = [{ depositToken: 'dlcBTC', borrowToken: 'USDC' }];
+  const vaults = [{ baseToken: 'dlcBTC', borrowToken: 'USDC' }];
 
   const getCorrespondingAssetIcon = (asset) => {
     switch (asset) {
@@ -61,12 +61,12 @@ export default function StableCoinBalance() {
     );
   };
 
-  const AssetTableRow = ({ depositToken, borrowToken }) => {
+  const AssetTableRow = ({ baseToken, borrowToken }) => {
     return (
       <Tr>
         <Td>
           <HStack>
-            <AssetIcon asset={depositToken} />
+            <AssetIcon asset={baseToken} />
             <AssetIcon asset={borrowToken} />
             <Text>dlcBTC • USDC</Text>
           </HStack>
@@ -84,7 +84,12 @@ export default function StableCoinBalance() {
           <Button
             variant={'deposit-withdraw'}
             onClick={() =>
-              dispatch(toggleBorrowModalVisibility({ depositToken: 'dlcBTC', borrowToken: 'USDC', isOpen: true }))
+              dispatch(
+                toggleBorrowModalVisibility({
+                  vaultForModal: { baseToken: 'dlcBTC', borrowToken: 'USDC' },
+                  isOpen: true,
+                })
+              )
             }>
             BORROW
           </Button>
@@ -93,7 +98,12 @@ export default function StableCoinBalance() {
           <Button
             variant={'deposit-withdraw'}
             onClick={() =>
-              dispatch(toggleRepayModalVisibility({ depositToken: 'dlcBTC', borrowToken: 'USDC', isOpen: true }))
+              dispatch(
+                toggleRepayModalVisibility({
+                  vaultForModal: { baseToken: 'dlcBTC', borrowToken: 'USDC' },
+                  isOpen: true,
+                })
+              )
             }>
             REPAY
           </Button>
@@ -147,7 +157,7 @@ export default function StableCoinBalance() {
             {vaults.map((vault, index) => (
               <AssetTableRow
                 key={index}
-                depositToken={vault.depositToken}
+                baseToken={vault.baseToken}
                 borrowToken={vault.borrowToken}
               />
             ))}
