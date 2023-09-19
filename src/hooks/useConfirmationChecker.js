@@ -48,12 +48,10 @@ export default function useConfirmationChecker({ loan }) {
           headers: { Accept: 'application/json' },
         });
         const bitcoinTransactionDetails = await response.json();
-        console.log('bitcoinTransactionDetails', bitcoinTransactionDetails)
         bitcoinTransactionBlockHeight = bitcoinTransactionDetails.status.block_height;
       } catch (error) {
         console.error(error);
       }
-      console.log('bitcoinCurrentBlockHeight', bitcoinCurrentBlockHeight)
       setTransactionProgress(bitcoinCurrentBlockHeight - bitcoinTransactionBlockHeight);
     };
     const fetchInterval = setInterval(fetchTransactionDetails, 10000); // 30 seconds

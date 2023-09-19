@@ -103,15 +103,6 @@ export default function Card({ loan }) {
   ];
 
   useEffect(() => {
-    console.log(
-      'shoud include',
-      [
-        solidityLoanStatuses.PREFUNDED,
-        solidityLoanStatuses.FUNDED,
-        solidityLoanStatuses.PRECLOSED,
-        solidityLoanStatuses.CLOSED,
-      ].includes(loan.status)
-    );
     if (
       [
         solidityLoanStatuses.PREFUNDED,
@@ -123,7 +114,6 @@ export default function Card({ loan }) {
         solidityLoanStatuses.CLOSED,
       ].includes(loan.status)
     ) {
-      console.log('setting include funding tx');
       setIncludeFundingTX(true);
     }
     if (
@@ -134,7 +124,6 @@ export default function Card({ loan }) {
         clarityLoanStatuses.CLOSED,
       ].includes(loan.status)
     ) {
-      console.log('setting include closing tx');
       setIncludeClosingTX(true);
     }
   }, [loan]);
