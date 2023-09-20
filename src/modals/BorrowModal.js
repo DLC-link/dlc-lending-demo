@@ -109,7 +109,7 @@ export default function BorrowModal() {
           fontSize={'md'}
           fontWeight={'bold'}
           color={'header'}>
-          Available DLCBTC for Deposit
+          Available dlcBTC for Deposit
         </Text>
         <HStack
           paddingBottom={2.5}
@@ -160,7 +160,7 @@ export default function BorrowModal() {
             fontSize={'xs'}
             fontWeight={'extrabold'}
             color={'white'}>
-            DLCBTC to Deposit:
+            dlcBTC to Deposit:
           </Text>
           <Text
             fontSize={'sm'}

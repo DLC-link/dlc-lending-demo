@@ -22,7 +22,7 @@ export default function Balance() {
     return (
       <HStack
         padding={15}
-        width={400}
+        max-width={700}
         borderRadius={'lg'}
         shadow={'dark-lg'}
         justifyContent={'space-evenly'}>

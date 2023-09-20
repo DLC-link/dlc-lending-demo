@@ -20,15 +20,11 @@ import { ethers } from 'ethers';
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Decimal } from 'decimal.js';
 
-import {
-  calculateCollateralCoveragePercentageForRepay,
-  formatCollateralInUSD,
-  customShiftValue,
-} from '../utilities/utils';
+import { formatCollateralInUSD, customShiftValue } from '../utilities/utils';
 
 import { withdrawFromVault } from '../blockchainFunctions/ethereumFunctions';
-// import { repayStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import { fetchBitcoinValue, fetchVdlcBtcBalance, fetchVaultDepositBalance } from '../store/externalDataSlice';
 
 import { ButtonContainer } from '../components/ActionButtons';
@@ -37,8 +33,7 @@ import { toggleRepayModalVisibility } from '../store/componentSlice';
 
 export default function RepayModal() {
   const dispatch = useDispatch();
-  // const loan = useSelector((state) => state.component.loanForModal);
-  const vault = useSelector((state) => state.component.vaultForModal);
+  // const vault = useSelector((state) => state.component.vaultForModal);
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
   const isRepayModalOpen = useSelector((state) => state.component.isRepayModalOpen);
   const walletType = useSelector((state) => state.account.walletType);
@@ -46,7 +41,7 @@ export default function RepayModal() {
   const vaultDepositBalance = useSelector((state) => state.externalData.vaultAssetBalance);
 
   const [additionalRepayment, setAdditionalRepayment] = useState(0);
-  const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
+  // const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
   const [USDAmount, setUSDAmount] = useState(0);
   const [isOverBalance, setIsOverBalance] = useState(false);
   const [assetsToWithdraw, setAssetsToWithdraw] = useState(0);
@@ -54,7 +49,7 @@ export default function RepayModal() {
   const outstandingDebt = useSelector((state) => state.externalData.outstandingDebt);
 
   const [isLoanError, setLoanError] = useState(false);
-  const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
+  // const [isCollateralToDebtPercentageError, setCollateralToDebtPercentageError] = useState(false);
 
   useOnMount(() => {
     dispatch(fetchBitcoinValue());
@@ -64,19 +59,10 @@ export default function RepayModal() {
 
   useEffect(() => {
     setUSDAmount(formatCollateralInUSD(vDlcBtcBalance, bitcoinUSDValue));
-    // updateCollateralToDebtPercentage();
     setLoanError(
       additionalRepayment < 1 || additionalRepayment === undefined || isOverBalance || !isVaultDepositsBalanceHighEnough
     );
-  }, [
-    additionalRepayment,
-    bitcoinUSDValue,
-    vDlcBtcBalance,
-    collateralToDebtPercentage,
-    isCollateralToDebtPercentageError,
-    isOverBalance,
-    isVaultDepositsBalanceHighEnough,
-  ]);
+  }, [additionalRepayment, bitcoinUSDValue, vDlcBtcBalance, isOverBalance, isVaultDepositsBalanceHighEnough]);
 
   useEffect(() => {
     const _assetsToWithdraw = (Number(additionalRepayment) / Number(bitcoinUSDValue)) * 100000000;
@@ -89,39 +75,14 @@ export default function RepayModal() {
     setAdditionalRepayment(additionalRepayment.target.value);
   };
 
-  // const updateCollateralToDebtPercentage = () => {
-  //   const collateralCoveragePercentage = calculateCollateralCoveragePercentageForRepay(
-  //     Number(loan.vaultCollateral),
-  //     Number(bitcoinUSDValue),
-  //     Number(loan.vaultLoan),
-  //     Number(additionalRepayment)
-  //   );
-
-  //   if (isNaN(collateralCoveragePercentage) || !isFinite(collateralCoveragePercentage)) {
-  //     setCollateralToDebtPercentage('-');
-  //   } else {
-  //     setCollateralToDebtPercentage(collateralCoveragePercentage);
-  //   }
-
-  //   const isBelowMinimumRatio = collateralCoveragePercentage < 140;
-
-  //   if (isBelowMinimumRatio) {
-  //     setCollateralToDebtPercentageError(true);
-  //   } else {
-  //     setCollateralToDebtPercentageError(false);
-  //   }
-  // };
-
   const repayLoanContract = async () => {
     store.dispatch(toggleRepayModalVisibility({ isOpen: false }));
     switch (walletType) {
+      case 'metamask':
+        withdrawFromVault(assetsToWithdraw);
+        break;
       case 'leather':
       case 'xverse':
-        // repayStacksLoan(loan.uuid, additionalRepayment);
-        break;
-      case 'metamask':
-        withdrawFromVault(assetsToWithdraw); // FIXME:
-        break;
       default:
         console.error('Unsupported wallet type!');
         break;
@@ -138,7 +99,7 @@ export default function RepayModal() {
           fontSize={'md'}
           fontWeight={'bold'}
           color={'header'}>
-          dlcBTC Balance in Vault
+          vDlcBTC Balance in Vault
         </Text>
         <HStack
           paddingBottom={2.5}
@@ -205,7 +166,7 @@ export default function RepayModal() {
             fontSize='xs'
             fontWeight={'extrabold'}
             color='white'>
-            Currently outstanding:
+            Total borrowed:
           </Text>
           <Text
             width={150}
@@ -248,7 +209,9 @@ export default function RepayModal() {
             textAlign={'right'}
             fontSize='xs'
             color='white'>
-            {vDlcBtcBalance - ethers.utils.formatUnits(assetsToWithdraw, 8)}
+            {(Decimal(Number(vDlcBtcBalance)) - Decimal(Number(ethers.utils.formatUnits(assetsToWithdraw, 8)))).toFixed(
+              8
+            )}
           </Text>
         </HStack>
       </>
@@ -335,7 +298,7 @@ export default function RepayModal() {
                   variant='outline'
                   type='submit'
                   onClick={() => repayLoanContract()}>
-                  REPAY USDC
+                  REPAY & WITHDRAW
                 </Button>
               </ButtonContainer>
             </VStack>
