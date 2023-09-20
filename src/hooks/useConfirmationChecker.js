@@ -1,16 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { useOnMount } from './useOnMount';
 
 export default function useConfirmationChecker({ loan }) {
   const { loansWithBTCTransactions } = useSelector((state) => state.loans);
+  let fetchInterval;
 
   const loansWithConfirmationProgress = [
     solidityLoanStatuses.PREFUNDED,
-    solidityLoanStatuses.PRECLOSED,
+    solidityLoanStatuses.CLOSED,
     clarityLoanStatuses.PREFUNDED,
-    clarityLoanStatuses.PRECLOSED,
+    clarityLoanStatuses.CLOSED,
   ];
 
   const [transactionProgress, setTransactionProgress] = useState(0);
@@ -54,7 +55,7 @@ export default function useConfirmationChecker({ loan }) {
       }
       setTransactionProgress(bitcoinCurrentBlockHeight - bitcoinTransactionBlockHeight);
     };
-    const fetchInterval = setInterval(fetchTransactionDetails, 10000); // 30 seconds
+    fetchInterval = setInterval(fetchTransactionDetails, 10000); // 30 seconds
 
     // Cleanup the interval when the component unmounts
     return () => clearInterval(fetchInterval);

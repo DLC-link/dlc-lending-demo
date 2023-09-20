@@ -46,11 +46,11 @@ const OpenExplorerLink = (bitcoinExplorerURL) => {
   window.open(bitcoinExplorerURL, '_blank');
 };
 
-const ExternalLinkButton = ({ label, bitcoinExplorerURL }) => {
+const ExternalLinkButton = ({ label, bitcoinExplorerURL, gutter }) => {
   return (
     <Tooltip
       label={label}
-      gutter={label === 'Funding TX' ? 150 : 180}
+      gutter={gutter}
       placement={'top-end'}>
       <IconButton
         padding={0}
@@ -88,6 +88,7 @@ export default function Card({ loan }) {
         <ExternalLinkButton
           label={'View funding transaction'}
           bitcoinExplorerURL={bitcoinFundingTXExplorerURL}
+          gutter={150}
         />
       ),
     },
@@ -97,6 +98,7 @@ export default function Card({ loan }) {
         <ExternalLinkButton
           label={'View closing transaction'}
           bitcoinExplorerURL={bitcoinClosingTXExplorerURL}
+          gutter={186}
         />
       ),
     },
@@ -112,18 +114,12 @@ export default function Card({ loan }) {
         solidityLoanStatuses.PRECLOSED,
         clarityLoanStatuses.PRECLOSED,
         solidityLoanStatuses.CLOSED,
+        clarityLoanStatuses.CLOSED,
       ].includes(loan.status)
     ) {
       setIncludeFundingTX(true);
     }
-    if (
-      [
-        solidityLoanStatuses.PRECLOSED,
-        clarityLoanStatuses.PRECLOSED,
-        solidityLoanStatuses.CLOSED,
-        clarityLoanStatuses.CLOSED,
-      ].includes(loan.status)
-    ) {
+    if ([solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.status)) {
       setIncludeClosingTX(true);
     }
   }, [loan]);

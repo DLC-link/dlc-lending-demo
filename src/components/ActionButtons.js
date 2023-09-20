@@ -31,11 +31,9 @@ const ConfirmationProgress = (loan) => {
   );
 
   useEffect(() => {
-    if (transactionConfirmations === 0 || transactionConfirmations > 6 || isNaN(transactionConfirmations)) {
-      setShouldBeIndeterminate(true);
-    } else {
-      setShouldBeIndeterminate(false);
-    }
+    setShouldBeIndeterminate(
+      transactionConfirmations === 0 || transactionConfirmations > 6 || isNaN(transactionConfirmations)
+    );
 
     setConfirmationText(
       <Text>
@@ -43,6 +41,9 @@ const ConfirmationProgress = (loan) => {
       </Text>
     );
   }, [transactionConfirmations]);
+
+  if (transactionConfirmations >= 6 && [solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.status))
+    return;
 
   return (
     <ButtonContainer>
@@ -121,8 +122,8 @@ export function ActionButtons({ loan }) {
     case solidityLoanStatuses.NONE:
     case clarityLoanStatuses.NONE:
       break;
-    case solidityLoanStatuses.PRECLOSED:
-    case clarityLoanStatuses.PRECLOSED:
+    case solidityLoanStatuses.CLOSED:
+    case clarityLoanStatuses.CLOSED:
     case solidityLoanStatuses.PREFUNDED:
     case clarityLoanStatuses.PREFUNDED:
       actionButton = <ConfirmationProgress loan={loan} />;
