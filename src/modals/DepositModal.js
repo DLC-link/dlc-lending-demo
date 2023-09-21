@@ -115,7 +115,7 @@ export default function DepositModal() {
           border={'1px'}
           borderRadius={'lg'}>
           <VStack>
-            <Text variant={'header'}>Request Loan</Text>
+            <Text variant={'header'}>Setup DLC</Text>
             <FormControl isInvalid={isCollateralError}>
               <VStack width={350}>
                 <FormLabel
@@ -133,7 +133,7 @@ export default function DepositModal() {
                     width={250}
                     height={25}
                     color='accent'>
-                    Enter the amount of <strong>BTC</strong> you would like to deposit.
+                    Enter the amount of <strong>BTC</strong> you would like to lock.
                   </Text>
                 ) : (
                   <Text
@@ -198,7 +198,7 @@ export default function DepositModal() {
                 variant={'outline'}
                 type={'submit'}
                 onClick={() => createAndSendLoanContract()}>
-                REQUEST VAULT
+                REQUEST DLC
               </Button>
             </VStack>
           </VStack>

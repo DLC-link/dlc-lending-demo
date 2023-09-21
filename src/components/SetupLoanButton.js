@@ -69,7 +69,7 @@ export default function SetupLoanButton() {
           fontWeight='bold'
           color='inherit'
           textAlign='center'>
-          SETUP LOAN
+          SETUP DLC
         </Text>
       </SetupLoanButtonContainer>
       {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
