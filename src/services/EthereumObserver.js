@@ -1,32 +1,28 @@
 import { ethers } from 'ethers';
-import { EthereumNetwork } from '../networks/networks';
-import { abi as protocolContractABI } from '../abis/protocolContractABI';
-import { abi as usdcABI } from '../abis/usdcABI';
-import { abi as usdcBorrowVaultABI } from '../abis/usdcBorrowVaultABI';
-import { abi as dlcBtcABI } from '../abis/dlcBtcABI';
+import { getEthereumContracts } from '../networks/networks';
 import store from '../store/store';
 import { fetchLoan, loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 import { solidityLoanStatuses } from '../enums/loanStatuses';
-import { getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { fetchOutstandingDebt } from '../store/externalDataSlice';
 
-export function startEthereumObserver(blockchain) {
+export async function startEthereumObserver(blockchain) {
   let ethereumProvider;
   let protocolContractETH, usdcBorrowVaultETH, dlcBtcETH;
   let usdcETH;
 
   try {
-    const { protocolContractAddress, usdcAddress, usdcBorrowVaultAddress, dlcBtcAddress } = EthereumNetwork;
     const { address } = store.getState().account;
     const { ethereum } = window;
 
     ethereumProvider = new ethers.providers.Web3Provider(ethereum);
+    const { name } = await ethereumProvider.getNetwork();
+    const { protocolContract, usdc, usdcBorrowVault, dlcBtc } = await getEthereumContracts(name);
 
-    protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, ethereumProvider);
-    usdcETH = new ethers.Contract(usdcAddress, usdcABI, ethereumProvider);
-    usdcBorrowVaultETH = new ethers.Contract(usdcBorrowVaultAddress, usdcBorrowVaultABI, ethereumProvider);
-    dlcBtcETH = new ethers.Contract(dlcBtcAddress, dlcBtcABI, ethereumProvider);
+    protocolContractETH = new ethers.Contract(protocolContract.address, protocolContract.abi, ethereumProvider);
+    usdcETH = new ethers.Contract(usdc.address, usdc.abi, ethereumProvider);
+    usdcBorrowVaultETH = new ethers.Contract(usdcBorrowVault.address, usdcBorrowVault.abi, ethereumProvider);
+    dlcBtcETH = new ethers.Contract(dlcBtc.address, dlcBtc.abi, ethereumProvider);
 
     if (!protocolContractETH || !usdcETH || !ethereumProvider || !dlcBtcETH || !usdcBorrowVaultETH) return;
 
@@ -36,7 +32,7 @@ export function startEthereumObserver(blockchain) {
       const loanUUID = args[1];
       const loanStatus = Object.values(solidityLoanStatuses)[args[2]];
       const loanTXHash = args[args.length - 1].transactionHash;
- 
+
       store.dispatch(
         fetchLoan({
           loanUUID: loanUUID,
@@ -51,7 +47,7 @@ export function startEthereumObserver(blockchain) {
       const loanOwner = args[1];
       const loanTXHash = args[args.length - 1].transactionHash;
 
-      console.log('Deposit')
+      console.log('Deposit');
 
       if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
 
@@ -65,41 +61,28 @@ export function startEthereumObserver(blockchain) {
       store.dispatch(fetchOutstandingDebt());
     });
 
-    // protocolContractETH.on('RepayEvent', (...args) => {
-    //   const loanUUID = args[1];
-    //   const loanStatus = Object.values(solidityLoanStatuses)[args[4]];
-    //   const loanTXHash = args[args.length - 1].transactionHash;
+    usdcBorrowVaultETH.on('Withdraw', (...args) => {
+      const loanOwner = args[1];
+      const loanTXHash = args[args.length - 1].transactionHash;
 
-    //   store.dispatch(
-    //     fetchLoan({
-    //       loanUUID: loanUUID,
-    //       loanStatus: loanStatus,
-    //       loanTXHash: loanTXHash,
-    //       loanEvent: 'RepayEvent',
-    //     })
-    //   );
-    // });
+      console.log('Withdraw');
 
-    // protocolContractETH.on('DoesNotNeedLiquidation', (...args) => {
-    //   const loanUUID = args[1];
-    //   const loanStatus = Object.values(solidityLoanStatuses)[args[2]];
-    //   const loanTXHash = args[args.length - 1].transactionHash;
+      if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
 
-    //   store.dispatch(
-    //     fetchLoan({
-    //       loanUUID: loanUUID,
-    //       loanStatus: loanStatus,
-    //       loanTXHash: loanTXHash,
-    //       loanEvent: 'DoesNotNeedLiquidationEvent',
-    //     })
-    //   );
-    // });
+      store.dispatch(
+        loanEventReceived({
+          status: ToastEvent.REPAID,
+          txHash: loanTXHash,
+        })
+      );
+      store.dispatch(fetchOutstandingDebt());
+    });
 
     usdcETH.on('Approval', (...args) => {
       const loanOwner = args[0];
       const loanTXHash = args[args.length - 1].transactionHash;
 
-      console.log('Approval')
+      console.log('Approval');
 
       if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
 

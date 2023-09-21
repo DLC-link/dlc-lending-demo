@@ -67,13 +67,13 @@ export default function BorrowModal() {
 
   useEffect(() => {
     const _assetsToDeposit = (Number(additionalLoan) / Number(bitcoinUSDValue)) * 100000000;
-    console.log(
-      Number(additionalLoan),
-      Number(bitcoinUSDValue),
-      _assetsToDeposit,
-      _assetsToDeposit.toFixed(0),
-      dlcBtcBalance
-    );
+    // console.log(
+    //   Number(additionalLoan),
+    //   Number(bitcoinUSDValue),
+    //   _assetsToDeposit,
+    //   _assetsToDeposit.toFixed(0),
+    //   dlcBtcBalance
+    // );
     setAssetsToDeposit(_assetsToDeposit.toFixed(0));
     setIsOverBalance(_assetsToDeposit > customShiftValue(dlcBtcBalance, 8));
     setIsVaultBalanceHighEnough(additionalLoan < parseInt(vaultReserves));
