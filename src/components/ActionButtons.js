@@ -92,6 +92,9 @@ export function ActionButtons({ loan }) {
       break;
     case 'metamask':
       closeAction = () => closeEthereumLoan(loan.uuid);
+      break;
+    default:
+      break;
   }
 
   switch (loan.status) {

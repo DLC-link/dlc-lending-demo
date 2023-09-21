@@ -100,6 +100,8 @@ export const loansSlice = createSlice({
               case clarityLoanStatuses.PRECLOSED:
                 toastStatus = ToastEvent.PREREPAID;
                 break;
+              default:
+                break;
             }
             break;
           case 'BorrowEvent':
@@ -107,6 +109,8 @@ export const loansSlice = createSlice({
             break;
           case 'RepayEvent':
             toastStatus = ToastEvent.REPAID;
+            break;
+          default:
             break;
         }
 
@@ -192,7 +196,7 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
   const { address } = store.getState().account;
   const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
-  
+
   let getLoanByUUID;
   let formatLoanContract;
 

@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { useOnMount } from './useOnMount';
 
 export default function useConfirmationChecker({ loan }) {
   const { loansWithBTCTransactions } = useSelector((state) => state.loans);
-  let fetchInterval;
+  const fetchInterval = useRef(null);
 
   const loansWithConfirmationProgress = [
     solidityLoanStatuses.PREFUNDED,
@@ -20,7 +20,10 @@ export default function useConfirmationChecker({ loan }) {
 
   useOnMount(() => {
     const fetchTransactionDetails = async () => {
-      if (!loansWithConfirmationProgress.includes(loan.status)) return;
+      if (!loansWithConfirmationProgress.includes(loan.status)) {
+        clearInterval(fetchInterval.current);
+        return;
+      }
 
       let bitcoinTransactionHash;
       if ([solidityLoanStatuses.PREFUNDED, clarityLoanStatuses.PREFUNDED].includes(loan.status)) {
@@ -53,12 +56,19 @@ export default function useConfirmationChecker({ loan }) {
       } catch (error) {
         console.error(error);
       }
-      setTransactionProgress(bitcoinCurrentBlockHeight - bitcoinTransactionBlockHeight);
+
+      const difference = bitcoinCurrentBlockHeight - bitcoinTransactionBlockHeight;
+
+      setTransactionProgress(difference);
+
+      if (difference >= 6) {
+        clearInterval(fetchInterval.current);
+      }
     };
-    fetchInterval = setInterval(fetchTransactionDetails, 10000); // 30 seconds
+    fetchInterval.current = setInterval(fetchTransactionDetails, 10000); // 10 seconds
 
     // Cleanup the interval when the component unmounts
-    return () => clearInterval(fetchInterval);
+    return () => clearInterval(fetchInterval.current);
   });
 
   return memoizedTransactionProgress;

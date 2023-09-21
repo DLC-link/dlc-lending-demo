@@ -9,7 +9,6 @@ import { fetchBitcoinValue } from '../store/externalDataSlice';
 import { useOnMount } from '../hooks/useOnMount';
 import Filter from './Filter';
 import StableCoinBalance from './StableCoinBalance';
-import useConfirmationChecker from '../hooks/useConfirmationChecker';
 
 export default function LoansScreen() {
   const dispatch = useDispatch();
