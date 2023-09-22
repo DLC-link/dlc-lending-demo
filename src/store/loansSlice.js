@@ -96,17 +96,11 @@ export const loansSlice = createSlice({
               case clarityLoanStatuses.FUNDED:
                 toastStatus = ToastEvent.FUNDED;
                 break;
-              case solidityLoanStatuses.LIQUIDATED:
-              case clarityLoanStatuses.LIQUIDATED:
-                toastStatus = ToastEvent.LIQUIDATED;
-                break;
-              case solidityLoanStatuses.PRELIQUIDATED:
-              case clarityLoanStatuses.PRELIQUIDATED:
-                toastStatus = ToastEvent.PRELIQUIDATED;
-                break;
               case solidityLoanStatuses.PRECLOSED:
               case clarityLoanStatuses.PRECLOSED:
                 toastStatus = ToastEvent.PREREPAID;
+                break;
+              default:
                 break;
             }
             break;
@@ -116,11 +110,7 @@ export const loansSlice = createSlice({
           case 'RepayEvent':
             toastStatus = ToastEvent.REPAID;
             break;
-          case 'DoesNotNeedLiquidation':
-            toastStatus = ToastEvent.INVALIDLIQUIDATION;
-            break;
-          case 'LiquidationEvent':
-            toastStatus = ToastEvent.PRELIQUIDATED;
+          default:
             break;
         }
 
@@ -135,7 +125,7 @@ export const loansSlice = createSlice({
       .addCase(fetchLoan.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
-      })
+      });
   },
 });
 
@@ -191,13 +181,11 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   }
 
   forEach((loan) => {
-    if (loan.status === clarityLoanStatuses.READY || loan.status === solidityLoanStatuses.READY) {
-      const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
-        (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
-      );
-      if (matchingLoanWithBTCTransaction) {
-        updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
-      }
+    const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
+      (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
+    );
+    if (matchingLoanWithBTCTransaction) {
+      updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
     }
   }, loans);
 
@@ -205,42 +193,32 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
 });
 
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
+  const { address } = store.getState().account;
   const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
-  const { loans, previousLoanEvent } = store.getState().loans;
-  const storedLoanUUIDs = loans.map((loan) => loan.uuid);
-  let fetchedLoanUUIDs = [];
 
-  let getAllLoansForAddress;
   let getLoanByUUID;
   let formatLoanContract;
 
   switch (walletType) {
     case 'metamask':
-      getAllLoansForAddress = getAllEthereumLoansForAddress;
       getLoanByUUID = getEthereumLoanByUUID;
       formatLoanContract = formatSolidityLoanContract;
       break;
     case 'xverse':
     case 'leather':
-      getAllLoansForAddress = getAllStacksLoansForAddress;
+    case 'walletConnect':
       getLoanByUUID = getStacksLoanByUUID;
       formatLoanContract = formatClarityLoanContract;
-      break;
-    case 'walletConnect':
       break;
     default:
       throw new Error('Unsupported wallet type!');
   }
 
-  if (loanStatus === solidityLoanStatuses.READY || loanStatus === clarityLoanStatuses.READY) {
-    const fetchedLoans = await getAllLoansForAddress();
-    fetchedLoanUUIDs = fetchedLoans.map((loan) => loan.uuid);
-  }
-
-  if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) return;
-
   const loan = await getLoanByUUID(loanUUID);
+
+  if (loan.owner.toLowerCase() !== address.toLowerCase()) return;
+
   const formattedLoan = formatLoanContract(loan);
 
   return { formattedLoan, loanTXHash, loanEvent };

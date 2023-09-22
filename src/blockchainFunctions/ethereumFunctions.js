@@ -4,12 +4,7 @@ import { ethers } from 'ethers';
 
 import store from '../store/store';
 
-import { abi as usdcABI } from '../abis/usdcABI';
-import { abi as protocolContractABI } from '../abis/protocolContractABI';
-import { abi as usdcBorrowVaultABI } from '../abis/usdcBorrowVaultABI';
-import { abi as dlcBtcABI } from '../abis/dlcBtcABI';
-
-import { EthereumNetwork } from '../networks/networks';
+import { getEthereumContracts } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { toggleInfoModalVisibility } from '../store/componentSlice';
@@ -24,51 +19,22 @@ let usdcETH, dlcBtcETH;
 let currentEthereumNetwork;
 
 export async function setEthereumProvider(address) {
-  const { protocolContractAddress, usdcAddress, usdcBorrowVaultAddress, dlcBtcAddress } =
-    EthereumNetwork;
   try {
     const { ethereum } = window;
     const provider = new ethers.providers.Web3Provider(ethereum);
     const signer = provider.getSigner();
-    const { chainId } = await provider.getNetwork();
+    const { chainId, name } = await provider.getNetwork();
 
     if (chainId !== parseInt(currentEthereumNetwork.slice(9))) {
       await changeEthereumNetwork();
     }
-    protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
-    usdcETH = new ethers.Contract(usdcAddress, usdcABI, signer);
-    usdcBorrowVaultETH = new ethers.Contract(usdcBorrowVaultAddress, usdcBorrowVaultABI, signer);
-    dlcBtcETH = new ethers.Contract(dlcBtcAddress, dlcBtcABI, signer);
 
-    if (Number(await usdcETH.balanceOf(address)) === 0) {
-      await recommendTokenForMetamask(
-        ethereum,
-        usdcAddress,
-        'USDC',
-        18,
-        'https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=026'
-      );
-    }
+    const { protocolContract, usdc, usdcBorrowVault, dlcBtc } = await getEthereumContracts(name);
 
-    if (Number(await dlcBtcETH.balanceOf(address)) === 0) {
-      await recommendTokenForMetamask(
-        ethereum,
-        dlcBtcAddress,
-        'DLCBTC',
-        8,
-        'https://cdn.discordapp.com/attachments/994505799902691348/1035507437748367360/DLC.Link_Emoji.png'
-      );
-    }
-
-    if (Number(await usdcBorrowVaultETH.balanceOf(address)) === 0) {
-      await recommendTokenForMetamask(
-        ethereum,
-        usdcBorrowVaultAddress,
-        'vDLCBTC',
-        8,
-        'https://cdn.discordapp.com/attachments/994505799902691348/1151911557404569711/DLC.Link_logo_icon_color1.png'
-      );
-    }
+    protocolContractETH = new ethers.Contract(protocolContract.address, protocolContract.abi, signer);
+    usdcETH = new ethers.Contract(usdc.address, usdc.abi, signer);
+    usdcBorrowVaultETH = new ethers.Contract(usdcBorrowVault.address, usdcBorrowVault.abi, signer);
+    dlcBtcETH = new ethers.Contract(dlcBtc.address, dlcBtc.abi, signer);
   } catch (error) {
     console.error(error);
   }
@@ -123,6 +89,7 @@ export async function fetchUserTokenBalance(assetName) {
   let contractMap = {
     DLCBTC: { contract: dlcBtcETH, decimals: 8 },
     USDC: { contract: usdcETH, decimals: 18 },
+    vDLCBTC: { contract: usdcBorrowVaultETH, decimals: 8 },
   };
   const balance = await contractMap[assetName].contract.balanceOf(store.getState().account.address);
   return ethers.utils.formatUnits(balance, contractMap[assetName].decimals);
@@ -134,9 +101,13 @@ export async function fetchOutstandingDebtFromVault() {
 }
 
 export async function fetchVaultReservesFromChain() {
-  const { usdcBorrowVaultAddress } = EthereumNetwork;
-  const balance = await usdcETH.balanceOf(usdcBorrowVaultAddress);
+  const balance = await usdcETH.balanceOf(usdcBorrowVaultETH.address);
   return ethers.utils.formatEther(balance);
+}
+
+export async function fetchVaultDepositBalanceFromChain() {
+  const balance = await usdcBorrowVaultETH.totalAssets();
+  return ethers.utils.formatUnits(balance, 8);
 }
 
 export async function isAllowanceSet(amount, assetContract, protocolContractAddress) {
@@ -178,7 +149,6 @@ export async function sendLoanContractToEthereum(loanContract) {
 
 export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
-  console.log('protocolContractETH: ', protocolContractETH);
   let formattedLoans = [];
   try {
     const loanContracts = await protocolContractETH.getAllDepositsForAddress(address);
@@ -211,10 +181,7 @@ export async function getEthereumLoanByUUID(UUID) {
 
 // we have to pass in the calculated necessary assets
 export async function depositToVault(assetDeposit) {
-  const { usdcBorrowVaultAddress } = EthereumNetwork;
-
-  console.log('depositToVault:', assetDeposit);
-  if (await isAllowanceSet(assetDeposit, dlcBtcETH, usdcBorrowVaultAddress)) {
+  if (await isAllowanceSet(assetDeposit, dlcBtcETH, usdcBorrowVaultETH.address)) {
     try {
       await usdcBorrowVaultETH
         ._deposit(assetDeposit, {
@@ -233,32 +200,11 @@ export async function depositToVault(assetDeposit) {
     }
   }
 }
-// export async function borrowEthereumLoan(UUID, additionalLoan) {
-//   const loan = await getEthereumLoanByUUID(UUID);
-//   if (await isAllowedInMetamask(ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))) {
-//     try {
-//       await protocolContractETH
-//         .borrow(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))
-//         .then((response) =>
-//           store.dispatch(
-//             loanEventReceived({
-//               txHash: response.hash,
-//               status: ToastEvent.BORROWREQUESTED,
-//             })
-//           )
-//         );
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   }
-// }
 
-export async function repayEthereumLoan(UUID, additionalRepayment) {
-  const loan = await getEthereumLoanByUUID(UUID);
-  try {
-    protocolContractETH
-      .repay(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalRepayment.toString(), 'ether'))
-      .then((response) =>
+export async function withdrawFromVault(assetsToWithdraw) {
+  if (await isAllowanceSet(assetsToWithdraw, usdcETH, usdcBorrowVaultETH.address)) {
+    try {
+      await usdcBorrowVaultETH._withdraw(assetsToWithdraw, store.getState().account.address).then((response) =>
         store.dispatch(
           loanEventReceived({
             txHash: response.hash,
@@ -266,8 +212,9 @@ export async function repayEthereumLoan(UUID, additionalRepayment) {
           })
         )
       );
-  } catch (error) {
-    console.error(error);
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
@@ -288,18 +235,20 @@ export async function liquidateEthereumLoan(UUID) {
 }
 
 export async function closeEthereumLoan(UUID) {
-  const loan = await getEthereumLoanByUUID(UUID);
-  try {
-    protocolContractETH.closeLoan(parseInt(loan.id._hex)).then((response) =>
-      store.dispatch(
-        loanEventReceived({
-          txHash: response.hash,
-          status: ToastEvent.CLOSEREQUESTED,
-        })
-      )
-    );
-  } catch (error) {
-    console.error(error);
+  const deposit = await getEthereumLoanByUUID(UUID);
+  if (await isAllowanceSet(deposit.depositAmount, dlcBtcETH, protocolContractETH.address)) {
+    try {
+      protocolContractETH.closeDeposit(parseInt(deposit.id._hex)).then((response) =>
+        store.dispatch(
+          loanEventReceived({
+            txHash: response.hash,
+            status: ToastEvent.CLOSEREQUESTED,
+          })
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
@@ -327,4 +276,35 @@ export async function recommendTokenForMetamask(ethereum, tokenAddress, tokenSym
   } catch (error) {
     console.log(error);
   }
+}
+
+export async function addAllTokensToMetamask() {
+  const { ethereum } = window;
+  const provider = new ethers.providers.Web3Provider(ethereum);
+  const { name } = await provider.getNetwork();
+  const { usdc, usdcBorrowVault, dlcBtc } = await getEthereumContracts(name);
+
+  await recommendTokenForMetamask(
+    ethereum,
+    usdc.address,
+    'USDC',
+    18,
+    'https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=026'
+  );
+
+  await recommendTokenForMetamask(
+    ethereum,
+    dlcBtc.address,
+    'DLCBTC',
+    8,
+    'https://cdn.discordapp.com/attachments/994505799902691348/1035507437748367360/DLC.Link_Emoji.png'
+  );
+
+  await recommendTokenForMetamask(
+    ethereum,
+    usdcBorrowVault.address,
+    'vDLCBTC',
+    8,
+    'https://cdn.discordapp.com/attachments/994505799902691348/1151911557404569711/DLC.Link_logo_icon_color1.png'
+  );
 }

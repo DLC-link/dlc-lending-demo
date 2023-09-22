@@ -50,7 +50,7 @@ export default function CustomToast({ txHash, status }) {
 
   const stacksExplorerURL = `${process.env.REACT_APP_STACKS_EXPLORER_API_URL}${txHash}`;
 
-  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${txHash}`;
+  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${txHash}`;
 
   let explorerURL;
   switch(walletType) {

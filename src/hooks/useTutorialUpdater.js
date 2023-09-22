@@ -91,24 +91,20 @@ export default function useTutorialStep() {
         currentTutorialLoanUUID = currentTutorialLoan.uuid;
         currentTutorialStep = TutorialStep.FUNDLOAN;
         break;
-      case solidityLoanStatuses.FUNDED:
-      case clarityLoanStatuses.FUNDED:
-        currentTutorialStep = TutorialStep.BORROWREPAY;
-        break;
       case solidityLoanStatuses.PREFUNDED:
       case clarityLoanStatuses.PREFUNDED:
         currentTutorialStep = TutorialStep.WAITFORCONFIRMATION;
         break;
-      case solidityLoanStatuses.PREREPAID:
-      case clarityLoanStatuses.PREREPAID:
-      case solidityLoanStatuses.PRELIQUIDATED:
-      case clarityLoanStatuses.PRELIQUIDATED:
+      case solidityLoanStatuses.FUNDED:
+      case clarityLoanStatuses.FUNDED:
+        currentTutorialStep = TutorialStep.BORROWREPAY;
+        break;
+      case solidityLoanStatuses.PRECLOSED:
+      case clarityLoanStatuses.PRECLOSED:
         currentTutorialStep = TutorialStep.WAITFORCLOSE;
         break;
-      case solidityLoanStatuses.REPAID:
-      case clarityLoanStatuses.REPAID:
-      case solidityLoanStatuses.LIQUIDATED:
-      case clarityLoanStatuses.LIQUIDATED:
+      case solidityLoanStatuses.CLOSED:
+      case clarityLoanStatuses.CLOSED:
         currentTutorialStep = TutorialStep.ENDFLOW;
         break;
     }

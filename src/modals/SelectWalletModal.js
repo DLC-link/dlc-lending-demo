@@ -30,17 +30,31 @@ export default function SelectWalletModal() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   const stacksBlockchain = {
-    id: process.env.REACT_APP_ETHEREUM_NETWORK_ID,
-    name: process.env.REACT_APP_ETHEREUM_NETWORK_NAME,
+    id: process.env.REACT_APP_STACKS_NETWORK_ID,
+    name: process.env.REACT_APP_STACKS_NETWORK_NAME,
   };
 
-  const ethereumBlockchain = {
-    id: process.env.REACT_APP_ETHEREUM_NETWORK_ID,
-    name: process.env.REACT_APP_ETHEREUM_NETWORK_NAME,
-  };
   const stacksBlockchains = [{ stacksBlockchain }];
 
-  const ethereumBlockchains = [ethereumBlockchain, { id: 'ethereum:31337', name: 'Hardhat' }];
+  const enabledEthChains = process.env.REACT_APP_ENABLED_ETHEREUM_CHAINS.split(',');
+
+  if (enabledEthChains.length === 0) throw new Error('No Ethereum chains enabled');
+
+  const ethereumChainConfigs = {
+    sepolia: {
+      id: 'ethereum:11155111',
+      name: 'Sepolia',
+    },
+    goerli: {
+      id: 'ethereum:5',
+      name: 'Goerli',
+    },
+  };
+
+  const ethereumBlockchains = [
+    ...enabledEthChains.map((chain) => ethereumChainConfigs[chain]),
+    { id: 'ethereum:31337', name: 'Hardhat' },
+  ];
 
   const walletItems = [
     {

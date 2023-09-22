@@ -2,26 +2,27 @@ import { Divider, Flex, HStack, IconButton, Image, Slide, Switch, Text, VStack }
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectTotalFundedCollateralAndLoan, toggleShowHiddenLoans } from '../store/loansSlice';
-import { fetchOutstandingDebt } from '../store/externalDataSlice';
+import { fetchOutstandingDebt, fetchDlcBtcBalance } from '../store/externalDataSlice';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function Balance() {
+  const dispatch = useDispatch();
+
   const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
   const outstandingDebt = useSelector((state) => state.externalData.outstandingDebt);
-
-  const { showHiddenLoans } = useSelector((state) => state.loans);
-  const dispatch = useDispatch();
+  const dlcBtcBalance = useSelector((state) => state.externalData.dlcBtcBalance);
 
   useEffect(() => {
     dispatch(fetchOutstandingDebt());
-  }, [outstandingDebt, dispatch]);
+    dispatch(fetchDlcBtcBalance());
+  }, [outstandingDebt, dlcBtcBalance, dispatch]);
 
   const BalanceContainer = ({ children }) => {
     return (
       <HStack
         padding={15}
-        width={325}
+        max-width={700}
         borderRadius={'lg'}
         shadow={'dark-lg'}
         justifyContent={'space-evenly'}>
@@ -30,22 +31,9 @@ export default function Balance() {
     );
   };
 
-  const FilterContainer = ({ children }) => {
+  const BalanceTextStack = ({ header, data, image }) => {
     return (
-      <HStack
-        paddingLeft={2.5}
-        paddingRight={2.5}
-        height={25}
-        width={162.5}
-        justifyContent={'space-between'}>
-        {children}
-      </HStack>
-    );
-  };
-
-  const BalanceTextStack = ({ header, data }) => {
-    return (
-      <VStack width={125}>
+      <VStack>
         <Text
           fontSize={'sm'}
           fontWeight={'bold'}
@@ -53,19 +41,11 @@ export default function Balance() {
           {header}
         </Text>
         <HStack>
-          {header === 'BTC Collateral' ? (
-            <Image
-              src='/btc_logo.png'
-              alt='Bitcoin Logo'
-              boxSize={15}
-            />
-          ) : (
-            <Image
-              src='/usdc_logo.png'
-              alt='USDC Logo'
-              boxSize={15}
-            />
-          )}
+          <Image
+            src={image.src}
+            alt={image.alt}
+            boxSize={15}
+          />
           <Text
             fontSize={'md'}
             fontWeight={'extrabold'}
@@ -78,30 +58,33 @@ export default function Balance() {
   };
 
   return (
-    <VStack
-      spacing={5}
-      alignItems={'flex-end'}>
-      <BalanceContainer>
-        <BalanceTextStack
-          header={'BTC Collateral'}
-          data={fundedCollateralSum.toFixed(4)}
-        />
-        <Divider
-          orientation='vertical'
-          height='50px'
-        />
-        <BalanceTextStack
-          header={'USDC Debt'}
-          data={new Intl.NumberFormat().format(outstandingDebt)}
-        />
-      </BalanceContainer>
-      <FilterContainer>
-        <Switch
-          size='sm'
-          isChecked={showHiddenLoans}
-          onChange={() => dispatch(toggleShowHiddenLoans())}></Switch>
-        <Text fontSize={'2xs'}>SHOW HIDDEN VAULTS</Text>
-      </FilterContainer>
-    </VStack>
+    <BalanceContainer>
+      <BalanceTextStack
+        header={'BTC Locked In DLCs'}
+        data={fundedCollateralSum.toFixed(4)}
+        image={{ src: '/btc_logo.png', alt: 'Bitcoin Logo' }}
+      />
+      <Divider
+        orientation='vertical'
+        height='50px'
+      />
+      <BalanceTextStack
+        header={'Available dlcBTC'}
+        data={new Intl.NumberFormat().format(dlcBtcBalance)}
+        image={{
+          src: 'https://cdn.discordapp.com/attachments/994505799902691348/1035507437748367360/DLC.Link_Emoji.png',
+          alt: 'dlcBTC Logo',
+        }}
+      />
+      <Divider
+        orientation='vertical'
+        height='50px'
+      />
+      <BalanceTextStack
+        header={'Total debt'}
+        data={new Intl.NumberFormat().format(outstandingDebt)}
+        image={{ src: '/usdc_logo.png', alt: 'USDC Logo' }}
+      />
+    </BalanceContainer>
   );
 }

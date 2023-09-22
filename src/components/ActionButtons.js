@@ -1,15 +1,14 @@
-import React from 'react';
-import { VStack, Button, Tooltip, Text } from '@chakra-ui/react';
+import { Button, Progress, Text, VStack } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
 
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { fetchBitcoinContractOfferAndSendToUserWallet } from '../blockchainFunctions/bitcoinFunctions';
-import { closeStacksLoan, liquidateStacksLoan } from '../blockchainFunctions/stacksFunctions';
-import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { closeEthereumLoan } from '../blockchainFunctions/ethereumFunctions';
+import { closeStacksLoan } from '../blockchainFunctions/stacksFunctions';
+import useConfirmationChecker from '../hooks/useConfirmationChecker';
 
-import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
-
-import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
+import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 
 export const ButtonContainer = ({ children }) => {
   return (
@@ -21,12 +20,68 @@ export const ButtonContainer = ({ children }) => {
   );
 };
 
-export function ActionButtons({ loan, canBeLiquidated }) {
-  const dispatch = useDispatch();
+const ConfirmationProgress = (loan) => {
+  const transactionConfirmations = useConfirmationChecker(loan);
+
+  const [shouldBeIndeterminate, setShouldBeIndeterminate] = useState(false);
+  const [confirmationText, setConfirmationText] = useState(
+    <Text>
+      <strong>0</strong>/6 confirmations
+    </Text>
+  );
+
+  useEffect(() => {
+    setShouldBeIndeterminate(
+      transactionConfirmations === 0 || transactionConfirmations > 6 || isNaN(transactionConfirmations)
+    );
+
+    setConfirmationText(
+      <Text>
+        <strong>{transactionConfirmations}</strong>/6 confirmations
+      </Text>
+    );
+  }, [transactionConfirmations]);
+
+  if (transactionConfirmations >= 6 && [solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.status))
+    return;
+
+  return (
+    <ButtonContainer>
+      <VStack padding={2.5}>
+        {transactionConfirmations <= 6 ? (
+          <Text
+            fontSize={'xs'}
+            fontWeight={'regular'}
+            color={'white'}>
+            {confirmationText}
+          </Text>
+        ) : (
+          <Text
+            fontSize={'xs'}
+            fontWeight={'regular'}
+            color={'white'}>
+            processing...
+          </Text>
+        )}
+        <Progress
+          isIndeterminate={shouldBeIndeterminate}
+          value={transactionConfirmations}
+          max={6}
+          hasStripe={true}
+          isAnimated={true}
+          colorScheme='teal'
+          size={'sm'}
+          width={200}
+        />
+      </VStack>
+    </ButtonContainer>
+  );
+};
+
+export function ActionButtons({ loan }) {
   const walletType = useSelector((state) => state.account.walletType);
 
   let closeAction;
-  let liquidateAction;
   let actionButton;
 
   switch (walletType) {
@@ -34,11 +89,12 @@ export function ActionButtons({ loan, canBeLiquidated }) {
     case 'leather':
     case 'walletConnect':
       closeAction = () => closeStacksLoan(loan.uuid);
-      liquidateAction = () => liquidateStacksLoan(loan.uuid);
       break;
     case 'metamask':
       closeAction = () => closeEthereumLoan(loan.uuid);
-      liquidateAction = () => liquidateEthereumLoan(loan.uuid);
+      break;
+    default:
+      break;
   }
 
   switch (loan.status) {
@@ -60,74 +116,20 @@ export function ActionButtons({ loan, canBeLiquidated }) {
         <ButtonContainer>
           <Button
             variant='outline'
-            margin={0}
-            padding={0}
-            onClick={() => dispatch(toggleBorrowModalVisibility({ isOpen: true, loan: loan }))}>
-            BORROW
+            onClick={() => closeAction()}>
+            CLOSE
           </Button>
-          {loan.vaultLoan > 0 ? (
-            <Button
-              variant='outline'
-              onClick={() => dispatch(toggleRepayModalVisibility({ isOpen: true, loan: loan }))}>
-              REPAY
-            </Button>
-          ) : (
-            <Button
-              variant='outline'
-              onClick={() => closeAction()}>
-              CLOSE
-            </Button>
-          )}
-          {canBeLiquidated && (
-            <Tooltip
-              label='Liquidate the loan and redeem the collateral value for BTC.'
-              fontSize={'10px'}
-              textAlign={'justify'}
-              padding={2.5}
-              placement={'bottom'}
-              width={200}
-              background={'transparent'}
-              border={'1px solid #FF4500'}
-              borderRadius={'lg'}
-              shadow={'dark-lg'}
-              gutter={35}>
-              <Button
-                variant='outline'
-                onClick={() => liquidateAction()}>
-                LIQUIDATE
-              </Button>
-            </Tooltip>
-          )}
         </ButtonContainer>
       );
       break;
     case solidityLoanStatuses.NONE:
     case clarityLoanStatuses.NONE:
       break;
-    case solidityLoanStatuses.PREREPAID:
-    case clarityLoanStatuses.PREREPAID:
-    case solidityLoanStatuses.PRELIQUIDATED:
-    case clarityLoanStatuses.PRELIQUIDATED:
+    case solidityLoanStatuses.CLOSED:
+    case clarityLoanStatuses.CLOSED:
     case solidityLoanStatuses.PREFUNDED:
     case clarityLoanStatuses.PREFUNDED:
-      actionButton = (
-        <ButtonContainer>
-          <Button
-            variant='outline'
-            isLoading
-            loadingText='PENDING'
-            color='gray'
-            _hover={{
-              shadow: 'none',
-            }}
-          />
-        </ButtonContainer>
-      );
-      break;
-    case solidityLoanStatuses.REPAID:
-    case clarityLoanStatuses.REPAID:
-    case solidityLoanStatuses.LIQUIDATED:
-    case clarityLoanStatuses.LIQUIDATED:
+      actionButton = <ConfirmationProgress loan={loan} />;
       break;
     default:
       break;
