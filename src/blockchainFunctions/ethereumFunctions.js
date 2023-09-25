@@ -4,17 +4,14 @@ import { ethers } from 'ethers';
 
 import store from '../store/store';
 
-import { abi as usdcABI } from '../abis/usdcABI';
-import { abi as protocolContractABI } from '../abis/protocolContractABI';
-
-import { EthereumNetwork } from '../networks/networks';
+import { getEthereumContracts } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { toggleInfoModalVisibility } from '../store/componentSlice';
 import { loanSetupRequested, loanEventReceived } from '../store/loansSlice';
 
 import { formatAllLoanContracts } from '../utilities/loanFormatter';
-import { fixedTwoDecimalShift, isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
+import { isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
 import { ToastEvent } from '../components/CustomToast';
 
 let protocolContractETH;
@@ -22,18 +19,19 @@ let usdcETH;
 let currentEthereumNetwork;
 
 export async function setEthereumProvider() {
-  const { protocolContractAddress, usdcAddress } = EthereumNetwork;
   try {
     const { ethereum } = window;
     const provider = new ethers.providers.Web3Provider(ethereum);
     const signer = provider.getSigner();
-    const { chainId } = await provider.getNetwork();
+    const { chainId, name } = await provider.getNetwork();
 
     if (chainId !== parseInt(currentEthereumNetwork.slice(9))) {
       await changeEthereumNetwork();
     }
-    protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, signer);
-    usdcETH = new ethers.Contract(usdcAddress, usdcABI, signer);
+    const { protocolContract, usdc } = await getEthereumContracts(name);
+
+    protocolContractETH = new ethers.Contract(protocolContract.address, protocolContract.abi, signer);
+    usdcETH = new ethers.Contract(usdc.address, usdc.abi, signer);
   } catch (error) {
     console.error(error);
   }
@@ -84,16 +82,15 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
   }
 }
 
-export async function isAllowedInMetamask(vaultLoan) {
-  const { protocolContractAddress } = EthereumNetwork;
+export async function isAllowanceSet(amount, assetContract, protocolContractAddress) {
   const address = store.getState().account.address;
 
   const desiredAmount = BigInt('1000000000000000000000000');
-  const allowedAmount = await usdcETH.allowance(address, protocolContractAddress);
+  const allowedAmount = await assetContract.allowance(address, protocolContractAddress);
 
-  if (isVaultLoanGreaterThanAllowedAmount(Number(vaultLoan), Number(allowedAmount))) {
+  if (isVaultLoanGreaterThanAllowedAmount(Number(amount), Number(allowedAmount))) {
     try {
-      await usdcETH.approve(protocolContractAddress, desiredAmount).then((response) =>
+      await assetContract.approve(protocolContractAddress, desiredAmount).then((response) =>
         store.dispatch(
           loanEventReceived({
             txHash: response.hash,
@@ -124,7 +121,7 @@ export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
   let formattedLoans = [];
   try {
-    console.log('protocolContractETH', protocolContractETH)
+    console.log('protocolContractETH', protocolContractETH);
     const loanContracts = await protocolContractETH.getAllLoansForAddress(address);
     formattedLoans = formatAllLoanContracts(loanContracts, 'solidity');
   } catch (error) {
@@ -155,7 +152,13 @@ export async function getEthereumLoanByUUID(UUID) {
 
 export async function borrowEthereumLoan(UUID, additionalLoan) {
   const loan = await getEthereumLoanByUUID(UUID);
-  if (await isAllowedInMetamask(ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))) {
+  if (
+    await isAllowanceSet(
+      ethers.utils.parseUnits(additionalLoan.toString(), 'ether'),
+      usdcETH,
+      protocolContractETH.address
+    )
+  ) {
     try {
       await protocolContractETH
         .borrow(parseInt(loan.id._hex), ethers.utils.parseUnits(additionalLoan.toString(), 'ether'))
@@ -221,4 +224,45 @@ export async function closeEthereumLoan(UUID) {
   } catch (error) {
     console.error(error);
   }
+}
+
+export async function recommendTokenForMetamask(ethereum, tokenAddress, tokenSymbol, tokenDecimals, tokenImage) {
+  try {
+    // wasAdded is a boolean. Like any RPC method, an error may be thrown.
+    const wasAdded = await ethereum.request({
+      method: 'wallet_watchAsset',
+      params: {
+        type: 'ERC20', // Initially only supports ERC20, but eventually more!
+        options: {
+          address: tokenAddress, // The address that the token is at.
+          symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 chars.
+          decimals: tokenDecimals, // The number of decimals in the token
+          image: tokenImage, // A string url of the token logo
+        },
+      },
+    });
+
+    if (wasAdded) {
+      console.log('Thanks for your interest!');
+    } else {
+      console.log('Your loss!');
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function addAllTokensToMetamask() {
+  const { ethereum } = window;
+  const provider = new ethers.providers.Web3Provider(ethereum);
+  const { name } = await provider.getNetwork();
+  const { usdc } = await getEthereumContracts(name);
+
+  await recommendTokenForMetamask(
+    ethereum,
+    usdc.address,
+    'USDC',
+    18,
+    'https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=026'
+  );
 }

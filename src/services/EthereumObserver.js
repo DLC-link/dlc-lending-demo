@@ -1,25 +1,25 @@
 import { ethers } from 'ethers';
-import { EthereumNetwork } from '../networks/networks';
-import { abi as protocolContractABI } from '../abis/protocolContractABI';
-import { abi as usdcABI } from '../abis/usdcABI';
+import { getEthereumContracts } from '../networks/networks';
 import store from '../store/store';
 import { fetchLoan, loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 import { solidityLoanStatuses } from '../enums/loanStatuses';
 
-export function startEthereumObserver(blockchain) {
+export async function startEthereumObserver(blockchain) {
   let ethereumProvider;
   let protocolContractETH;
   let usdcETH;
 
   try {
-    const { protocolContractAddress, usdcAddress } = EthereumNetwork;
     const { ethereum } = window;
+    ethereumProvider = new ethers.providers.Web3Provider(ethereum);
+    const { name } = await ethereumProvider.getNetwork();
+    const { protocolContract, usdc } = await getEthereumContracts(name);
 
     ethereumProvider = new ethers.providers.Web3Provider(ethereum);
 
-    protocolContractETH = new ethers.Contract(protocolContractAddress, protocolContractABI, ethereumProvider);
-    usdcETH = new ethers.Contract(usdcAddress, usdcABI, ethereumProvider);
+    protocolContractETH = new ethers.Contract(protocolContract.address, protocolContract.abi, ethereumProvider);
+    usdcETH = new ethers.Contract(usdc.address, usdc.abi, ethereumProvider);
 
     if (!protocolContractETH || !usdcETH || !ethereumProvider) return;
 
