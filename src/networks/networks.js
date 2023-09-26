@@ -12,12 +12,6 @@ const stacksNetworks = {
   mocknet: mocknet,
 };
 
-// export const EthereumNetwork = {
-//     protocolContractAddress: process.env.REACT_APP_ETHEREUM_PROTOCOL_CONTRACT_ADDRESS,
-//     usdcAddress: process.env.REACT_APP_ETHEREUM_USDC_ADDRESS,
-//     dlcManagerAddress: process.env.REACT_APP_ETHEREUM_DLC_MANAGER_ADDRESS,
-// };
-
 export const StacksNetwork = {
   network: stacksNetworks[process.env.REACT_APP_STACKS_NETWORK],
   loanContractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
@@ -49,8 +43,6 @@ const contractDeploymentInfoNames = {
   protocolContract: 'LendingContract',
   usdc: 'USDC',
   dlcManager: 'DlcManager',
-  // usdcBorrowVault: 'USDCBorrowVault',
-  // dlcBtc: 'DLCBTC',
 };
 
 // Cache to store fetched contracts
