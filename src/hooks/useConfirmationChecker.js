@@ -9,9 +9,9 @@ export default function useConfirmationChecker({ loan }) {
 
   const loansWithConfirmationProgress = [
     solidityLoanStatuses.PREFUNDED,
-    solidityLoanStatuses.CLOSED,
+    solidityLoanStatuses.REPAID,
     clarityLoanStatuses.PREFUNDED,
-    clarityLoanStatuses.CLOSED,
+    clarityLoanStatuses.REPAID,
   ];
 
   const [transactionProgress, setTransactionProgress] = useState(0);
@@ -61,7 +61,7 @@ export default function useConfirmationChecker({ loan }) {
 
       setTransactionProgress(difference);
 
-      if (difference >= 6) {
+      if (difference > 6) {
         clearInterval(fetchInterval.current);
       }
     };

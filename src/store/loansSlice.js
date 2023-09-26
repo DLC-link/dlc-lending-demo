@@ -109,6 +109,8 @@ export const loansSlice = createSlice({
               case clarityLoanStatuses.PRECLOSED:
                 toastStatus = ToastEvent.PREREPAID;
                 break;
+              default:
+                break;
             }
             break;
           case 'BorrowEvent':
@@ -123,6 +125,8 @@ export const loansSlice = createSlice({
           case 'LiquidationEvent':
             toastStatus = ToastEvent.PRELIQUIDATED;
             break;
+          default:
+            break;
         }
 
         state.toastEvent = {
@@ -136,7 +140,7 @@ export const loansSlice = createSlice({
       .addCase(fetchLoan.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
-      })
+      });
   },
 });
 
@@ -158,15 +162,19 @@ export const selectTotalFundedCollateralAndLoan = createSelector(selectAllLoans,
     return [clarityLoanStatuses.FUNDED, solidityLoanStatuses.FUNDED].includes(loan.status);
   });
 
-  const fundedCollateralSum = fundedLoans.reduce((acc, loan) => {
-    const decimalVaultCollateral = new Decimal(loan.vaultCollateral);
-    return acc.plus(decimalVaultCollateral);
-  }, new Decimal(0)).toNumber();
-  
-  const fundedLoanSum = fundedLoans.reduce((acc, loan) => {
-    const decimalVaultLoan = new Decimal(loan.vaultLoan);
-    return acc.plus(decimalVaultLoan);
-  }, new Decimal(0)).toNumber();
+  const fundedCollateralSum = fundedLoans
+    .reduce((acc, loan) => {
+      const decimalVaultCollateral = new Decimal(loan.vaultCollateral);
+      return acc.plus(decimalVaultCollateral);
+    }, new Decimal(0))
+    .toNumber();
+
+  const fundedLoanSum = fundedLoans
+    .reduce((acc, loan) => {
+      const decimalVaultLoan = new Decimal(loan.vaultLoan);
+      return acc.plus(decimalVaultLoan);
+    }, new Decimal(0))
+    .toNumber();
 
   return {
     fundedCollateralSum,
