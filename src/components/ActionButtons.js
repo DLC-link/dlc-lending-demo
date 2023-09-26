@@ -23,46 +23,41 @@ export const ButtonContainer = ({ children }) => {
 const ConfirmationProgress = (loan) => {
   const transactionConfirmations = useConfirmationChecker(loan);
 
-  const [shouldBeIndeterminate, setShouldBeIndeterminate] = useState(false);
-  const [confirmationText, setConfirmationText] = useState(
-    <Text>
-      <strong>0</strong>/6 confirmations
-    </Text>
-  );
+  const [shouldBeIndeterminate, setShouldBeIndeterminate] = useState(true);
+  const [confirmationText, setConfirmationText] = useState(`checking confirmations...`);
 
   useEffect(() => {
+    console.log('transactionConfirmations', transactionConfirmations);
     setShouldBeIndeterminate(
       transactionConfirmations === 0 || transactionConfirmations > 6 || isNaN(transactionConfirmations)
     );
 
-    setConfirmationText(
-      <Text>
-        <strong>{transactionConfirmations}</strong>/6 confirmations
-      </Text>
-    );
+    if (transactionConfirmations === 0) {
+      setConfirmationText(`checking confirmations...`);
+    } else if (transactionConfirmations > 6) {
+      setConfirmationText(`processing...`);
+    } else {
+      setConfirmationText(`${transactionConfirmations || ''}/6 confirmations`);
+    }
   }, [transactionConfirmations]);
 
-  if (transactionConfirmations >= 6 && [solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.status))
-    return;
+  if (
+    transactionConfirmations >= 6 &&
+    [solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.loan.status)
+  ) {
+    console.log('loan', loan);
+    return <></>;
+  }
 
   return (
     <ButtonContainer>
       <VStack padding={2.5}>
-        {transactionConfirmations <= 6 ? (
-          <Text
-            fontSize={'xs'}
-            fontWeight={'regular'}
-            color={'white'}>
-            {confirmationText}
-          </Text>
-        ) : (
-          <Text
-            fontSize={'xs'}
-            fontWeight={'regular'}
-            color={'white'}>
-            processing...
-          </Text>
-        )}
+        <Text
+          fontSize={'xs'}
+          fontWeight={'regular'}
+          color={'white'}>
+          <strong>{confirmationText}</strong>
+        </Text>
         <Progress
           isIndeterminate={shouldBeIndeterminate}
           value={transactionConfirmations}

@@ -61,7 +61,7 @@ export default function useConfirmationChecker({ loan }) {
 
       setTransactionProgress(difference);
 
-      if (difference >= 6) {
+      if (difference > 6) {
         clearInterval(fetchInterval.current);
       }
     };
