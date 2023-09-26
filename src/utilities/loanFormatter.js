@@ -15,6 +15,7 @@ export function formatClarityLoanContract(loanContract) {
   const liquidationRatio = parseInt(loanContract['liquidation-ratio'].value);
   const formattedLiquidationRatio = `${liquidationRatio} %`;
   const attestorList = loanContract.attestors.value.map((attestor) => attestor.value.dns.value);
+  const closingTXHash = loanContract.btcTxId;
   return {
     uuid,
     status,
@@ -27,6 +28,7 @@ export function formatClarityLoanContract(loanContract) {
     formattedLiquidationFee,
     liquidationRatio,
     formattedLiquidationRatio,
+    closingTXHash,
     attestorList,
   };
 }
@@ -44,6 +46,7 @@ export function formatSolidityLoanContract(loanContract) {
   const liquidationRatio = customShiftValue(parseInt(loanContract.liquidationRatio._hex), 2, true).toFixed(2);
   const formattedLiquidationRatio = `${liquidationRatio} %`;
   const attestorList = loanContract.attestorList;
+  const closingTXHash = loanContract.btcTxId;
   return {
     uuid,
     status,
@@ -56,6 +59,7 @@ export function formatSolidityLoanContract(loanContract) {
     formattedLiquidationFee,
     liquidationRatio,
     formattedLiquidationRatio,
+    closingTXHash,
     attestorList,
   };
 }
@@ -77,6 +81,8 @@ export function formatAllLoanContracts(loans, responseType) {
 }
 
 export function updateLoanToFundingInProgress(loan, loanTXHash, walletType) {
-  loan.txHash = loanTXHash;
-  loan.status = walletType === 'solidity' ? solidityLoanStatuses.PREFUNDED : clarityLoanStatuses.PREFUNDED;
+  loan.fundingTXHash = loanTXHash;
+  if (loan.status === solidityLoanStatuses.READY || loan.status === clarityLoanStatuses.READY) {
+    loan.status = walletType === 'solidity' ? solidityLoanStatuses.PREFUNDED : clarityLoanStatuses.PREFUNDED;
+  }
 }

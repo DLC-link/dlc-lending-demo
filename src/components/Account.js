@@ -1,5 +1,5 @@
 import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons';
-import { HStack, Image, Menu, MenuButton, MenuItem, MenuList, Spacer, Text, VStack, keyframes } from '@chakra-ui/react';
+import { HStack, Image, Menu, MenuButton, MenuItem, MenuList, Text, VStack, keyframes } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TutorialStep } from '../enums/TutorialSteps';
@@ -8,6 +8,7 @@ import { toggleSelectWalletModalVisibility } from '../store/componentSlice';
 import { easyTruncateAddress } from '../utilities/utils';
 import TutorialBox from './TutorialBox';
 import TutorialSwitch from './TutorialSwitch';
+import { addAllTokensToMetamask } from '../blockchainFunctions/ethereumFunctions';
 
 export default function Account() {
   const dispatch = useDispatch();
@@ -81,6 +82,7 @@ export default function Account() {
           </HStack>
         </MenuButton>
         <MenuList width={250}>
+          <MenuItem onClick={() => addAllTokensToMetamask()}>Add tokens to MetaMask</MenuItem>
           <MenuItem onClick={() => dispatch(logout())}>Disconnect Wallet</MenuItem>
         </MenuList>
       </Menu>

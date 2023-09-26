@@ -117,5 +117,6 @@ export const fetchBitcoinContractOfferAndSendToUserWallet = async (loanContract)
   const bitcoinContractOffer = await fetchBitcoinContractOfferFromCounterpartyWallet(loanContract);
   if (!bitcoinContractOffer) return;
   const urlParams = createURLParams(bitcoinContractOffer, loanContract.attestorList);
+  console.log(urlParams)
   await sendOfferForSigning(urlParams, loanContract.uuid);
 };
