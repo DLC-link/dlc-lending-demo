@@ -218,7 +218,7 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
   const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
-  const { loans, previousLoanEvent } = store.getState().loans;
+  const { loans } = store.getState().loans;
   const storedLoanUUIDs = loans.map((loan) => loan.uuid);
   let fetchedLoanUUIDs = [];
 

@@ -90,7 +90,7 @@ export default function Card({ loan }) {
         <ExternalLinkButton
           label={'View funding transaction'}
           bitcoinExplorerURL={bitcoinFundingTXExplorerURL}
-          gutter={150}
+          gutter={180}
         />
       ),
     },
@@ -100,7 +100,7 @@ export default function Card({ loan }) {
         <ExternalLinkButton
           label={'View closing transaction'}
           bitcoinExplorerURL={bitcoinClosingTXExplorerURL}
-          gutter={186}
+          gutter={216}
         />
       ),
     },
@@ -113,15 +113,15 @@ export default function Card({ loan }) {
         clarityLoanStatuses.PREFUNDED,
         solidityLoanStatuses.FUNDED,
         clarityLoanStatuses.FUNDED,
-        solidityLoanStatuses.PRECLOSED,
-        clarityLoanStatuses.PRECLOSED,
-        solidityLoanStatuses.CLOSED,
-        clarityLoanStatuses.CLOSED,
+        solidityLoanStatuses.PREREPAID,
+        clarityLoanStatuses.PREREPAID,
+        solidityLoanStatuses.REPAID,
+        clarityLoanStatuses.REPAID,
       ].includes(loan.status)
     ) {
       setIncludeFundingTX(true);
     }
-    if ([solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.status)) {
+    if ([solidityLoanStatuses.REPAID, clarityLoanStatuses.REPAID].includes(loan.status)) {
       setIncludeClosingTX(true);
     }
   }, [loan]);
@@ -194,31 +194,29 @@ export default function Card({ loan }) {
 
   const CardContainer = ({ children }) => {
     return (
-      <>
-        <VStack
-          height={350}
-          width={250}
-          borderRadius='lg'
-          shadow='dark-lg'
-          padding={2.5}
-          bgGradient='linear(to-br, background1, transparent)'
-          backgroundPosition='right'
-          backgroundSize='200%'
-          transition='background-position 500ms ease'
-          animation={
-            showTutorial
-              ? `
+      <VStack
+        height={300}
+        width={250}
+        borderRadius='lg'
+        shadow='dark-lg'
+        padding={2.5}
+        bgGradient='linear(to-br, background1, transparent)'
+        backgroundPosition='right'
+        backgroundSize='200%'
+        transition='background-position 500ms ease'
+        animation={
+          showTutorial
+            ? `
             ${glowAnimation} infinite 1s
         `
-              : ''
-          }
-          justifyContent='center'
-          _hover={{
-            backgroundPosition: 'left',
-          }}>
-          {children}
-        </VStack>
-      </>
+            : ''
+        }
+        justifyContent='center'
+        _hover={{
+          backgroundPosition: 'left',
+        }}>
+        {children}
+      </VStack>
     );
   };
 

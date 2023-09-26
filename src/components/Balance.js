@@ -1,4 +1,4 @@
-import { Divider, Flex, HStack, IconButton, Image, Slide, Switch, Text, VStack } from '@chakra-ui/react';
+import { Divider, HStack, Image, Switch, Text, VStack } from '@chakra-ui/react';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectTotalFundedCollateralAndLoan, toggleShowHiddenLoans } from '../store/loansSlice';
