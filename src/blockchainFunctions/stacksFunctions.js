@@ -27,7 +27,6 @@ import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 
 const getAllAttestors = async () => {
-  const { blockchain } = store.getState().account;
   const { managerContractAddress, managerContractName, apiBase } = StacksNetwork;
   const attestorNFT = 'dlc-attestors';
 

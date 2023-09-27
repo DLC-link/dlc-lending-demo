@@ -1,5 +1,4 @@
-import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { HStack, IconButton, Text, Tooltip } from '@chakra-ui/react';
+import { HStack, Text } from '@chakra-ui/react';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import PaidIcon from '@mui/icons-material/Paid';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HStack, Box, Flex } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import Account from './Account';
 import CompanyWebsiteButton from './CompanyWebsiteButton';
 

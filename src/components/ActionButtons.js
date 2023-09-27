@@ -110,7 +110,7 @@ export function ActionButtons({ loan }) {
           <Button
             variant='outline'
             onClick={() => closeAction()}>
-            CLOSE
+            CLOSE DLC
           </Button>
         </ButtonContainer>
       );

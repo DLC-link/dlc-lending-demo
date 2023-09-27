@@ -43,6 +43,7 @@ export const loansSlice = createSlice({
       state.toastEvent = {
         txHash: action.payload.txHash,
         status: action.payload.status,
+        successful: action.payload.successful,
       };
     },
     hideLoan: (state, action) => {
@@ -194,7 +195,7 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
 
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
   const { address } = store.getState().account;
-  const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
+  const { loanUUID, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
 
   let getLoanByUUID;

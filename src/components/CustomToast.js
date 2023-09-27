@@ -30,6 +30,7 @@ const WalletInteractionEvent = {
   FETCHFAILED: 'Failed to fetch offer!',
   ACCEPTFAILED: 'Failed to lock Bitcoin!',
   ACCEPTSUCCEEDED: 'Locked Bitcoin!',
+  METAMASKERROR: 'An error occured. Check MetaMask for details!',
 };
 
 const BlockchainInteractionEvent = {
@@ -43,7 +44,9 @@ export const ToastEvent = {
   ...BlockchainInteractionEvent,
 };
 
-export default function CustomToast({ txHash, status }) {
+export default function CustomToast({ txHash, status, successful }) {
+  console.log('CustomToast', txHash, status, successful);
+  const isSuccessful = successful ?? true;
   const { walletType } = useSelector((state) => state.account);
 
   const ethereumExplorerURL = `${process.env.REACT_APP_ETHEREUM_EXPLORER_API_URL}${txHash}`;
@@ -53,7 +56,7 @@ export default function CustomToast({ txHash, status }) {
   const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${txHash}`;
 
   let explorerURL;
-  switch(walletType) {
+  switch (walletType) {
     case 'metamask':
       explorerURL = ethereumExplorerURL;
       break;
@@ -65,16 +68,8 @@ export default function CustomToast({ txHash, status }) {
       throw new Error('Unknown wallet type!');
   }
 
-  const isSuccessfulEvent = ![
-    ToastEvent.ACCEPTFAILED,
-    ToastEvent.FETCHFAILED,
-    ToastEvent.TRANSACTIONFAILED,
-    ToastEvent.TRANSACTIONCANCELLED,
-    ToastEvent.RETRIEVALFAILED,
-  ].includes(status);
-
   const eventExplorerAddress =
-    !isSuccessfulEvent || status === ToastEvent.SETUPREQUESTED
+    !isSuccessful || status === ToastEvent.SETUPREQUESTED
       ? undefined
       : status === ToastEvent.ACCEPTSUCCEEDED
       ? bitcoinExplorerURL
@@ -115,7 +110,7 @@ export default function CustomToast({ txHash, status }) {
           fontWeight='extrabold'>
           {status}
         </Text>
-        {isSuccessfulEvent && status !== ToastEvent.SETUPREQUESTED && (
+        {isSuccessful && status !== ToastEvent.SETUPREQUESTED && (
           <Text
             fontSize='3xs'
             fontWeight='bold'>
@@ -127,7 +122,7 @@ export default function CustomToast({ txHash, status }) {
   };
 
   const CustomToastIcon = () => {
-    return isSuccessfulEvent ? <CheckCircleIcon color='green' /> : <WarningIcon color='red' />;
+    return isSuccessful ? <CheckCircleIcon color='green' /> : <WarningIcon color='red' />;
   };
 
   return (

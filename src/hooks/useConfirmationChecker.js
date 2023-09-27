@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
 import { useOnMount } from './useOnMount';

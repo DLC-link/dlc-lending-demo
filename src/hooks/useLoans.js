@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { clarityLoanOrder, solidityLoanOrder } from '../enums/loanStatuses';
-import { selectNotHiddenLoans } from '../store/loansSlice';
 
 export function useLoans() {
   const { loans, showHiddenLoans, hiddenLoans } = useSelector((state) => state.loans);

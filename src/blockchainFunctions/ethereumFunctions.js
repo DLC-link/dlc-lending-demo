@@ -18,7 +18,7 @@ let protocolContractETH, usdcBorrowVaultETH;
 let usdcETH, dlcBtcETH;
 let currentEthereumNetwork;
 
-export async function setEthereumProvider(address) {
+export async function setEthereumProvider() {
   try {
     const { ethereum } = window;
     const provider = new ethers.providers.Web3Provider(ethereum);
@@ -77,7 +77,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
 
     currentEthereumNetwork = blockchain;
 
-    await setEthereumProvider(accounts[0]);
+    await setEthereumProvider();
 
     store.dispatch(login(accountInformation));
   } catch (error) {
@@ -118,13 +118,12 @@ export async function isAllowanceSet(amount, assetContract, protocolContractAddr
 
   if (isVaultLoanGreaterThanAllowedAmount(Number(amount), Number(allowedAmount))) {
     try {
-      await assetContract.approve(protocolContractAddress, desiredAmount).then((response) =>
-        store.dispatch(
-          loanEventReceived({
-            txHash: response.hash,
-            status: ToastEvent.APPROVEREQUESTED,
-          })
-        )
+      const tx = await assetContract.approve(protocolContractAddress, desiredAmount);
+      store.dispatch(
+        loanEventReceived({
+          txHash: tx.hash,
+          status: ToastEvent.APPROVEREQUESTED,
+        })
       );
       return false;
     } catch (error) {
@@ -137,13 +136,19 @@ export async function isAllowanceSet(amount, assetContract, protocolContractAddr
 
 export async function sendLoanContractToEthereum(loanContract) {
   try {
-    protocolContractETH
-      .setupDeposit(loanContract.BTCDeposit, loanContract.attestorCount, {
-        gasLimit: 900000,
-      })
-      .then((response) => store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit })));
+    await protocolContractETH.setupDeposit(loanContract.BTCDeposit, loanContract.attestorCount, {
+      gasLimit: 900000,
+    });
+    store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit }));
   } catch (error) {
     console.error(error);
+    store.dispatch(
+      loanEventReceived({
+        txHash: undefined,
+        status: ToastEvent.METAMASKERROR,
+        successful: false,
+      })
+    );
   }
 }
 
@@ -183,20 +188,24 @@ export async function getEthereumLoanByUUID(UUID) {
 export async function depositToVault(assetDeposit) {
   if (await isAllowanceSet(assetDeposit, dlcBtcETH, usdcBorrowVaultETH.address)) {
     try {
-      await usdcBorrowVaultETH
-        ._deposit(assetDeposit, {
-          gasLimit: 900000,
+      const tx = await usdcBorrowVaultETH._deposit(assetDeposit, {
+        gasLimit: 900000,
+      });
+      store.dispatch(
+        loanEventReceived({
+          txHash: tx.hash,
+          status: ToastEvent.BORROWREQUESTED,
         })
-        .then((response) =>
-          store.dispatch(
-            loanEventReceived({
-              txHash: response.hash,
-              status: ToastEvent.BORROWREQUESTED,
-            })
-          )
-        );
+      );
     } catch (error) {
       console.error(error);
+      store.dispatch(
+        loanEventReceived({
+          txHash: undefined,
+          status: ToastEvent.METAMASKERROR,
+          successful: false,
+        })
+      );
     }
   }
 }
@@ -204,33 +213,23 @@ export async function depositToVault(assetDeposit) {
 export async function withdrawFromVault(assetsToWithdraw) {
   if (await isAllowanceSet(assetsToWithdraw, usdcETH, usdcBorrowVaultETH.address)) {
     try {
-      await usdcBorrowVaultETH._withdraw(assetsToWithdraw, store.getState().account.address).then((response) =>
-        store.dispatch(
-          loanEventReceived({
-            txHash: response.hash,
-            status: ToastEvent.REPAYREQUESTED,
-          })
-        )
+      const tx = await usdcBorrowVaultETH._withdraw(assetsToWithdraw, store.getState().account.address);
+      store.dispatch(
+        loanEventReceived({
+          txHash: tx.hash,
+          status: ToastEvent.REPAYREQUESTED,
+        })
       );
     } catch (error) {
       console.error(error);
-    }
-  }
-}
-
-export async function liquidateEthereumLoan(UUID) {
-  const loan = await getEthereumLoanByUUID(UUID);
-  try {
-    protocolContractETH.attemptLiquidate(parseInt(loan.id._hex)).then((response) => {
       store.dispatch(
         loanEventReceived({
-          txHash: response.hash,
-          status: ToastEvent.LIQUIDATIONREQUESTED,
+          txHash: undefined,
+          status: ToastEvent.METAMASKERROR,
+          successful: false,
         })
       );
-    });
-  } catch (error) {
-    console.error(error);
+    }
   }
 }
 
@@ -238,16 +237,22 @@ export async function closeEthereumLoan(UUID) {
   const deposit = await getEthereumLoanByUUID(UUID);
   if (await isAllowanceSet(deposit.depositAmount, dlcBtcETH, protocolContractETH.address)) {
     try {
-      protocolContractETH.closeDeposit(parseInt(deposit.id._hex)).then((response) =>
-        store.dispatch(
-          loanEventReceived({
-            txHash: response.hash,
-            status: ToastEvent.CLOSEREQUESTED,
-          })
-        )
+      const tx = await protocolContractETH.closeDeposit(parseInt(deposit.id._hex));
+      store.dispatch(
+        loanEventReceived({
+          txHash: tx.hash,
+          status: ToastEvent.CLOSEREQUESTED,
+        })
       );
     } catch (error) {
       console.error(error);
+      store.dispatch(
+        loanEventReceived({
+          txHash: undefined,
+          status: ToastEvent.METAMASKERROR,
+          successful: false,
+        })
+      );
     }
   }
 }
@@ -275,6 +280,13 @@ export async function recommendTokenForMetamask(ethereum, tokenAddress, tokenSym
     }
   } catch (error) {
     console.log(error);
+    store.dispatch(
+      loanEventReceived({
+        txHash: undefined,
+        status: ToastEvent.METAMASKERROR,
+        successful: false,
+      })
+    );
   }
 }
 

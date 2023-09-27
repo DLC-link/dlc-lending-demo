@@ -1,5 +1,3 @@
-/*global chrome*/
-
 import React from 'react';
 import { Flex, Collapse, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';

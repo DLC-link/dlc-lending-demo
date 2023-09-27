@@ -63,8 +63,12 @@
     },
     "extends": [
       "react-app",
-      "react-app/jest"
-    ]
+      "react-app/jest",
+      "eslint:recommended"
+    ],
+    "rules": {
+      "require-await": "warn"
+    }
   },
   "browserslist": {
     "production": [

@@ -1,6 +1,6 @@
 import { ArrowDownIcon, ArrowUpIcon } from '@chakra-ui/icons';
 
-import { VStack, Text, Spacer } from '@chakra-ui/react';
+import { VStack, Text } from '@chakra-ui/react';
 import { keyframes } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import { TutorialStep } from '../enums/TutorialSteps';

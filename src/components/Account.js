@@ -1,17 +1,5 @@
 import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons';
-import {
-  HStack,
-  Button,
-  Image,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Spacer,
-  Text,
-  VStack,
-  keyframes,
-} from '@chakra-ui/react';
+import { HStack, Image, Menu, MenuButton, MenuItem, MenuList, Text, VStack, keyframes } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TutorialStep } from '../enums/TutorialSteps';

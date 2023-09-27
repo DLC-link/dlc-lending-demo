@@ -1,5 +1,4 @@
 import { useToast } from '@chakra-ui/react';
-import { useSelector } from 'react-redux';
 import CustomToast from '../components/CustomToast';
 
 export const useCustomToast = () => {
@@ -13,6 +12,7 @@ export const useCustomToast = () => {
           <CustomToast
             txHash={toastEvent.txHash}
             status={toastEvent.status}
+            successful={toastEvent.successful}
           />
         ),
       });

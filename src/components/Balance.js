@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 export default function Balance() {
   const dispatch = useDispatch();
 
-  const { fundedCollateralSum, fundedLoanSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
+  const { fundedCollateralSum } = useSelector((state) => selectTotalFundedCollateralAndLoan(state));
   const outstandingDebt = useSelector((state) => state.externalData.outstandingDebt);
   const dlcBtcBalance = useSelector((state) => state.externalData.dlcBtcBalance);
 
