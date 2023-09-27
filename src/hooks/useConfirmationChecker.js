@@ -65,6 +65,7 @@ export default function useConfirmationChecker({ loan }) {
         clearInterval(fetchInterval.current);
       }
     };
+    fetchTransactionDetails();
     fetchInterval.current = setInterval(fetchTransactionDetails, 10000); // 10 seconds
 
     // Cleanup the interval when the component unmounts
