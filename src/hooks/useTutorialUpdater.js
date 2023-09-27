@@ -107,6 +107,8 @@ export default function useTutorialStep() {
       case clarityLoanStatuses.CLOSED:
         currentTutorialStep = TutorialStep.ENDFLOW;
         break;
+      default:
+        break;
     }
     dispatch(setTutorialStep(currentTutorialStep));
 

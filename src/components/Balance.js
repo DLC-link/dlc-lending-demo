@@ -1,7 +1,7 @@
-import { Divider, Flex, HStack, IconButton, Image, Slide, Switch, Text, VStack } from '@chakra-ui/react';
+import { Divider, HStack, Image, Text, VStack } from '@chakra-ui/react';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectTotalFundedCollateralAndLoan, toggleShowHiddenLoans } from '../store/loansSlice';
+import { selectTotalFundedCollateralAndLoan } from '../store/loansSlice';
 import { fetchOutstandingDebt, fetchDlcBtcBalance } from '../store/externalDataSlice';
 
 import { useEffect } from 'react';
@@ -61,7 +61,7 @@ export default function Balance() {
     <BalanceContainer>
       <BalanceTextStack
         header={'BTC Locked In DLCs'}
-        data={fundedCollateralSum.toFixed(4)}
+        data={fundedCollateralSum}
         image={{ src: '/btc_logo.png', alt: 'Bitcoin Logo' }}
       />
       <Divider
@@ -70,7 +70,7 @@ export default function Balance() {
       />
       <BalanceTextStack
         header={'Available dlcBTC'}
-        data={new Intl.NumberFormat().format(dlcBtcBalance)}
+        data={dlcBtcBalance}
         image={{
           src: 'https://cdn.discordapp.com/attachments/994505799902691348/1035507437748367360/DLC.Link_Emoji.png',
           alt: 'dlcBTC Logo',
@@ -82,7 +82,7 @@ export default function Balance() {
       />
       <BalanceTextStack
         header={'Total debt'}
-        data={new Intl.NumberFormat().format(outstandingDebt)}
+        data={parseFloat(outstandingDebt).toFixed(2)}
         image={{ src: '/usdc_logo.png', alt: 'USDC Logo' }}
       />
     </BalanceContainer>

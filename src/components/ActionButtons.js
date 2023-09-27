@@ -27,17 +27,15 @@ const ConfirmationProgress = (loan) => {
   const [confirmationText, setConfirmationText] = useState(`checking confirmations...`);
 
   useEffect(() => {
-    console.log('transactionConfirmations', transactionConfirmations);
-    setShouldBeIndeterminate(
-      transactionConfirmations === 0 || transactionConfirmations > 6 || isNaN(transactionConfirmations)
-    );
-
-    if (transactionConfirmations === 0) {
+    if (transactionConfirmations === 0 || isNaN(transactionConfirmations)) {
       setConfirmationText(`checking confirmations...`);
+      setShouldBeIndeterminate(true);
     } else if (transactionConfirmations > 6) {
       setConfirmationText(`processing...`);
+      setShouldBeIndeterminate(true);
     } else {
       setConfirmationText(`${transactionConfirmations || ''}/6 confirmations`);
+      setShouldBeIndeterminate(false);
     }
   }, [transactionConfirmations]);
 
