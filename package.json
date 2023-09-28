@@ -18,6 +18,10 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^29.5.5",
+    "@types/node": "^20.7.1",
+    "@types/react": "^18.2.23",
+    "@types/react-dom": "^18.2.8",
     "@web3-react/core": "^6.1.9",
     "@web3-react/injected-connector": "^6.0.7",
     "@web3-react/walletconnect-connector": "^6.2.13",
@@ -48,8 +52,12 @@
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "typeface-roboto": "^1.1.13",
+    "typescript": "^5.2.2",
     "web-vitals": "^2.1.4",
     "web3": "^1.8.1"
+  },
+  "overrides": {
+    "typescript": "^5.2.2"
   },
   "scripts": {
     "start": "GENERATE_SOURCEMAP=false react-app-rewired start",
@@ -67,7 +75,8 @@
       "eslint:recommended"
     ],
     "rules": {
-      "require-await": "warn"
+      "require-await": "warn",
+      "no-unused-vars": "warn"
     }
   },
   "browserslist": {

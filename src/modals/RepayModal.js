@@ -79,7 +79,7 @@ export default function RepayModal() {
     store.dispatch(toggleRepayModalVisibility({ isOpen: false }));
     switch (walletType) {
       case 'metamask':
-        withdrawFromVault(assetsToWithdraw);
+        await withdrawFromVault(assetsToWithdraw);
         break;
       case 'leather':
       case 'xverse':

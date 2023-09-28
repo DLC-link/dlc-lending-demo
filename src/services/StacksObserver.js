@@ -8,8 +8,7 @@ import { getStacksLoanByID } from '../blockchainFunctions/stacksFunctions';
 import { ToastEvent } from '../components/CustomToast';
 
 export function startStacksObserver(blockchain) {
-  const { loanContractAddress, loanContractName, managerContractAddress, managerContractName, apiBase } =
-    StacksNetwork;
+  const { loanContractAddress, loanContractName, managerContractAddress, managerContractName, apiBase } = StacksNetwork;
   const loanContractFullName = `${loanContractAddress}.${loanContractName}`;
   const managerContractFullName = `${managerContractAddress}.${managerContractName}`;
 
@@ -24,11 +23,11 @@ export function startStacksObserver(blockchain) {
 
   const stacksSocket = new StacksApiSocketClient(socket);
 
-  stacksSocket.socket.on('connect', async () => {
+  stacksSocket.socket.on('connect', () => {
     console.log(`Listening to [${blockchain}]`);
   });
 
-  stacksSocket.socket.on('disconnect', async (reason) => {
+  stacksSocket.socket.on('disconnect', (reason) => {
     console.log(`Disconnecting from [${blockchain}], reason: ${reason}`);
     stacksSocket.socket.connect();
   });

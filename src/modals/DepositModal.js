@@ -38,10 +38,7 @@ export default function DepositModal() {
   const { tutorialStep } = useSelector((state) => state.tutorial);
 
   useOnMount(() => {
-    const updateBitcoinUSDValue = async () => {
-      dispatch(fetchBitcoinValue());
-    };
-    updateBitcoinUSDValue();
+    dispatch(fetchBitcoinValue());
     setBitCoinInUSDAsString(new Intl.NumberFormat().format(bitcoinUSDValue));
   });
 

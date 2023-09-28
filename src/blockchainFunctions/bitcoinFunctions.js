@@ -34,25 +34,23 @@ const createURLParams = (bitcoinContractOffer, attestorURLs) => {
 };
 
 const sendOfferForSigning = async (urlParams, loanUUID) => {
-  window.btc
-    .request('acceptBitcoinContractOffer', urlParams)
-    .then((response) => {
-      store.dispatch(
-        loanEventReceived({
-          status: ToastEvent.ACCEPTSUCCEEDED,
-          txHash: response.result.txId,
-          uuid: loanUUID,
-        })
-      );
-      store.dispatch(fetchLoans());
-    })
-    .catch((error) => {
-      store.dispatch(
-        loanEventReceived({
-          status: ToastEvent.ACCEPTFAILED,
-        })
-      );
-    });
+  try {
+    const response = await window.btc.request('acceptBitcoinContractOffer', urlParams);
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.ACCEPTSUCCEEDED,
+        txHash: response.result.txId,
+        uuid: loanUUID,
+      })
+    );
+    store.dispatch(fetchLoans());
+  } catch (error) {
+    store.dispatch(
+      loanEventReceived({
+        status: ToastEvent.ACCEPTFAILED,
+      })
+    );
+  }
 };
 
 export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContract) => {

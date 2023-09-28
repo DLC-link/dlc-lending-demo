@@ -88,10 +88,10 @@ export default function BorrowModal() {
     switch (walletType) {
       case 'leather':
       case 'xverse':
-        borrowStacksLoan(loan.uuid, additionalLoan);
+        await borrowStacksLoan(loan.uuid, additionalLoan);
         break;
       case 'metamask':
-        depositToVault(assetsToDeposit);
+        await depositToVault(assetsToDeposit);
         break;
       default:
         console.error('Unsupported wallet type!');

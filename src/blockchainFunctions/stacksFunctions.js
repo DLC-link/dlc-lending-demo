@@ -39,7 +39,7 @@ const getAllAttestors = async () => {
   return attestorIDs;
 };
 
-const selectRandomAttestors = async (attestorList, attestorCount) => {
+const selectRandomAttestors = (attestorList, attestorCount) => {
   const shuffledAttestorList = [...attestorList].sort(() => 0.5 - Math.random());
   const selectedAttestors = shuffledAttestorList.slice(0, attestorCount);
   return Buffer.from(selectedAttestors);
@@ -102,7 +102,7 @@ export async function requestAndDispatchStacksAccountInformation(blockchain) {
   store.dispatch(login(accountInformation));
 }
 
-async function showConnectAndGetAddress(blockchain) {
+function showConnectAndGetAddress(blockchain) {
   return new Promise((resolve, reject) => {
     showConnect({
       appDetails: {
@@ -131,7 +131,7 @@ export async function sendLoanContractToStacks(loanContract) {
   const { walletType, blockchain } = store.getState().account;
 
   const allAttestors = await getAllAttestors();
-  const selectedAttestors = await selectRandomAttestors(allAttestors, loanContract.attestorCount);
+  const selectedAttestors = selectRandomAttestors(allAttestors, loanContract.attestorCount);
 
   const functionName = 'setup-loan';
   const functionArgs = [uintCV(loanContract.BTCDeposit), bufferCV(selectedAttestors)];
@@ -368,7 +368,7 @@ export async function liquidateStacksLoan(UUID) {
   }
 
   try {
-    openContractCall(txOptions);
+    await openContractCall(txOptions);
   } catch (error) {
     store.dispatch(
       loanEventReceived({
@@ -416,7 +416,7 @@ export async function closeStacksLoan(UUID) {
   }
 
   try {
-    openContractCall(txOptions);
+    await openContractCall(txOptions);
   } catch (error) {
     store.dispatch(
       loanEventReceived({

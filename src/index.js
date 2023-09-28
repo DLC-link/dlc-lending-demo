@@ -10,7 +10,7 @@ import { appTheme } from './styles/appTheme';
 
 const container = document.getElementById('root');
 const root = createRoot(container);
-let persistor = persistStore(store);
+export const persistor = persistStore(store);
 
 root.render(
   <Provider store={store}>
