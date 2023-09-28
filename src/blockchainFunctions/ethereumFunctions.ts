@@ -14,7 +14,7 @@ import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
 import { ToastEvent } from '../components/CustomToast';
 
-import type { DLCParams } from '../models/types';
+import type { DLCParams, FormattedLoanEthereum } from '../models/types';
 
 let protocolContractETH: ethers.Contract,
   usdcBorrowVaultETH: ethers.Contract,
@@ -90,7 +90,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain: s
 }
 
 export async function fetchUserTokenBalance(assetName: string) {
-  let contractMap: { [key: string]: { contract: ethers.Contract; decimals: number } } = {
+  const contractMap: { [key: string]: { contract: ethers.Contract; decimals: number } } = {
     DLCBTC: { contract: dlcBtcETH, decimals: 8 },
     USDC: { contract: usdcETH, decimals: 18 },
     vDLCBTC: { contract: usdcBorrowVaultETH, decimals: 8 },
@@ -156,12 +156,12 @@ export async function sendLoanContractToEthereum(loanContract: DLCParams) {
   }
 }
 
-export async function getAllEthereumLoansForAddress() {
+export async function getAllEthereumLoansForAddress(): Promise<FormattedLoanEthereum[]> {
   const address = store.getState().account.address;
-  let formattedLoans = [];
+  let formattedLoans: FormattedLoanEthereum[] = [];
   try {
     const loanContracts = await protocolContractETH.getAllDepositsForAddress(address);
-    formattedLoans = formatAllLoanContracts(loanContracts, 'solidity');
+    formattedLoans = formatAllLoanContracts(loanContracts, 'solidity') as FormattedLoanEthereum[];
   } catch (error) {
     console.error(error);
   }
@@ -273,6 +273,7 @@ export async function recommendTokenForMetamask(
     const wasAdded = await ethereum.request?.({
       method: 'wallet_watchAsset',
       params: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         type: 'ERC20', // Initially only supports ERC20, but eventually more!
         options: {

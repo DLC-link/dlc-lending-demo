@@ -14,6 +14,6 @@ export default function CustomToastHandler() {
     if (!toastEvent) return;
     handleCustomToast(toastEvent);
     dispatch(deleteToastEvent());
-  }, [toastEvent]);
+  }, [toastEvent, handleCustomToast, dispatch]);
   return null;
 }

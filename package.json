@@ -30,6 +30,8 @@
     "buffer": "^6.0.3",
     "constants-browserify": "^1.0.0",
     "decimal.js": "^10.4.3",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-typescript": "^17.1.0",
     "ethers": "^5.7.2",
     "graceful-fs": "^4.2.10",
     "https-browserify": "^1.0.0",
@@ -61,8 +63,8 @@
   },
   "scripts": {
     "start": "GENERATE_SOURCEMAP=false react-scripts start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -72,11 +74,19 @@
     "extends": [
       "react-app",
       "react-app/jest",
-      "eslint:recommended"
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended"
     ],
     "rules": {
       "require-await": "warn",
-      "no-unused-vars": "warn"
+      "no-unused-vars": "warn",
+      "max-len": "off",
+      "no-console": "off",
+      "no-underscore-dangle": "off",
+      "comma-dangle": "off"
+    },
+    "parserOptions": {
+      "project": "./tsconfig.json"
     }
   },
   "browserslist": {

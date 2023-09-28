@@ -10,6 +10,7 @@ import useTutorialStep from './hooks/useTutorialUpdater';
 
 /* global BigInt */
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 // eslint-disable-next-line no-extend-native
 BigInt.prototype.toJSON = function () {

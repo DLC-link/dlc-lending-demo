@@ -10,6 +10,7 @@ export type FormattedLoanEthereum = {
   vaultCollateral: number;
   formattedVaultCollateral: string;
   closingTXHash: string;
+  fundingTXHash: string;
   attestorList: any;
 };
 
@@ -25,6 +26,8 @@ export type FormattedLoanStacks = {
   formattedLiquidationFee: string;
   liquidationRatio: number;
   formattedLiquidationRatio: string;
+  fundingTXHash: string;
+  closingTXHash: string;
   attestorList: any;
 };
 

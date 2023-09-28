@@ -24,7 +24,7 @@ export const externalDataSlice = createSlice({
   reducers: {},
   extraReducers(builder) {
     builder
-      .addCase(fetchBitcoinValue.pending, (state, action) => {
+      .addCase(fetchBitcoinValue.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchBitcoinValue.fulfilled, (state, action) => {
@@ -36,7 +36,7 @@ export const externalDataSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase(fetchDlcBtcBalance.pending, (state, action) => {
+      .addCase(fetchDlcBtcBalance.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchDlcBtcBalance.fulfilled, (state, action) => {
@@ -48,7 +48,7 @@ export const externalDataSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase(fetchOutstandingDebt.pending, (state, action) => {
+      .addCase(fetchOutstandingDebt.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchOutstandingDebt.fulfilled, (state, action) => {
@@ -60,7 +60,7 @@ export const externalDataSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase(fetchVaultReserves.pending, (state, action) => {
+      .addCase(fetchVaultReserves.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchVaultReserves.fulfilled, (state, action) => {
@@ -72,7 +72,7 @@ export const externalDataSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase(fetchVaultDepositBalance.pending, (state, action) => {
+      .addCase(fetchVaultDepositBalance.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchVaultDepositBalance.fulfilled, (state, action) => {
@@ -84,7 +84,7 @@ export const externalDataSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase(fetchVdlcBtcBalance.pending, (state, action) => {
+      .addCase(fetchVdlcBtcBalance.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchVdlcBtcBalance.fulfilled, (state, action) => {

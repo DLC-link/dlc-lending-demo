@@ -45,7 +45,7 @@ const selectRandomAttestors = (attestorList, attestorCount) => {
   return Buffer.from(selectedAttestors);
 };
 
-const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, blockchain) => {
+const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus) => {
   const { loanContractAddress, loanContractName, network } = StacksNetwork;
 
   return {

@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { userSession } from '../hiroWalletUserSession';
 
-export type walletType = 'metamask' | 'xverse' | 'leather' | 'walletConnect';
+export type walletType = 'metamask' | 'xverse' | 'leather' | 'walletConnect' | string;
 
 export interface AccountState {
   walletType: walletType | null;

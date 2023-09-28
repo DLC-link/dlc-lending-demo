@@ -1,8 +1,9 @@
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import { customShiftValue } from './utils';
 import { cvToValue } from '@stacks/transactions';
+import { FormattedLoan, FormattedLoanEthereum, FormattedLoanStacks } from '../models/types';
 
-export function formatClarityLoanContract(loanContract) {
+export function formatClarityLoanContract(loanContract: any): FormattedLoanStacks {
   const uuid = loanContract.dlc_uuid.value.value;
   const status = loanContract.status.value;
   const owner = loanContract.owner.value;
@@ -14,7 +15,8 @@ export function formatClarityLoanContract(loanContract) {
   const formattedLiquidationFee = `${liquidationFee} %`;
   const liquidationRatio = parseInt(loanContract['liquidation-ratio'].value);
   const formattedLiquidationRatio = `${liquidationRatio} %`;
-  const attestorList = loanContract.attestors.value.map((attestor) => attestor.value.dns.value);
+  const attestorList = loanContract.attestors.value.map((attestor: any) => attestor.value.dns.value);
+  const closingTXHash = loanContract.btcTxId;
   return {
     uuid,
     status,
@@ -27,18 +29,20 @@ export function formatClarityLoanContract(loanContract) {
     formattedLiquidationFee,
     liquidationRatio,
     formattedLiquidationRatio,
+    closingTXHash,
+    fundingTXHash: '',
     attestorList,
   };
 }
 
-export function formatSolidityLoanContract(loanContract) {
+export function formatSolidityLoanContract(loanContract: any): FormattedLoanEthereum {
   const uuid = loanContract.dlcUUID;
   const status = Object.values(solidityLoanStatuses)[loanContract.status];
   const owner = loanContract.owner;
   const vaultCollateral = customShiftValue(parseInt(loanContract.depositAmount._hex), 8, true);
   const formattedVaultCollateral = `${vaultCollateral} BTC`;
   const closingTXHash = loanContract.btcTxId;
-  const attestorList = loanContract.attestorList;
+  const { attestorList } = loanContract;
   return {
     uuid,
     status,
@@ -46,12 +50,13 @@ export function formatSolidityLoanContract(loanContract) {
     vaultCollateral,
     formattedVaultCollateral,
     closingTXHash,
+    fundingTXHash: '',
     attestorList,
   };
 }
 
-export function formatAllLoanContracts(loans, responseType) {
-  let formattedLoans = [];
+export function formatAllLoanContracts(loans: any[], responseType: 'solidity' | 'clarity'): FormattedLoan[] {
+  let formattedLoans: FormattedLoan[] = [];
   switch (responseType) {
     case 'solidity':
       formattedLoans = loans.map((loan) => formatSolidityLoanContract(loan));
@@ -66,9 +71,10 @@ export function formatAllLoanContracts(loans, responseType) {
   return formattedLoans;
 }
 
-export function updateLoanToFundingInProgress(loan, loanTXHash, walletType) {
+export function updateLoanToFundingInProgress(loan: FormattedLoan, loanTXHash: string, walletType: string) {
   loan.fundingTXHash = loanTXHash;
   if (loan.status === solidityLoanStatuses.READY || loan.status === clarityLoanStatuses.READY) {
     loan.status = walletType === 'solidity' ? solidityLoanStatuses.PREFUNDED : clarityLoanStatuses.PREFUNDED;
   }
+  return loan;
 }
