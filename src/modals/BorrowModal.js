@@ -17,7 +17,7 @@ import store from '../store/store';
 import { ethers } from 'ethers';
 
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 
 import { formatCollateralInUSD, customShiftValue } from '../utilities/utils';
 

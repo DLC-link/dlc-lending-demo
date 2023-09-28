@@ -1,7 +1,7 @@
 import { Button, Progress, Text, VStack } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 
 import { fetchBitcoinContractOfferAndSendToUserWallet } from '../blockchainFunctions/bitcoinFunctions';
 import { closeEthereumLoan } from '../blockchainFunctions/ethereumFunctions';

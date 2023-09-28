@@ -60,7 +60,7 @@
     "typescript": "^5.2.2"
   },
   "scripts": {
-    "start": "GENERATE_SOURCEMAP=false react-app-rewired start",
+    "start": "GENERATE_SOURCEMAP=false react-scripts start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"
@@ -90,5 +90,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/ramda": "^0.29.5"
   }
 }

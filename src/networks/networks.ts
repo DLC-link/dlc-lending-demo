@@ -1,4 +1,5 @@
 import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
+import { DeploymentInfo } from '../models/interfaces';
 
 const mainnet = new StacksMainnet();
 const testnet = new StacksTestnet();
@@ -13,7 +14,7 @@ const stacksNetworks = {
 };
 
 export const StacksNetwork = {
-  network: stacksNetworks[process.env.REACT_APP_STACKS_NETWORK],
+  network: stacksNetworks[process.env.REACT_APP_STACKS_NETWORK as keyof typeof stacksNetworks],
   loanContractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
   loanContractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
   managerContractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
@@ -24,7 +25,7 @@ export const StacksNetwork = {
   apiBase: process.env.REACT_APP_STACKS_API_BASE_URL,
 };
 
-const fetchDeploymentPlan = async (contract, chain) => {
+const fetchDeploymentPlan = async (contract: string, chain: string): Promise<DeploymentInfo> => {
   const branch = process.env.REACT_APP_ETHEREUM_FETCH_BRANCH || 'dev';
   const version = process.env.REACT_APP_ETHEREUM_FETCH_VERSION || '1';
   console.log(`Fetching deployment info for ${contract} on ${chain} from dlc-solidity/${branch}`);
@@ -39,7 +40,7 @@ const fetchDeploymentPlan = async (contract, chain) => {
 };
 
 // This is necessary as the DeploymentFiles have different namings than here
-const contractDeploymentInfoNames = {
+const contractDeploymentInfoNames: { [contractName: string]: string } = {
   protocolContract: 'DepositDemo',
   usdc: 'USDC',
   dlcManager: 'DlcManager',
@@ -48,9 +49,9 @@ const contractDeploymentInfoNames = {
 };
 
 // Cache to store fetched contracts
-const EthereumContractsCache = {};
+const EthereumContractsCache: { [contractName: string]: DeploymentInfo['contract'] } = {};
 
-const getOrFetchContract = async (contractName, chainName) => {
+const getOrFetchContract = async (contractName: string, chainName: string) => {
   if (EthereumContractsCache[contractName]) {
     return EthereumContractsCache[contractName];
   }
@@ -59,8 +60,8 @@ const getOrFetchContract = async (contractName, chainName) => {
   return contractData.contract;
 };
 
-export const getEthereumContracts = async (chainName) => {
-  const result = {};
+export const getEthereumContracts = async (chainName: string) => {
+  const result: { [contractName: string]: DeploymentInfo['contract'] } = {};
   for (const contractName in contractDeploymentInfoNames) {
     result[contractName] = await getOrFetchContract(contractName, chainName);
   }

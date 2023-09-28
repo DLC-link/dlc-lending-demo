@@ -1,7 +1,7 @@
 import { Link, Flex, HStack, Text } from '@chakra-ui/react';
 
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 
 const VaultBlockchainEvent = {
   READY: 'Vault is ready!',

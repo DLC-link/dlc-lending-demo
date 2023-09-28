@@ -7,9 +7,10 @@ import App from './App';
 import Observer from './services/Observer';
 import store from './store/store';
 import { appTheme } from './styles/appTheme';
+import React from 'react';
 
 const container = document.getElementById('root');
-const root = createRoot(container);
+const root = createRoot(container as HTMLElement);
 export const persistor = persistStore(store);
 
 root.render(

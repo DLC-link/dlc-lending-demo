@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 import { useCustomToast } from '../hooks/useCustomToast';
 import { deleteToastEvent } from '../store/loansSlice';
 import { useDispatch } from 'react-redux';
@@ -15,4 +15,5 @@ export default function CustomToastHandler() {
     handleCustomToast(toastEvent);
     dispatch(deleteToastEvent());
   }, [toastEvent]);
+  return null;
 }

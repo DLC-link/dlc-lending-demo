@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Collapse, Image, VStack } from '@chakra-ui/react';
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 
 export default function Header() {
   const address = useSelector((state) => state.account.address);

@@ -14,9 +14,13 @@ import { formatAllLoanContracts } from '../utilities/loanFormatter';
 import { isVaultLoanGreaterThanAllowedAmount } from '../utilities/utils';
 import { ToastEvent } from '../components/CustomToast';
 
-let protocolContractETH, usdcBorrowVaultETH;
-let usdcETH, dlcBtcETH;
-let currentEthereumNetwork;
+import type { DLCParams } from '../models/types';
+
+let protocolContractETH: ethers.Contract,
+  usdcBorrowVaultETH: ethers.Contract,
+  usdcETH: ethers.Contract,
+  dlcBtcETH: ethers.Contract;
+let currentEthereumNetwork: string;
 
 export async function setEthereumProvider() {
   try {
@@ -46,12 +50,12 @@ async function changeEthereumNetwork() {
   const formattedChainId = '0x' + shortenedChainID.toString(16);
   try {
     store.dispatch(toggleInfoModalVisibility(true));
-    await ethereum.request({
+    await ethereum.request?.({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: formattedChainId }],
     });
     window.location.reload();
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 4001) {
       window.location.reload();
     }
@@ -59,14 +63,14 @@ async function changeEthereumNetwork() {
   }
 }
 
-export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
+export async function requestAndDispatchMetaMaskAccountInformation(blockchain: string) {
   try {
     const { ethereum } = window;
     if (!ethereum) {
       alert('Install MetaMask!');
       return;
     }
-    const accounts = await ethereum.request({
+    const accounts = await ethereum.request?.({
       method: 'eth_requestAccounts',
     });
     const accountInformation = {
@@ -85,8 +89,8 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
   }
 }
 
-export async function fetchUserTokenBalance(assetName) {
-  let contractMap = {
+export async function fetchUserTokenBalance(assetName: string) {
+  let contractMap: { [key: string]: { contract: ethers.Contract; decimals: number } } = {
     DLCBTC: { contract: dlcBtcETH, decimals: 8 },
     USDC: { contract: usdcETH, decimals: 18 },
     vDLCBTC: { contract: usdcBorrowVaultETH, decimals: 8 },
@@ -110,7 +114,7 @@ export async function fetchVaultDepositBalanceFromChain() {
   return ethers.utils.formatUnits(balance, 8);
 }
 
-export async function isAllowanceSet(amount, assetContract, protocolContractAddress) {
+export async function isAllowanceSet(amount: number, assetContract: ethers.Contract, protocolContractAddress: string) {
   const address = store.getState().account.address;
 
   const desiredAmount = BigInt('1000000000000000000000000');
@@ -134,7 +138,7 @@ export async function isAllowanceSet(amount, assetContract, protocolContractAddr
   }
 }
 
-export async function sendLoanContractToEthereum(loanContract) {
+export async function sendLoanContractToEthereum(loanContract: DLCParams) {
   try {
     await protocolContractETH.setupDeposit(loanContract.BTCDeposit, loanContract.attestorCount, {
       gasLimit: 900000,
@@ -164,7 +168,7 @@ export async function getAllEthereumLoansForAddress() {
   return formattedLoans;
 }
 
-export async function getEthereumLoan(loanID) {
+export async function getEthereumLoan(loanID: number) {
   let loan;
   try {
     loan = await protocolContractETH.getDeposit(loanID);
@@ -174,7 +178,7 @@ export async function getEthereumLoan(loanID) {
   return loan;
 }
 
-export async function getEthereumLoanByUUID(UUID) {
+export async function getEthereumLoanByUUID(UUID: string) {
   let loan;
   try {
     loan = await protocolContractETH.getDepositByUUID(UUID);
@@ -185,7 +189,7 @@ export async function getEthereumLoanByUUID(UUID) {
 }
 
 // we have to pass in the calculated necessary assets
-export async function depositToVault(assetDeposit) {
+export async function depositToVault(assetDeposit: number) {
   if (await isAllowanceSet(assetDeposit, dlcBtcETH, usdcBorrowVaultETH.address)) {
     try {
       const tx = await usdcBorrowVaultETH._deposit(assetDeposit, {
@@ -210,7 +214,7 @@ export async function depositToVault(assetDeposit) {
   }
 }
 
-export async function withdrawFromVault(assetsToWithdraw) {
+export async function withdrawFromVault(assetsToWithdraw: number) {
   if (await isAllowanceSet(assetsToWithdraw, usdcETH, usdcBorrowVaultETH.address)) {
     try {
       const tx = await usdcBorrowVaultETH._withdraw(assetsToWithdraw, store.getState().account.address);
@@ -233,7 +237,7 @@ export async function withdrawFromVault(assetsToWithdraw) {
   }
 }
 
-export async function closeEthereumLoan(UUID) {
+export async function closeEthereumLoan(UUID: string) {
   const deposit = await getEthereumLoanByUUID(UUID);
   if (await isAllowanceSet(deposit.depositAmount, dlcBtcETH, protocolContractETH.address)) {
     try {
@@ -257,12 +261,19 @@ export async function closeEthereumLoan(UUID) {
   }
 }
 
-export async function recommendTokenForMetamask(ethereum, tokenAddress, tokenSymbol, tokenDecimals, tokenImage) {
+export async function recommendTokenForMetamask(
+  ethereum: ethers.providers.ExternalProvider,
+  tokenAddress: string,
+  tokenSymbol: string,
+  tokenDecimals: number,
+  tokenImage: string
+) {
   try {
     // wasAdded is a boolean. Like any RPC method, an error may be thrown.
-    const wasAdded = await ethereum.request({
+    const wasAdded = await ethereum.request?.({
       method: 'wallet_watchAsset',
       params: {
+        // @ts-ignore
         type: 'ERC20', // Initially only supports ERC20, but eventually more!
         options: {
           address: tokenAddress, // The address that the token is at.

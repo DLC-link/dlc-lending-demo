@@ -2,7 +2,7 @@ import { ArrowDownIcon, ArrowUpIcon } from '@chakra-ui/icons';
 
 import { VStack, Text } from '@chakra-ui/react';
 import { keyframes } from '@chakra-ui/react';
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { useEffect, useState } from 'react';
 

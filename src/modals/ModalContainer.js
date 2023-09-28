@@ -1,4 +1,4 @@
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 import DepositModal from './DepositModal';
 import RepayModal from './RepayModal';
 import BorrowModal from './BorrowModal';

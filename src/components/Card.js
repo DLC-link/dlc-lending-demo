@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react';
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 
 import { motion } from 'framer-motion';
 

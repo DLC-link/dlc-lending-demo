@@ -1,6 +1,6 @@
 import { HStack, Switch, Text } from '@chakra-ui/react';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { toggleShowHiddenLoans } from '../store/loansSlice';
 
 export default function Filter() {

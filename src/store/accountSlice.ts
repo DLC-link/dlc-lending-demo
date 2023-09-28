@@ -1,15 +1,25 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { userSession } from '../hiroWalletUserSession';
+
+export type walletType = 'metamask' | 'xverse' | 'leather' | 'walletConnect';
+
+export interface AccountState {
+  walletType: walletType | null;
+  address: string | null;
+  blockchain: string | null;
+}
+
+const initialState: AccountState = {
+  walletType: null,
+  address: null,
+  blockchain: null,
+};
 
 export const accountSlice = createSlice({
   name: 'account',
-  initialState: {
-    walletType: null,
-    address: null,
-    blockchain: null,
-  },
+  initialState: initialState,
   reducers: {
-    login: (state, action) => {
+    login: (state, action: PayloadAction<AccountState>) => {
       state.walletType = action.payload.walletType;
       state.address = action.payload.address;
       state.blockchain = action.payload.blockchain;

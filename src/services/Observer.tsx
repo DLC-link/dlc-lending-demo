@@ -1,4 +1,4 @@
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 import { useEffect } from 'react';
 import { startEthereumObserver } from './EthereumObserver';
 import { startStacksObserver } from './StacksObserver';
@@ -23,4 +23,5 @@ export default function Observer() {
       }
     }
   }, [address, walletType, blockchain]);
+  return null;
 }

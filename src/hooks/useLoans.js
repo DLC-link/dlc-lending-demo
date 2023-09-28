@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 import { clarityLoanOrder, solidityLoanOrder } from '../enums/loanStatuses';
 
 export function useLoans() {

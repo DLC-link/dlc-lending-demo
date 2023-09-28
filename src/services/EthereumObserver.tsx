@@ -6,7 +6,7 @@ import { ToastEvent } from '../components/CustomToast';
 import { solidityLoanStatuses } from '../enums/loanStatuses';
 import { fetchOutstandingDebt } from '../store/externalDataSlice';
 
-export async function startEthereumObserver(blockchain) {
+export async function startEthereumObserver(blockchain: string) {
   let ethereumProvider;
   let protocolContractETH, usdcBorrowVaultETH, dlcBtcETH;
   let usdcETH;
@@ -49,7 +49,7 @@ export async function startEthereumObserver(blockchain) {
 
       console.log('Deposit');
 
-      if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
+      if (loanOwner.toLowerCase() !== address?.toLowerCase()) return;
 
       store.dispatch(
         loanEventReceived({
@@ -67,7 +67,7 @@ export async function startEthereumObserver(blockchain) {
 
       console.log('Withdraw');
 
-      if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
+      if (loanOwner.toLowerCase() !== address?.toLowerCase()) return;
 
       store.dispatch(
         loanEventReceived({
@@ -84,7 +84,7 @@ export async function startEthereumObserver(blockchain) {
 
       console.log('Approval');
 
-      if (loanOwner.toLowerCase() !== address.toLowerCase()) return;
+      if (loanOwner.toLowerCase() !== address?.toLowerCase()) return;
 
       store.dispatch(
         loanEventReceived({

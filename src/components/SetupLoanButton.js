@@ -1,6 +1,6 @@
 import { Text, VStack, keyframes } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { toggleDepositModalVisibility } from '../store/componentSlice';
 import TutorialBox from './TutorialBox';

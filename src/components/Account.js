@@ -1,7 +1,7 @@
 import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons';
 import { HStack, Image, Menu, MenuButton, MenuItem, MenuList, Text, VStack, keyframes } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { logout } from '../store/accountSlice';
 import { toggleSelectWalletModalVisibility } from '../store/componentSlice';

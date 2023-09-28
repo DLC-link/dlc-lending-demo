@@ -1,6 +1,6 @@
 import { Button, HStack, Image, Table, TableContainer, Tbody, Td, Text, Thead, Tr } from '@chakra-ui/react';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { fetchVaultReserves, fetchOutstandingDebt, fetchVdlcBtcBalance } from '../store/externalDataSlice';
 
 import { useEffect } from 'react';

@@ -14,12 +14,13 @@ import {
   keyframes,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { requestAndDispatchMetaMaskAccountInformation } from '../blockchainFunctions/ethereumFunctions';
 import { requestAndDispatchStacksAccountInformation } from '../blockchainFunctions/stacksFunctions';
 import TutorialBox from '../components/TutorialBox';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { toggleSelectWalletModalVisibility } from '../store/componentSlice';
+import React from 'react';
 
 export default function SelectWalletModal() {
   const dispatch = useDispatch();
@@ -29,18 +30,29 @@ export default function SelectWalletModal() {
 
   const [showTutorial, setShowTutorial] = useState(false);
 
-  const stacksBlockchain = {
-    id: process.env.REACT_APP_STACKS_NETWORK_ID,
-    name: process.env.REACT_APP_STACKS_NETWORK_NAME,
+  type blockchainConfig = {
+    id: string;
+    name: string;
   };
 
-  const stacksBlockchains = [{ stacksBlockchain }];
+  type EthereumChainConfigs = {
+    [key: string]: blockchainConfig;
+  };
 
-  const enabledEthChains = process.env.REACT_APP_ENABLED_ETHEREUM_CHAINS.split(',');
+  type walletItem = { id: string; name: string; logo: string; blockchains: blockchainConfig[] };
+
+  const stacksBlockchain: blockchainConfig = {
+    id: process.env.REACT_APP_STACKS_NETWORK_ID as string,
+    name: process.env.REACT_APP_STACKS_NETWORK_NAME as string,
+  };
+
+  const stacksBlockchains = [stacksBlockchain];
+
+  const enabledEthChains = (process.env.REACT_APP_ENABLED_ETHEREUM_CHAINS as string).split(',');
 
   if (enabledEthChains.length === 0) throw new Error('No Ethereum chains enabled');
 
-  const ethereumChainConfigs = {
+  const ethereumChainConfigs: EthereumChainConfigs = {
     sepolia: {
       id: 'ethereum:11155111',
       name: 'Sepolia',
@@ -51,12 +63,12 @@ export default function SelectWalletModal() {
     },
   };
 
-  const ethereumBlockchains = [
+  const ethereumBlockchains: blockchainConfig[] = [
     ...enabledEthChains.map((chain) => ethereumChainConfigs[chain]),
     { id: 'ethereum:31337', name: 'Hardhat' },
   ];
 
-  const walletItems = [
+  const walletItems: walletItem[] = [
     {
       id: 'metamask',
       name: 'Metamask',
@@ -77,14 +89,14 @@ export default function SelectWalletModal() {
     },
   ];
 
-  const WalletMenu = ({ walletItem }) => {
+  const WalletMenu = ({ walletItem }: { key: string; walletItem: walletItem }) => {
     return (
       <Menu>
         {({ isOpen }) => (
           <>
             <MenuButton
               width={225}
-              variant={'outline'}
+              // variant='outline'
               disabled={walletItem.id === 'xverse' || walletItem.id === 'leather'}
               filter={walletItem.id === 'xverse' || walletItem.id === 'leather' ? 'blur(1px)' : ''}
               animation={
@@ -164,7 +176,7 @@ export default function SelectWalletModal() {
       <ModalContent
         width={250}
         background={'transparent'}>
-        {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+        {showTutorial && <TutorialBox />}
         <VStack
           padding={25}
           spacing={5}

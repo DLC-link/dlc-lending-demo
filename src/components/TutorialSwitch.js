@@ -1,5 +1,5 @@
 import { HStack, Switch, Text, Tooltip } from '@chakra-ui/react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { setTutorialOn } from '../store/tutorialSlice';
 import { IconButton } from '@chakra-ui/react';
 import { RepeatIcon } from '@chakra-ui/icons';

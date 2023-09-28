@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import { setTutorialOn, setTutorialStep, toggleFirstTimeUser } from '../store/tutorialSlice';

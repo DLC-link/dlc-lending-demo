@@ -14,7 +14,7 @@ import {
   keyframes,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { sendLoanContractToEthereum } from '../blockchainFunctions/ethereumFunctions';
 import { sendLoanContractToStacks } from '../blockchainFunctions/stacksFunctions';
 import TutorialBox from '../components/TutorialBox';

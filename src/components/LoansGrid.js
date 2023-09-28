@@ -1,7 +1,7 @@
 import React from 'react';
 import { Flex, Collapse, SimpleGrid, ScaleFade } from '@chakra-ui/react';
 import Card from './Card';
-import { useSelector } from 'react-redux';
+import { useAppSelector as useSelector } from '../hooks/hooks';
 import SetupLoanButton from './SetupLoanButton';
 import { useLoans } from '../hooks/useLoans';
 

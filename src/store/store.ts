@@ -27,7 +27,9 @@ export const rootReducer = combineReducers({
   tutorial: tutorialReducer,
 });
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+export type RootReducer = ReturnType<typeof rootReducer>;
+
+const persistedReducer = persistReducer < RootReducer > (persistConfig, rootReducer);
 const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
@@ -37,5 +39,8 @@ const store = configureStore({
       },
     }),
 });
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 
 export default store;

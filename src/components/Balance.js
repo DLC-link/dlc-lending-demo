@@ -1,6 +1,6 @@
 import { Divider, HStack, Image, Text, VStack } from '@chakra-ui/react';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '../hooks/hooks';
 import { selectTotalFundedCollateralAndLoan } from '../store/loansSlice';
 import { fetchOutstandingDebt, fetchDlcBtcBalance } from '../store/externalDataSlice';
 
@@ -61,7 +61,7 @@ export default function Balance() {
     <BalanceContainer>
       <BalanceTextStack
         header={'BTC Locked In DLCs'}
-        data={fundedCollateralSum}
+        data={fundedCollateralSum.toFixed(8)}
         image={{ src: '/btc_logo.png', alt: 'Bitcoin Logo' }}
       />
       <Divider
