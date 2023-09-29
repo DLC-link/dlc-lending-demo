@@ -22,7 +22,6 @@ import { useAppDispatch as useDispatch, useAppSelector as useSelector } from '..
 import { formatCollateralInUSD, customShiftValue } from '../utilities/utils';
 
 import { depositToVault } from '../blockchainFunctions/ethereumFunctions';
-import { borrowStacksLoan } from '../blockchainFunctions/stacksFunctions';
 import {
   fetchBitcoinValue,
   fetchDlcBtcBalance,
@@ -33,10 +32,11 @@ import {
 import { ButtonContainer } from '../components/ActionButtons';
 import { useOnMount } from '../hooks/useOnMount';
 import { toggleBorrowModalVisibility } from '../store/componentSlice';
+import React from 'react';
 
 export default function BorrowModal() {
   const dispatch = useDispatch();
-  const loan = useSelector((state) => state.component.loanForModal);
+  // const loan = useSelector((state) => state.component.loanForModal);
   const bitcoinUSDValue = useSelector((state) => state.externalData.bitcoinUSDValue);
   const isBorrowModalOpen = useSelector((state) => state.component.isBorrowModalOpen);
   const walletType = useSelector((state) => state.account.walletType);
@@ -46,7 +46,7 @@ export default function BorrowModal() {
 
   const [additionalLoan, setAdditionalLoan] = useState(0);
   // const [collateralToDebtPercentage, setCollateralToDebtPercentage] = useState();
-  const [USDAmount, setUSDAmount] = useState(0);
+  const [USDAmount, setUSDAmount] = useState('0');
 
   const [isLoanError, setLoanError] = useState(false);
   const [isOverBalance, setIsOverBalance] = useState(false);
@@ -66,6 +66,7 @@ export default function BorrowModal() {
   }, [additionalLoan, dlcBtcBalance, bitcoinUSDValue, isOverBalance, isVaultBalanceHighEnough]);
 
   useEffect(() => {
+    if (!bitcoinUSDValue || !dlcBtcBalance || !vaultReserves) return;
     const _assetsToDeposit = (Number(additionalLoan) / Number(bitcoinUSDValue)) * 100000000;
     // console.log(
     //   Number(additionalLoan),
@@ -74,12 +75,12 @@ export default function BorrowModal() {
     //   _assetsToDeposit.toFixed(0),
     //   dlcBtcBalance
     // );
-    setAssetsToDeposit(_assetsToDeposit.toFixed(0));
+    setAssetsToDeposit(Math.floor(_assetsToDeposit));
     setIsOverBalance(_assetsToDeposit > customShiftValue(dlcBtcBalance, 8));
     setIsVaultBalanceHighEnough(additionalLoan < parseInt(vaultReserves));
   }, [additionalLoan, bitcoinUSDValue, dlcBtcBalance, vaultReserves]);
 
-  const handleLoanChange = (additionalLoan) => {
+  const handleLoanChange = (additionalLoan: any) => {
     setAdditionalLoan(additionalLoan.target.value);
   };
 
@@ -88,7 +89,7 @@ export default function BorrowModal() {
     switch (walletType) {
       case 'leather':
       case 'xverse':
-        await borrowStacksLoan(loan.uuid, additionalLoan);
+        // await borrowStacksLoan(loan.uuid, additionalLoan);
         break;
       case 'metamask':
         await depositToVault(assetsToDeposit);
@@ -142,7 +143,7 @@ export default function BorrowModal() {
             fontSize={'xs'}
             color={'white'}>
             at 1 <strong>BTC</strong> $&nbsp;
-            {new Intl.NumberFormat().format(bitcoinUSDValue)}
+            {bitcoinUSDValue ? new Intl.NumberFormat().format(parseFloat(bitcoinUSDValue)) : NaN}
           </Text>
         </HStack>
       </>
@@ -183,7 +184,7 @@ export default function BorrowModal() {
             textAlign={'right'}
             fontSize='xs'
             color='white'>
-            $ {new Intl.NumberFormat().format(outstandingDebt)}
+            $ {outstandingDebt ? new Intl.NumberFormat().format(parseFloat(outstandingDebt)) : NaN}
           </Text>
         </HStack>
         <HStack
@@ -201,7 +202,7 @@ export default function BorrowModal() {
             textAlign={'right'}
             fontSize='xs'
             color={isVaultBalanceHighEnough ? 'white' : 'warning'}>
-            $ {new Intl.NumberFormat().format(parseInt(vaultReserves))}
+            $ {vaultReserves ? new Intl.NumberFormat().format(parseInt(vaultReserves)) : NaN}
           </Text>
         </HStack>
       </>

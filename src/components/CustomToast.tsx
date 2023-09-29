@@ -2,6 +2,7 @@ import { Link, Flex, HStack, Text } from '@chakra-ui/react';
 
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { useAppSelector as useSelector } from '../hooks/hooks';
+import React from 'react';
 
 const VaultBlockchainEvent = {
   READY: 'Vault is ready!',
@@ -44,7 +45,15 @@ export const ToastEvent = {
   ...BlockchainInteractionEvent,
 };
 
-export default function CustomToast({ txHash, status, successful }) {
+export default function CustomToast({
+  txHash,
+  status,
+  successful,
+}: {
+  txHash: string;
+  status?: string;
+  successful?: boolean;
+}) {
   console.log('CustomToast', txHash, status, successful);
   const isSuccessful = successful ?? true;
   const { walletType } = useSelector((state) => state.account);
@@ -75,7 +84,7 @@ export default function CustomToast({ txHash, status, successful }) {
       ? bitcoinExplorerURL
       : explorerURL;
 
-  const CustomToastContainer = ({ children }) => {
+  const CustomToastContainer = ({ children }: any) => {
     return (
       <Link
         href={eventExplorerAddress}
@@ -101,7 +110,7 @@ export default function CustomToast({ txHash, status, successful }) {
     );
   };
 
-  const CustomToastInfoStack = ({ children }) => {
+  const CustomToastInfoStack = ({ children }: any) => {
     return (
       <HStack spacing='3.5'>
         {children}

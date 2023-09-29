@@ -43,7 +43,6 @@ const ConfirmationProgress = (loan) => {
     transactionConfirmations >= 6 &&
     [solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.loan.status)
   ) {
-    console.log('loan', loan);
     return <></>;
   }
 

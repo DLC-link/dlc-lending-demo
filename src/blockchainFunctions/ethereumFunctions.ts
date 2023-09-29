@@ -6,7 +6,7 @@ import store from '../store/store';
 
 import { getEthereumContracts } from '../networks/networks';
 
-import { login } from '../store/accountSlice';
+import { AccountState, login } from '../store/accountSlice';
 import { toggleInfoModalVisibility } from '../store/componentSlice';
 import { loanSetupRequested, loanEventReceived } from '../store/loansSlice';
 
@@ -16,10 +16,10 @@ import { ToastEvent } from '../components/CustomToast';
 
 import type { DLCParams, FormattedLoanEthereum } from '../models/types';
 
-let protocolContractETH: ethers.Contract,
-  usdcBorrowVaultETH: ethers.Contract,
-  usdcETH: ethers.Contract,
-  dlcBtcETH: ethers.Contract;
+let protocolContractETH: ethers.Contract;
+let usdcBorrowVaultETH: ethers.Contract;
+let usdcETH: ethers.Contract;
+let dlcBtcETH: ethers.Contract;
 let currentEthereumNetwork: string;
 
 export async function setEthereumProvider() {
@@ -73,7 +73,7 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain: s
     const accounts = await ethereum.request?.({
       method: 'eth_requestAccounts',
     });
-    const accountInformation = {
+    const accountInformation: AccountState = {
       walletType: 'metamask',
       address: accounts[0],
       blockchain,

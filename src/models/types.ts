@@ -15,9 +15,9 @@ export type FormattedLoanEthereum = {
 };
 
 export type FormattedLoanStacks = {
-  uuid: any;
+  uuid: string;
   status: any;
-  owner: any;
+  owner: string;
   vaultCollateral: number;
   formattedVaultCollateral: string;
   vaultLoan: string;
@@ -32,3 +32,5 @@ export type FormattedLoanStacks = {
 };
 
 export type FormattedLoan = FormattedLoanEthereum | FormattedLoanStacks;
+
+export type WalletType = 'metamask' | 'xverse' | 'leather' | 'walletConnect';
