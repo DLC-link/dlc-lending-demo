@@ -34,7 +34,7 @@ const ConfirmationProgress = (loan) => {
       setConfirmationText(`processing...`);
       setShouldBeIndeterminate(true);
     } else {
-      setConfirmationText(`${transactionConfirmations || ''}/6 confirmations`);
+      setConfirmationText(`${transactionConfirmations || '0'}/6 confirmations`);
       setShouldBeIndeterminate(false);
     }
   }, [transactionConfirmations]);
