@@ -129,7 +129,7 @@ export default function Status({ status, canBeLiquidated, txHash }) {
       paddingBottom={2.5}
       justifyContent={'space-between'}>
       <StatusInfo text={text}>{icon}</StatusInfo>
-      {(status === solidityLoanStatuses.PREFUNDED || status === clarityLoanStatuses.PREFUNDED) && (
+      {/* {(status === solidityLoanStatuses.PREFUNDED || status === clarityLoanStatuses.PREFUNDED) && (
         <Tooltip
           label='View transaction in explorer'
           gutter={35}
@@ -143,7 +143,7 @@ export default function Status({ status, canBeLiquidated, txHash }) {
             onClick={() => OpenExplorerLink()}
           />
         </Tooltip>
-      )}
+      )} */}
       {status !== clarityLoanStatuses.LIQUIDATED && status !== solidityLoanStatuses.LIQUIDATED && (
         <LiquidationIndicator />
       )}
