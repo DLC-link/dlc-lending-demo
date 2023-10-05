@@ -27,7 +27,7 @@ const ConfirmationProgress = (loan) => {
   const [confirmationText, setConfirmationText] = useState(`checking confirmations...`);
 
   useEffect(() => {
-    if (transactionConfirmations === 0 || isNaN(transactionConfirmations)) {
+    if (isNaN(transactionConfirmations)) {
       setConfirmationText(`checking confirmations...`);
       setShouldBeIndeterminate(true);
     } else if (transactionConfirmations > 6) {
