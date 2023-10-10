@@ -2,6 +2,7 @@ import { Link, Flex, HStack, Text } from '@chakra-ui/react';
 
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { useSelector } from 'react-redux';
+import { getNetworkConfig, getEthereumNetworkConfig } from '../networks/networks';
 
 const VaultBlockchainEvent = {
   READY: 'Vault is ready!',
@@ -46,14 +47,14 @@ export const ToastEvent = {
 export default function CustomToast({ txHash, status }) {
   const { walletType } = useSelector((state) => state.account);
 
-  const ethereumExplorerURL = `${process.env.REACT_APP_ETHEREUM_EXPLORER_API_URL}${txHash}`;
+  const ethereumExplorerURL = `${getEthereumNetworkConfig().explorerAPIURL}${txHash}`;
 
-  const stacksExplorerURL = `${process.env.REACT_APP_STACKS_EXPLORER_API_URL}${txHash}`;
+  const stacksExplorerURL = `${getNetworkConfig().explorerAPIURL}${txHash}`;
 
   const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${txHash}`;
 
   let explorerURL;
-  switch(walletType) {
+  switch (walletType) {
     case 'metamask':
       explorerURL = ethereumExplorerURL;
       break;

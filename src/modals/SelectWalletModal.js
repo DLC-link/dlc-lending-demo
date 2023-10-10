@@ -29,13 +29,23 @@ export default function SelectWalletModal() {
 
   const [showTutorial, setShowTutorial] = useState(false);
 
-  const stacksBlockchain = {
-    id: process.env.REACT_APP_STACKS_NETWORK_ID,
-    name: process.env.REACT_APP_STACKS_NETWORK_NAME,
+  // Stacks
+  const enabledStacksChains = process.env.REACT_APP_ENABLED_STACKS_CHAINS.split(',');
+
+  const stacksChainConfigs = {
+    testnet: {
+      id: 'stacks:2147483648',
+      name: 'Testnet',
+    },
+    mocknet: {
+      id: 'stacks:42',
+      name: 'Mocknet',
+    },
   };
 
-  const stacksBlockchains = [stacksBlockchain];
+  const stacksBlockchains = [...enabledStacksChains.map((chain) => stacksChainConfigs[chain])];
 
+  // Ethereum
   const enabledEthChains = process.env.REACT_APP_ENABLED_ETHEREUM_CHAINS.split(',');
 
   if (enabledEthChains.length === 0) throw new Error('No Ethereum chains enabled');
@@ -114,7 +124,7 @@ export default function SelectWalletModal() {
                     onClick={() => {
                       switch (walletItem.id) {
                         case 'metamask':
-                          requestAndDispatchMetaMaskAccountInformation(blockchain.id);
+                          requestAndDispatchMetaMaskAccountInformation(blockchain);
                           break;
                         case 'leather':
                           requestAndDispatchStacksAccountInformation(blockchain.id);

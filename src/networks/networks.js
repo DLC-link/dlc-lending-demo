@@ -1,28 +1,65 @@
 import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
+import store from '../store/store';
 
-const mainnet = new StacksMainnet();
-const testnet = new StacksTestnet();
-const mocknet = new StacksMocknet({
-  url: process.env.REACT_APP_STACKS_DEVNET_ADDRESS,
-});
+// ////////////////////////////////////////////////////////////////////////////
+// STACKS
+
+const mainnet = {
+  network: new StacksMainnet(),
+  loanContractAddress: '',
+  loanContractName: '',
+  managerContractAddress: '',
+  managerContractName: '',
+  assetContractAddress: '',
+  assetContractName: '',
+  assetName: '',
+  apiBase: '',
+  walletURL: '',
+  explorerAPIURL: '',
+};
+
+const testnet = {
+  network: new StacksTestnet(),
+  loanContractAddress: 'ST1JHQ5GPQT249ZWG6V4AWETQW5DYA5RHJB0JSMQ3',
+  loanContractName: 'sample-contract-loan-v1',
+  managerContractAddress: 'ST1JHQ5GPQT249ZWG6V4AWETQW5DYA5RHJB0JSMQ3',
+  managerContractName: 'dlc-manager-v1',
+  assetContractAddress: 'ST1JHQ5GPQT249ZWG6V4AWETQW5DYA5RHJB0JSMQ3',
+  assetContractName: 'dlc-stablecoin',
+  assetName: 'dlc-stablecoin',
+  apiBase: 'api.testnet.hiro.so',
+  walletURL: 'https://testnet.dlc.link/stacks-wallet',
+  explorerAPIURL: 'https://explorer.stacks.co/txid/',
+};
+
+const mocknet = {
+  network: new StacksMocknet({
+    url: 'https://devnet.dlc.link/',
+  }),
+  loanContractAddress: 'STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6',
+  loanContractName: 'sample-contract-loan-v1',
+  managerContractAddress: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+  managerContractName: 'dlc-manager-v1',
+  assetContractAddress: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+  assetContractName: 'dlc-stablecoin',
+  assetName: 'dlc-stablecoin',
+  apiBase: 'api.testnet.hiro.so',
+  walletURL: 'https://devnet.dlc.link/stacks-wallet',
+  explorerAPIURL: 'https://explorer.stacks.co/txid/',
+};
 
 const stacksNetworks = {
-  mainnet: mainnet,
-  testnet: testnet,
-  mocknet: mocknet,
+  'stacks:1': mainnet,
+  'stacks:2147483648': testnet,
+  'stacks:42': mocknet,
 };
 
-export const StacksNetwork = {
-  network: stacksNetworks[process.env.REACT_APP_STACKS_NETWORK],
-  loanContractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-  loanContractName: process.env.REACT_APP_STACKS_SAMPLE_CONTRACT_NAME,
-  managerContractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-  managerContractName: process.env.REACT_APP_STACKS_MANAGER_NAME,
-  assetContractAddress: process.env.REACT_APP_STACKS_CONTRACT_ADDRESS,
-  assetContractName: process.env.REACT_APP_STACKS_ASSET_CONTRACT_NAME,
-  assetName: process.env.REACT_APP_STACKS_ASSET_NAME,
-  apiBase: process.env.REACT_APP_STACKS_API_BASE_URL,
+export const getNetworkConfig = () => {
+  return stacksNetworks[store.getState().account.blockchain];
 };
+
+// ////////////////////////////////////////////////////////////////////////////
+// ETHEREUM
 
 const fetchDeploymentPlan = async (contract, chain) => {
   const branch = process.env.REACT_APP_ETHEREUM_FETCH_BRANCH || 'dev';
@@ -64,4 +101,27 @@ export const getEthereumContracts = async (chainName) => {
   }
   console.log('Returning contracts', result);
   return result;
+};
+
+export const getEthereumNetworkConfig = () => {
+  const { blockchainName } = store.getState().account;
+  switch (blockchainName) {
+    case 'Sepolia':
+      return {
+        walletURL: 'https://devnet.dlc.link/eth-wallet',
+        explorerAPIURL: 'https://sepolia.etherscan.io/tx/',
+      };
+    case 'Goerli':
+      return {
+        walletURL: 'https://testnet.dlc.link/eth-wallet',
+        explorerAPIURL: 'https://goerli.etherscan.io/tx/',
+      };
+    case 'Hardhat':
+      return {
+        walletURL: 'TODO',
+        explorerAPIURL: 'TODO',
+      };
+    default:
+      return { walletURL: '', explorerAPIURL: '' };
+  }
 };

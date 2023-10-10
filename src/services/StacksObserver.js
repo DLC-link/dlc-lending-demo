@@ -1,6 +1,6 @@
 import { io as ioClient } from 'socket.io-client';
 import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
-import { StacksNetwork } from '../networks/networks';
+import { getNetworkConfig } from '../networks/networks';
 import store from '../store/store';
 import { loanEventReceived, fetchLoan } from '../store/loansSlice';
 import { cvToValue, deserializeCV } from '@stacks/transactions';
@@ -9,7 +9,7 @@ import { ToastEvent } from '../components/CustomToast';
 
 export function startStacksObserver(blockchain) {
   const { loanContractAddress, loanContractName, managerContractAddress, managerContractName, apiBase } =
-    StacksNetwork;
+    getNetworkConfig();
   const loanContractFullName = `${loanContractAddress}.${loanContractName}`;
   const managerContractFullName = `${managerContractAddress}.${managerContractName}`;
 

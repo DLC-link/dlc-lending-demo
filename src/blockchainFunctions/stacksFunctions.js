@@ -1,4 +1,3 @@
-import { StacksMocknet } from '@stacks/network';
 import {
   uintCV,
   bufferCV,
@@ -20,14 +19,14 @@ import { NonFungibleConditionCode } from '@stacks/transactions';
 import { makeContractNonFungiblePostCondition } from '@stacks/transactions';
 import store from '../store/store';
 
-import { StacksNetwork } from '../networks/networks';
+import { getNetworkConfig } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 
 const getAllAttestors = async () => {
-  const { managerContractAddress, managerContractName, apiBase } = StacksNetwork;
+  const { managerContractAddress, managerContractName, apiBase } = getNetworkConfig();
   const attestorNFT = 'dlc-attestors';
 
   const getAllAttestorsURL = `https://${apiBase}/extended/v1/tokens/nft/holdings?asset_identifiers=${managerContractAddress}.${managerContractName}::${attestorNFT}&principal=${managerContractAddress}.${managerContractName}`;
@@ -45,8 +44,8 @@ const selectRandomAttestors = async (attestorList, attestorCount) => {
   return Buffer.from(selectedAttestors);
 };
 
-const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus ) => {
-  const { loanContractAddress, loanContractName, network } = StacksNetwork;
+const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus) => {
+  const { loanContractAddress, loanContractName, network } = getNetworkConfig();
 
   return {
     contractAddress: loanContractAddress,
@@ -115,7 +114,7 @@ async function showConnectAndGetAddress(blockchain) {
 }
 
 export async function sendLoanContractToStacks(loanContract) {
-  const { walletType, blockchain } = store.getState().account;
+  const { blockchain } = store.getState().account;
 
   const allAttestors = await getAllAttestors();
   const selectedAttestors = await selectRandomAttestors(allAttestors, loanContract.attestorCount);
@@ -126,13 +125,6 @@ export async function sendLoanContractToStacks(loanContract) {
   const onFinishStatus = loanContract.BTCDeposit;
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
-
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
 
   try {
     openContractCall(txOptions);
@@ -157,7 +149,9 @@ export async function getAllStacksLoansForAddress() {
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
   try {
     const response = await callReadOnlyFunction(txOptions);
+    console.log('response from Stacks', response);
     const loanContracts = response.list;
+    console.log('loanContracts from Stacks', loanContracts);
     formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
   } catch (error) {
     store.dispatch(
@@ -233,14 +227,15 @@ export async function getStacksLoanByID(ID) {
 }
 
 export async function borrowStacksLoan(UUID, additionalLoan) {
-  const { walletType, blockchain } = store.getState().account;
+  const { blockchain } = store.getState().account;
   const amount = customShiftValue(additionalLoan, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.BORROWREQUESTED;
-  const { assetContractAddress, assetContractName, assetName, loanContractAddress, loanContractName } = StacksNetwork;
+  const { assetContractAddress, assetContractName, assetName, loanContractAddress, loanContractName } =
+    getNetworkConfig();
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
@@ -261,13 +256,6 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
     blockchain
   );
 
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
-
   try {
     openContractCall(txOptions);
   } catch (error) {
@@ -280,7 +268,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
 }
 
 export async function repayStacksLoan(UUID, additionalRepayment) {
-  const { address, walletType, blockchain } = store.getState().account;
+  const { address, blockchain } = store.getState().account;
 
   const amount = customShiftValue(additionalRepayment, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
@@ -288,7 +276,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.REPAYREQUESTED;
-  const { assetContractAddress, assetContractName, assetName } = StacksNetwork;
+  const { assetContractAddress, assetContractName, assetName } = getNetworkConfig();
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
@@ -308,13 +296,6 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
     blockchain
   );
 
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
-
   try {
     openContractCall(txOptions);
   } catch (error) {
@@ -327,7 +308,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
 }
 
 export async function liquidateStacksLoan(UUID) {
-  const { walletType, blockchain } = store.getState().account;
+  const { blockchain } = store.getState().account;
   const { bitcoinUSDValue } = store.getState().externalData;
 
   const bitcoinUSDValueShifted = customShiftValue(bitcoinUSDValue, 8, false);
@@ -347,13 +328,6 @@ export async function liquidateStacksLoan(UUID) {
     blockchain
   );
 
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
-
   try {
     openContractCall(txOptions);
   } catch (error) {
@@ -366,7 +340,7 @@ export async function liquidateStacksLoan(UUID) {
 }
 
 export async function closeStacksLoan(UUID) {
-  const { walletType, blockchain } = store.getState().account;
+  const { blockchain } = store.getState().account;
 
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'close-loan';
@@ -374,7 +348,7 @@ export async function closeStacksLoan(UUID) {
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.CLOSEREQUESTED;
   const openDLCNFT = 'open-dlc';
-  const { managerContractAddress, managerContractName } = StacksNetwork;
+  const { managerContractAddress, managerContractName } = getNetworkConfig();
 
   const contractNonFungiblePostConditionForClose = [
     makeContractNonFungiblePostCondition(
@@ -394,13 +368,6 @@ export async function closeStacksLoan(UUID) {
     onFinishStatus,
     blockchain
   );
-
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
 
   try {
     openContractCall(txOptions);
