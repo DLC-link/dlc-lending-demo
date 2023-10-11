@@ -7,6 +7,7 @@ export const solidityLoanStatuses = {
   PRELIQUIDATED: 'PreLiquidated',
   LIQUIDATED: 'Liquidated',
   PREFUNDED: 'PreFunded',
+  CLOSEREQUESTED: 'CloseRequested',
 };
 
 export const clarityLoanStatuses = {
@@ -18,6 +19,7 @@ export const clarityLoanStatuses = {
   PRELIQUIDATED: 'pre-liquidated',
   LIQUIDATED: 'liquidated',
   PREFUNDED: 'pre-funded',
+  CLOSEREQUESTED: 'close-requested',
 };
 
 export const solidityLoanOrder = {

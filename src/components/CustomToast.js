@@ -45,13 +45,17 @@ export const ToastEvent = {
 };
 
 export default function CustomToast({ txHash, status }) {
-  const { walletType } = useSelector((state) => state.account);
+  const { walletType, blockchain } = useSelector((state) => state.account);
+
+  const stacksNetworkConfig = getNetworkConfig();
 
   const ethereumExplorerURL = `${getEthereumNetworkConfig().explorerAPIURL}${txHash}`;
 
-  const stacksExplorerURL = `${getNetworkConfig().explorerAPIURL}${txHash}`;
+  const stacksExplorerURL = `${stacksNetworkConfig.explorerAPIURL}${txHash}${
+    stacksNetworkConfig.network.version === 1 ? '' : '?chain=testnet'
+  }${blockchain === 'stacks:42' ? '&api=https://devnet.dlc.link' : ''}`;
 
-  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${txHash}`;
+  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${txHash}`;
 
   let explorerURL;
   switch (walletType) {
@@ -74,12 +78,9 @@ export default function CustomToast({ txHash, status }) {
     ToastEvent.RETRIEVALFAILED,
   ].includes(status);
 
-  const eventExplorerAddress =
-    !isSuccessfulEvent || status === ToastEvent.SETUPREQUESTED
-      ? undefined
-      : status === ToastEvent.ACCEPTSUCCEEDED
-      ? bitcoinExplorerURL
-      : explorerURL;
+  let eventExplorerAddress;
+  if (isSuccessfulEvent && status !== ToastEvent.SETUPREQUESTED)
+    eventExplorerAddress = status === ToastEvent.ACCEPTSUCCEEDED ? bitcoinExplorerURL : explorerURL;
 
   const CustomToastContainer = ({ children }) => {
     return (

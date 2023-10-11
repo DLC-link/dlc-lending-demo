@@ -128,10 +128,10 @@ export default function Account() {
       paddingBottom={25}
       spacing={5}>
       <HStack>
-        <TutorialSwitch tutorialStep={tutorialStep} />
+        {/* <TutorialSwitch tutorialStep={tutorialStep} /> */}
         {address ? <DisconnectMenu /> : <ConnectMenu />}
       </HStack>
-      {showTutorial && <TutorialBox tutorialStep={tutorialStep} />}
+      {/* {showTutorial && <TutorialBox tutorialStep={tutorialStep} />} */}
     </VStack>
   );
 }

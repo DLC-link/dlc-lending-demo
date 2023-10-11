@@ -1,15 +1,11 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import Decimal from 'decimal.js';
-import { forEach } from 'ramda';
+import { forEach, set } from 'ramda';
 import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockchainFunctions/ethereumFunctions';
 import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
 import { ToastEvent } from '../components/CustomToast';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
-import {
-  formatClarityLoanContract,
-  formatSolidityLoanContract,
-  updateLoanToFundingInProgress,
-} from '../utilities/loanFormatter';
+import { formatClarityLoanContract, formatSolidityLoanContract, setStateIfFunded } from '../utilities/loanFormatter';
 import { customShiftValue } from '../utilities/utils';
 import store from './store';
 
@@ -40,6 +36,13 @@ export const loansSlice = createSlice({
       if (action.payload.status === ToastEvent.ACCEPTSUCCEEDED) {
         state.loansWithBTCTransactions.push([action.payload.uuid, action.payload.txHash]);
         fetchLoans();
+      } else if (action.payload.status === ToastEvent.CLOSEREQUESTED) {
+        console.log('action.payload', action.payload);
+        const loanIndex = state.loans.findIndex((loan) => loan.uuid === action.payload.uuid);
+        state.loans[loanIndex].status =
+          action.payload.walletType === 'metamask'
+            ? solidityLoanStatuses.CLOSEREQUESTED
+            : clarityLoanStatuses.CLOSEREQUESTED;
       }
       state.toastEvent = {
         txHash: action.payload.txHash,
@@ -105,8 +108,8 @@ export const loansSlice = createSlice({
               case clarityLoanStatuses.PRELIQUIDATED:
                 toastStatus = ToastEvent.PRELIQUIDATED;
                 break;
-              case solidityLoanStatuses.PRECLOSED:
-              case clarityLoanStatuses.PRECLOSED:
+              case solidityLoanStatuses.PREREPAID:
+              case clarityLoanStatuses.PREREPAID:
                 toastStatus = ToastEvent.PREREPAID;
                 break;
               default:
@@ -202,14 +205,7 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   }
 
   forEach((loan) => {
-    if (loan.status === clarityLoanStatuses.READY || loan.status === solidityLoanStatuses.READY) {
-      const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
-        (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
-      );
-      if (matchingLoanWithBTCTransaction) {
-        updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
-      }
-    }
+    setStateIfFunded(loansWithBTCTransactions, loan, walletType);
   }, loans);
 
   return loans;
@@ -218,7 +214,7 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
   const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
-  const { loans } = store.getState().loans;
+  const { loans, loansWithBTCTransactions } = store.getState().loans;
   const storedLoanUUIDs = loans.map((loan) => loan.uuid);
   let fetchedLoanUUIDs = [];
 
@@ -252,7 +248,9 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
   if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) return;
 
   const loan = await getLoanByUUID(loanUUID);
-  const formattedLoan = formatLoanContract(loan);
+  let formattedLoan = formatLoanContract(loan);
+
+  formattedLoan = setStateIfFunded(loansWithBTCTransactions, loan, walletType);
 
   return { formattedLoan, loanTXHash, loanEvent };
 });

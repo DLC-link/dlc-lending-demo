@@ -41,8 +41,13 @@ export function startStacksObserver(blockchain) {
   }, 2000);
 
   stacksSocket.subscribeAddressTransactions(managerContractFullName);
+  stacksSocket.subscribeAddressTransactions(loanContractFullName);
+
+  let lastTxHash = '';
 
   stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
+    if (txWithTransfers.tx.tx_id === lastTxHash) return;
+    lastTxHash = txWithTransfers.tx.tx_id;
     console.log(`TX happened on ${address}`);
 
     const _tx = txWithTransfers.tx;

@@ -203,6 +203,8 @@ export async function liquidateEthereumLoan(UUID) {
         loanEventReceived({
           txHash: response.hash,
           status: ToastEvent.LIQUIDATIONREQUESTED,
+          walletType: 'metamask',
+          uuid: UUID,
         })
       );
     });
@@ -219,6 +221,8 @@ export async function closeEthereumLoan(UUID) {
         loanEventReceived({
           txHash: response.hash,
           status: ToastEvent.CLOSEREQUESTED,
+          walletType: 'metamask',
+          uuid: UUID,
         })
       )
     );

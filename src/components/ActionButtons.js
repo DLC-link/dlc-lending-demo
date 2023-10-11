@@ -9,6 +9,7 @@ import { closeEthereumLoan, liquidateEthereumLoan } from '../blockchainFunctions
 import useConfirmationChecker from '../hooks/useConfirmationChecker';
 import { solidityLoanStatuses, clarityLoanStatuses } from '../enums/loanStatuses';
 import { toggleBorrowModalVisibility, toggleRepayModalVisibility } from '../store/componentSlice';
+import { useOnMount } from '../hooks/useOnMount';
 
 export const ButtonContainer = ({ children }) => {
   return (
@@ -24,17 +25,27 @@ const ConfirmationProgress = (loan) => {
   const transactionConfirmations = useConfirmationChecker(loan);
 
   const [shouldBeIndeterminate, setShouldBeIndeterminate] = useState(true);
-  const [confirmationText, setConfirmationText] = useState(`checking confirmations...`);
+  const [confirmationText, setConfirmationText] = useState(`awaiting confirmations...`);
+
+  // useOnMount(() => {
+  //   console.log('mounted');
+  // });
 
   useEffect(() => {
-    if (transactionConfirmations === 0 || isNaN(transactionConfirmations)) {
-      setConfirmationText(`checking confirmations...`);
+    setTimeout(() => {
+      console.log('confirmation progress useEffect');
+    }, 1000);
+  });
+
+  useEffect(() => {
+    if (isNaN(transactionConfirmations)) {
+      setConfirmationText(`awaiting confirmations...`);
       setShouldBeIndeterminate(true);
     } else if (transactionConfirmations > 6) {
       setConfirmationText(`processing...`);
       setShouldBeIndeterminate(true);
     } else {
-      setConfirmationText(`${transactionConfirmations || ''}/6 confirmations`);
+      setConfirmationText(`${transactionConfirmations || '0'}/6 confirmations`);
       setShouldBeIndeterminate(false);
     }
   }, [transactionConfirmations]);
@@ -160,6 +171,8 @@ export function ActionButtons({ loan, canBeLiquidated }) {
     case clarityLoanStatuses.PREREPAID:
     case solidityLoanStatuses.PRELIQUIDATED:
     case clarityLoanStatuses.PRELIQUIDATED:
+    case solidityLoanStatuses.CLOSEREQUESTED:
+    case clarityLoanStatuses.CLOSEREQUESTED:
       actionButton = (
         <ButtonContainer>
           <Button

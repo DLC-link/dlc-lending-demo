@@ -44,7 +44,7 @@ const selectRandomAttestors = async (attestorList, attestorCount) => {
   return Buffer.from(selectedAttestors);
 };
 
-const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus) => {
+const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, UUID) => {
   const { loanContractAddress, loanContractName, network } = getNetworkConfig();
 
   return {
@@ -63,7 +63,9 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
       if (typeof onFinishStatus !== 'string') {
         store.dispatch(loanSetupRequested(onFinishStatus));
       } else {
-        store.dispatch(loanEventReceived({ txHash: data.txId, status: onFinishStatus }));
+        store.dispatch(
+          loanEventReceived({ txHash: data.txId, status: onFinishStatus, walletType: 'leather', uuid: UUID })
+        );
       }
     },
     onCancel: () => {
@@ -114,8 +116,6 @@ async function showConnectAndGetAddress(blockchain) {
 }
 
 export async function sendLoanContractToStacks(loanContract) {
-  const { blockchain } = store.getState().account;
-
   const allAttestors = await getAllAttestors();
   const selectedAttestors = await selectRandomAttestors(allAttestors, loanContract.attestorCount);
 
@@ -124,7 +124,7 @@ export async function sendLoanContractToStacks(loanContract) {
   const senderAddress = undefined;
   const onFinishStatus = loanContract.BTCDeposit;
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus);
 
   try {
     openContractCall(txOptions);
@@ -138,7 +138,7 @@ export async function sendLoanContractToStacks(loanContract) {
 }
 
 export async function getAllStacksLoansForAddress() {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(address)];
@@ -146,13 +146,14 @@ export async function getAllStacksLoansForAddress() {
 
   let formattedLoans = [];
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
   try {
     const response = await callReadOnlyFunction(txOptions);
     console.log('response from Stacks', response);
     const loanContracts = response.list;
     console.log('loanContracts from Stacks', loanContracts);
     formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
+    console.log('formattedLoans from Stacks', formattedLoans);
   } catch (error) {
     store.dispatch(
       loanEventReceived({
@@ -164,13 +165,13 @@ export async function getAllStacksLoansForAddress() {
 }
 
 export async function getStacksLoanIDByUUID(UUID) {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   const senderAddress = address;
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
 
   try {
     const response = await callReadOnlyFunction(txOptions);
@@ -185,13 +186,13 @@ export async function getStacksLoanIDByUUID(UUID) {
 }
 
 export async function getStacksLoanByUUID(UUID) {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-loan-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   const senderAddress = address;
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
 
   try {
     const response = await callReadOnlyFunction(txOptions);
@@ -206,13 +207,13 @@ export async function getStacksLoanByUUID(UUID) {
 }
 
 export async function getStacksLoanByID(ID) {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-loan';
   const functionArgs = [uintCV(ID)];
   const senderAddress = address;
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
 
   try {
     const response = await callReadOnlyFunction(txOptions);
@@ -227,7 +228,6 @@ export async function getStacksLoanByID(ID) {
 }
 
 export async function borrowStacksLoan(UUID, additionalLoan) {
-  const { blockchain } = store.getState().account;
   const amount = customShiftValue(additionalLoan, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'borrow';
@@ -252,8 +252,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
     functionArgs,
     contractFungiblePostConditionForBorrow,
     senderAddress,
-    onFinishStatus,
-    blockchain
+    onFinishStatus
   );
 
   try {
@@ -268,7 +267,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
 }
 
 export async function repayStacksLoan(UUID, additionalRepayment) {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const amount = customShiftValue(additionalRepayment, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
@@ -292,8 +291,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
     functionArgs,
     standardFungiblePostConditionForRepay,
     senderAddress,
-    onFinishStatus,
-    blockchain
+    onFinishStatus
   );
 
   try {
@@ -308,7 +306,6 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
 }
 
 export async function liquidateStacksLoan(UUID) {
-  const { blockchain } = store.getState().account;
   const { bitcoinUSDValue } = store.getState().externalData;
 
   const bitcoinUSDValueShifted = customShiftValue(bitcoinUSDValue, 8, false);
@@ -325,7 +322,7 @@ export async function liquidateStacksLoan(UUID) {
     contractFungiblePostCondition,
     senderAddress,
     onFinishStatus,
-    blockchain
+    UUID
   );
 
   try {
@@ -340,8 +337,6 @@ export async function liquidateStacksLoan(UUID) {
 }
 
 export async function closeStacksLoan(UUID) {
-  const { blockchain } = store.getState().account;
-
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
@@ -366,7 +361,7 @@ export async function closeStacksLoan(UUID) {
     contractNonFungiblePostConditionForClose,
     senderAddress,
     onFinishStatus,
-    blockchain
+    UUID
   );
 
   try {

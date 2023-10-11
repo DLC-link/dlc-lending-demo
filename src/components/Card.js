@@ -195,7 +195,7 @@ export default function Card({ loan }) {
   const CardContainer = ({ children }) => {
     return (
       <VStack
-        height={300}
+        height={350}
         width={250}
         borderRadius='lg'
         shadow='dark-lg'

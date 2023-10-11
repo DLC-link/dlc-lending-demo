@@ -84,6 +84,11 @@ export default function Status({ status, canBeLiquidated, txHash }) {
         setIcon(<HourglassEmptyIcon sx={{ color: '#FF4500', height: '20px' }} />);
         setText('Not ready');
         break;
+      case solidityLoanStatuses.CLOSEREQUESTED:
+      case clarityLoanStatuses.CLOSEREQUESTED:
+        setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);
+        setText('Close requested');
+        break;
       case solidityLoanStatuses.PREREPAID:
       case clarityLoanStatuses.PREREPAID:
         setIcon(<HourglassEmptyIcon sx={{ color: '#04BAB2', height: '20px' }} />);

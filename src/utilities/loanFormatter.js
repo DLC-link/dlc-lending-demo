@@ -15,7 +15,7 @@ export function formatClarityLoanContract(loanContract) {
   const liquidationRatio = parseInt(loanContract['liquidation-ratio'].value);
   const formattedLiquidationRatio = `${liquidationRatio} %`;
   const attestorList = loanContract.attestors.value.map((attestor) => attestor.value.dns.value);
-  const closingTXHash = loanContract.btcTxId;
+  const closingTXHash = loanContract['btc-tx-id']?.value?.value;
   return {
     uuid,
     status,
@@ -85,4 +85,15 @@ export function updateLoanToFundingInProgress(loan, loanTXHash, walletType) {
   if (loan.status === solidityLoanStatuses.READY || loan.status === clarityLoanStatuses.READY) {
     loan.status = walletType === 'solidity' ? solidityLoanStatuses.PREFUNDED : clarityLoanStatuses.PREFUNDED;
   }
+  return loan;
+}
+
+export function setStateIfFunded(loansWithBTCTransactions, loan, walletType) {
+  const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
+    (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
+  );
+  if (matchingLoanWithBTCTransaction) {
+    loan = updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
+  }
+  return loan;
 }
