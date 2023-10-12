@@ -15,7 +15,7 @@ export function formatClarityLoanContract(loanContract) {
   const liquidationRatio = parseInt(loanContract['liquidation-ratio'].value);
   const formattedLiquidationRatio = `${liquidationRatio} %`;
   const attestorList = loanContract.attestors.value.map((attestor) => attestor.value.dns.value);
-  const closingTXHash = loanContract['btc-tx-id']?.value?.valu
+  const closingTXHash = loanContract['btc-tx-id']?.value?.value;
   return {
     uuid,
     status,
