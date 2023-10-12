@@ -47,27 +47,24 @@ export const ToastEvent = {
 export default function CustomToast({ txHash, status }) {
   const { walletType, blockchain } = useSelector((state) => state.account);
 
-  const stacksNetworkConfig = getNetworkConfig();
-
-  const ethereumExplorerURL = `${getEthereumNetworkConfig().explorerAPIURL}${txHash}`;
-
-  const stacksExplorerURL = `${stacksNetworkConfig.explorerAPIURL}${txHash}${
-    stacksNetworkConfig.network.version === 1 ? '' : '?chain=testnet'
-  }${blockchain === 'stacks:42' ? '&api=https://devnet.dlc.link' : ''}`;
-
   const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${txHash}`;
 
   let explorerURL;
   switch (walletType) {
     case 'metamask':
-      explorerURL = ethereumExplorerURL;
+      explorerURL = `${getEthereumNetworkConfig().explorerAPIURL}${txHash}`;
       break;
     case 'leather':
     case 'xverse':
+      const stacksNetworkConfig = getNetworkConfig();
+      const stacksExplorerURL = `${stacksNetworkConfig.explorerAPIURL}${txHash}${
+        stacksNetworkConfig.network.version === 1 ? '' : '?chain=testnet'
+      }${blockchain === 'stacks:42' ? '&api=https://devnet.dlc.link' : ''}`;
       explorerURL = stacksExplorerURL;
       break;
     default:
-      throw new Error('Unknown wallet type!');
+      console.error('Unknown wallet type!');
+      return;
   }
 
   const isSuccessfulEvent = ![

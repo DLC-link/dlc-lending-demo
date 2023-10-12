@@ -250,7 +250,7 @@ export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) =>
   const loan = await getLoanByUUID(loanUUID);
   let formattedLoan = formatLoanContract(loan);
 
-  formattedLoan = setStateIfFunded(loansWithBTCTransactions, loan, walletType);
+  formattedLoan = setStateIfFunded(loansWithBTCTransactions, formattedLoan, walletType);
 
   return { formattedLoan, loanTXHash, loanEvent };
 });
