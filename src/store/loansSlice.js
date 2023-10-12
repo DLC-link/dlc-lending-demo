@@ -28,7 +28,7 @@ export const loansSlice = createSlice({
         uuid: '-',
         status: 'None',
         formattedVaultLoan: 0,
-        formattedVaultCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
+        formattedVaultCollateral: customShiftValue(parseInt(action.payload.BTCDeposit), 8, true) + ' BTC',
       };
       state.loans.unshift(initialLoan);
     },

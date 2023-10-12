@@ -122,7 +122,7 @@ export async function sendLoanContractToStacks(loanContract) {
   const functionName = 'setup-loan';
   const functionArgs = [uintCV(loanContract.BTCDeposit), bufferCV(selectedAttestors)];
   const senderAddress = undefined;
-  const onFinishStatus = loanContract.BTCDeposit;
+  const onFinishStatus = { BTCDeposit: loanContract.BTCDeposit };
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus);
 
