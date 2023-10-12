@@ -8,14 +8,12 @@ import { ExternalLinkIcon, InfoIcon } from '@chakra-ui/icons';
 import { useOnMount } from '../hooks/useOnMount';
 import { useState } from 'react';
 import { IconButton } from '@chakra-ui/react';
-import { HideImageRounded, InfoOutlined } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
 
 export default function Status({ status, canBeLiquidated, txHash }) {
   const [text, setText] = useState();
   const [icon, setIcon] = useState();
 
-  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}${txHash}`;
+  const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${txHash}`;
 
   const OpenExplorerLink = () => {
     window.open(bitcoinExplorerURL, '_blank');
