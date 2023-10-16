@@ -1,4 +1,5 @@
 import { Link, Flex, HStack, Text } from '@chakra-ui/react';
+import { getNetworkConfig, getEthereumNetworkConfig } from '../networks/networks';
 
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { useAppSelector as useSelector } from '../hooks/hooks';
@@ -51,38 +52,42 @@ export default function CustomToast({
   successful,
 }: {
   txHash: string;
-  status?: string;
+  status: string;
   successful?: boolean;
 }) {
   console.log('CustomToast', txHash, status, successful);
-  const isSuccessful = successful ?? true;
   const { walletType } = useSelector((state) => state.account);
 
-  const ethereumExplorerURL = `${process.env.REACT_APP_ETHEREUM_EXPLORER_API_URL}${txHash}`;
+  // const ethereumExplorerURL = `${process.env.REACT_APP_ETHEREUM_EXPLORER_API_URL}${txHash}`;
 
   const stacksExplorerURL = `${process.env.REACT_APP_STACKS_EXPLORER_API_URL}${txHash}`;
 
   const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${txHash}`;
 
-  let explorerURL;
+  let explorerURL = '';
   switch (walletType) {
     case 'metamask':
-      explorerURL = ethereumExplorerURL;
+      explorerURL = `${getEthereumNetworkConfig().explorerAPIURL}${txHash}`;
       break;
     case 'leather':
     case 'xverse':
       explorerURL = stacksExplorerURL;
       break;
     default:
-      throw new Error('Unknown wallet type!');
+      console.error('Unknown wallet type!');
   }
 
-  const eventExplorerAddress =
-    !isSuccessful || status === ToastEvent.SETUPREQUESTED
-      ? undefined
-      : status === ToastEvent.ACCEPTSUCCEEDED
-      ? bitcoinExplorerURL
-      : explorerURL;
+  const isSuccessfulEvent = ![
+    ToastEvent.ACCEPTFAILED,
+    ToastEvent.FETCHFAILED,
+    ToastEvent.TRANSACTIONFAILED,
+    ToastEvent.TRANSACTIONCANCELLED,
+    ToastEvent.RETRIEVALFAILED,
+  ].includes(status);
+
+  let eventExplorerAddress: string;
+  if (isSuccessfulEvent && status !== ToastEvent.SETUPREQUESTED)
+    eventExplorerAddress = status === ToastEvent.ACCEPTSUCCEEDED ? bitcoinExplorerURL : explorerURL;
 
   const CustomToastContainer = ({ children }: any) => {
     return (
@@ -119,7 +124,7 @@ export default function CustomToast({
           fontWeight='extrabold'>
           {status}
         </Text>
-        {isSuccessful && status !== ToastEvent.SETUPREQUESTED && (
+        {isSuccessfulEvent && status !== ToastEvent.SETUPREQUESTED && (
           <Text
             fontSize='3xs'
             fontWeight='bold'>
@@ -131,7 +136,7 @@ export default function CustomToast({
   };
 
   const CustomToastIcon = () => {
-    return isSuccessful ? <CheckCircleIcon color='green' /> : <WarningIcon color='red' />;
+    return isSuccessfulEvent ? <CheckCircleIcon color='green' /> : <WarningIcon color='red' />;
   };
 
   return (

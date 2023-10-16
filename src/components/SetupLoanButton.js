@@ -30,7 +30,7 @@ export default function SetupLoanButton() {
 
   const SetupLoanButtonContainer = ({ children }) => (
     <VStack
-      height={300}
+      height={350}
       width={250}
       borderRadius='lg'
       shadow='dark-lg'

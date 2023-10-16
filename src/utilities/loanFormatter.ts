@@ -78,3 +78,17 @@ export function updateLoanToFundingInProgress(loan: FormattedLoan, loanTXHash: s
   }
   return loan;
 }
+
+export function setStateIfFunded(
+  loansWithBTCTransactions: Array<Array<string>>,
+  loan: FormattedLoan,
+  walletType: string
+) {
+  const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
+    (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
+  );
+  if (matchingLoanWithBTCTransaction) {
+    loan = updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
+  }
+  return loan;
+}

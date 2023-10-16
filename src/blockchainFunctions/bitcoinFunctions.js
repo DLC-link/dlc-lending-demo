@@ -2,18 +2,13 @@ import store from '../store/store';
 import { fetchLoans, loanEventReceived } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 import { customShiftValue } from '../utilities/utils';
-
-const routerWalletURLMap = {
-  metamask: process.env.REACT_APP_ETHEREUM_WALLET_DOMAIN,
-  leather: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
-  xverse: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
-  walletConnect: process.env.REACT_APP_STACKS_WALLET_DOMAIN,
-};
+import { getNetworkConfig, getEthereumNetworkConfig } from '../networks/networks';
 
 const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   const { walletType } = store.getState().account;
 
-  const routerWalletURL = routerWalletURLMap[walletType];
+  const routerWalletURL =
+    walletType === 'metamask' ? getEthereumNetworkConfig().walletURL : getNetworkConfig().walletURL;
 
   if (!routerWalletURL) {
     console.error('Wallet type or blockchain not supported');
@@ -56,7 +51,8 @@ const sendOfferForSigning = async (urlParams, loanUUID) => {
 export const fetchBitcoinContractOfferFromCounterpartyWallet = async (loanContract) => {
   const { walletType } = store.getState().account;
 
-  const routerWalletURL = routerWalletURLMap[walletType];
+  const routerWalletURL =
+    walletType === 'metamask' ? getEthereumNetworkConfig().walletURL : getNetworkConfig().walletURL;
 
   if (!routerWalletURL) {
     console.error('Wallet type or blockchain not supported');

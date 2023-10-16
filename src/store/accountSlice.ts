@@ -6,12 +6,14 @@ export interface AccountState {
   walletType: WalletType | null;
   address: string | null;
   blockchain: string | null;
+  blockchainName: string | null;
 }
 
 const initialState: AccountState = {
   walletType: null,
   address: null,
   blockchain: null,
+  blockchainName: null,
 };
 
 export const accountSlice = createSlice({
@@ -22,6 +24,7 @@ export const accountSlice = createSlice({
       state.walletType = action.payload.walletType;
       state.address = action.payload.address;
       state.blockchain = action.payload.blockchain;
+      state.blockchainName = action.payload.blockchainName;
     },
     logout: (state) => {
       if (state.walletType === 'leather' || state.walletType === 'xverse') {
@@ -30,6 +33,7 @@ export const accountSlice = createSlice({
       state.walletType = null;
       state.address = null;
       state.blockchain = null;
+      state.blockchainName = null;
     },
   },
 });

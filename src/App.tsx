@@ -6,7 +6,7 @@ import { useAppSelector as useSelector } from './hooks/hooks';
 import LoansScreen from './components/LoansScreen';
 import ModalContainer from './modals/ModalContainer';
 import CustomToastContainer from './components/CustomToastHandler';
-import useTutorialStep from './hooks/useTutorialUpdater';
+// import useTutorialStep from './hooks/useTutorialUpdater';
 
 /* global BigInt */
 
@@ -26,7 +26,7 @@ declare global {
 export default function App() {
   const address = useSelector((state) => state.account.address);
 
-  useTutorialStep();
+  // useTutorialStep();
 
   return (
     <>

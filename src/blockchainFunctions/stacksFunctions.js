@@ -1,4 +1,3 @@
-import { StacksMocknet } from '@stacks/network';
 import {
   uintCV,
   bufferCV,
@@ -20,14 +19,14 @@ import { NonFungibleConditionCode } from '@stacks/transactions';
 import { makeContractNonFungiblePostCondition } from '@stacks/transactions';
 import store from '../store/store';
 
-import { StacksNetwork } from '../networks/networks';
+import { getNetworkConfig } from '../networks/networks';
 
 import { login } from '../store/accountSlice';
 import { loanEventReceived, loanSetupRequested } from '../store/loansSlice';
 import { ToastEvent } from '../components/CustomToast';
 
 const getAllAttestors = async () => {
-  const { managerContractAddress, managerContractName, apiBase } = StacksNetwork;
+  const { managerContractAddress, managerContractName, apiBase } = getNetworkConfig();
   const attestorNFT = 'dlc-attestors';
 
   const getAllAttestorsURL = `https://${apiBase}/extended/v1/tokens/nft/holdings?asset_identifiers=${managerContractAddress}.${managerContractName}::${attestorNFT}&principal=${managerContractAddress}.${managerContractName}`;
@@ -39,14 +38,14 @@ const getAllAttestors = async () => {
   return attestorIDs;
 };
 
-const selectRandomAttestors = (attestorList, attestorCount) => {
+const selectRandomAttestors = async (attestorList, attestorCount) => {
   const shuffledAttestorList = [...attestorList].sort(() => 0.5 - Math.random());
   const selectedAttestors = shuffledAttestorList.slice(0, attestorCount);
   return Buffer.from(selectedAttestors);
 };
 
-const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus) => {
-  const { loanContractAddress, loanContractName, network } = StacksNetwork;
+const populateTxOptions = (functionName, functionArgs, postConditions, senderAddress, onFinishStatus, UUID) => {
+  const { loanContractAddress, loanContractName, network } = getNetworkConfig();
 
   return {
     contractAddress: loanContractAddress,
@@ -64,7 +63,9 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
       if (typeof onFinishStatus !== 'string') {
         store.dispatch(loanSetupRequested(onFinishStatus));
       } else {
-        store.dispatch(loanEventReceived({ txHash: data.txId, status: onFinishStatus }));
+        store.dispatch(
+          loanEventReceived({ txHash: data.txId, status: onFinishStatus, walletType: 'leather', uuid: UUID })
+        );
       }
     },
     onCancel: () => {
@@ -76,22 +77,9 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
 export async function requestAndDispatchStacksAccountInformation(blockchain) {
   const isUserSignedIn = userSession.isUserSignedIn();
 
-  let address;
-  switch (blockchain) {
-    case 'stacks:1':
-      address = isUserSignedIn
-        ? userSession.loadUserData().profile.stxAddress.mainnet
-        : await showConnectAndGetAddress(blockchain);
-      break;
-    case 'stacks:2147483648':
-    case 'stacks:42':
-      address = isUserSignedIn
-        ? userSession.loadUserData().profile.stxAddress.testnet
-        : await showConnectAndGetAddress(blockchain);
-      break;
-    default:
-      throw new Error('Invalid blockchain!');
-  }
+  const address = isUserSignedIn
+    ? userSession.loadUserData().profile.stxAddress.testnet
+    : await showConnectAndGetAddress(blockchain);
 
   const accountInformation = {
     walletType: 'leather',
@@ -102,7 +90,7 @@ export async function requestAndDispatchStacksAccountInformation(blockchain) {
   store.dispatch(login(accountInformation));
 }
 
-function showConnectAndGetAddress(blockchain) {
+async function showConnectAndGetAddress(blockchain) {
   return new Promise((resolve, reject) => {
     showConnect({
       appDetails: {
@@ -128,24 +116,15 @@ function showConnectAndGetAddress(blockchain) {
 }
 
 export async function sendLoanContractToStacks(loanContract) {
-  const { walletType, blockchain } = store.getState().account;
-
   const allAttestors = await getAllAttestors();
-  const selectedAttestors = selectRandomAttestors(allAttestors, loanContract.attestorCount);
+  const selectedAttestors = await selectRandomAttestors(allAttestors, loanContract.attestorCount);
 
   const functionName = 'setup-loan';
   const functionArgs = [uintCV(loanContract.BTCDeposit), bufferCV(selectedAttestors)];
   const senderAddress = undefined;
-  const onFinishStatus = loanContract.BTCDeposit;
+  const onFinishStatus = { BTCDeposit: loanContract.BTCDeposit };
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus, blockchain);
-
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus);
 
   try {
     openContractCall(txOptions);
@@ -159,7 +138,7 @@ export async function sendLoanContractToStacks(loanContract) {
 }
 
 export async function getAllStacksLoansForAddress() {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-creator-loans';
   const functionArgs = [principalCV(address)];
@@ -167,11 +146,14 @@ export async function getAllStacksLoansForAddress() {
 
   let formattedLoans = [];
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
   try {
     const response = await callReadOnlyFunction(txOptions);
+    console.log('response from Stacks', response);
     const loanContracts = response.list;
+    console.log('loanContracts from Stacks', loanContracts);
     formattedLoans = formatAllLoanContracts(loanContracts, 'clarity');
+    console.log('formattedLoans from Stacks', formattedLoans);
   } catch (error) {
     store.dispatch(
       loanEventReceived({
@@ -183,13 +165,13 @@ export async function getAllStacksLoansForAddress() {
 }
 
 export async function getStacksLoanIDByUUID(UUID) {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-loan-id-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   const senderAddress = address;
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
 
   try {
     const response = await callReadOnlyFunction(txOptions);
@@ -204,13 +186,13 @@ export async function getStacksLoanIDByUUID(UUID) {
 }
 
 export async function getStacksLoanByUUID(UUID) {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-loan-by-uuid';
   const functionArgs = [bufferCV(hexToBytes(UUID))];
   const senderAddress = address;
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
 
   try {
     const response = await callReadOnlyFunction(txOptions);
@@ -225,13 +207,13 @@ export async function getStacksLoanByUUID(UUID) {
 }
 
 export async function getStacksLoanByID(ID) {
-  const { address, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const functionName = 'get-loan';
   const functionArgs = [uintCV(ID)];
   const senderAddress = address;
 
-  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined, blockchain);
+  const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, undefined);
 
   try {
     const response = await callReadOnlyFunction(txOptions);
@@ -246,14 +228,14 @@ export async function getStacksLoanByID(ID) {
 }
 
 export async function borrowStacksLoan(UUID, additionalLoan) {
-  const { walletType, blockchain } = store.getState().account;
   const amount = customShiftValue(additionalLoan, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'borrow';
   const functionArgs = [uintCV(loanContractID || 0), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.BORROWREQUESTED;
-  const { assetContractAddress, assetContractName, assetName, loanContractAddress, loanContractName } = StacksNetwork;
+  const { assetContractAddress, assetContractName, assetName, loanContractAddress, loanContractName } =
+    getNetworkConfig();
 
   const contractFungiblePostConditionForBorrow = [
     makeContractFungiblePostCondition(
@@ -270,16 +252,8 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
     functionArgs,
     contractFungiblePostConditionForBorrow,
     senderAddress,
-    onFinishStatus,
-    blockchain
+    onFinishStatus
   );
-
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
 
   try {
     openContractCall(txOptions);
@@ -293,7 +267,7 @@ export async function borrowStacksLoan(UUID, additionalLoan) {
 }
 
 export async function repayStacksLoan(UUID, additionalRepayment) {
-  const { address, walletType, blockchain } = store.getState().account;
+  const { address } = store.getState().account;
 
   const amount = customShiftValue(additionalRepayment, 6, false);
   const loanContractID = await getStacksLoanIDByUUID(UUID);
@@ -301,7 +275,7 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
   const functionArgs = [uintCV(loanContractID || 1), uintCV(amount)];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.REPAYREQUESTED;
-  const { assetContractAddress, assetContractName, assetName } = StacksNetwork;
+  const { assetContractAddress, assetContractName, assetName } = getNetworkConfig();
 
   const standardFungiblePostConditionForRepay = [
     makeStandardFungiblePostCondition(
@@ -317,16 +291,8 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
     functionArgs,
     standardFungiblePostConditionForRepay,
     senderAddress,
-    onFinishStatus,
-    blockchain
+    onFinishStatus
   );
-
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
 
   try {
     openContractCall(txOptions);
@@ -340,7 +306,6 @@ export async function repayStacksLoan(UUID, additionalRepayment) {
 }
 
 export async function liquidateStacksLoan(UUID) {
-  const { walletType, blockchain } = store.getState().account;
   const { bitcoinUSDValue } = store.getState().externalData;
 
   const bitcoinUSDValueShifted = customShiftValue(bitcoinUSDValue, 8, false);
@@ -357,18 +322,11 @@ export async function liquidateStacksLoan(UUID) {
     contractFungiblePostCondition,
     senderAddress,
     onFinishStatus,
-    blockchain
+    UUID
   );
 
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
-
   try {
-    await openContractCall(txOptions);
+    openContractCall(txOptions);
   } catch (error) {
     store.dispatch(
       loanEventReceived({
@@ -379,15 +337,13 @@ export async function liquidateStacksLoan(UUID) {
 }
 
 export async function closeStacksLoan(UUID) {
-  const { walletType, blockchain } = store.getState().account;
-
   const loanContractID = await getStacksLoanIDByUUID(UUID);
   const functionName = 'close-loan';
   const functionArgs = [uintCV(parseInt(loanContractID))];
   const senderAddress = undefined;
   const onFinishStatus = ToastEvent.CLOSEREQUESTED;
   const openDLCNFT = 'open-dlc';
-  const { managerContractAddress, managerContractName } = StacksNetwork;
+  const { managerContractAddress, managerContractName } = getNetworkConfig();
 
   const contractNonFungiblePostConditionForClose = [
     makeContractNonFungiblePostCondition(
@@ -405,18 +361,11 @@ export async function closeStacksLoan(UUID) {
     contractNonFungiblePostConditionForClose,
     senderAddress,
     onFinishStatus,
-    blockchain
+    UUID
   );
 
-  //Network override because of the Leather bug
-  if (blockchain === 'stacks:42' && walletType === 'leather') {
-    txOptions.network = new StacksMocknet({
-      url: process.env.REACT_APP_STACKS_PROXY_ADDRESS + process.env.REACT_APP_STACKS_PORT_ADDRESS,
-    });
-  }
-
   try {
-    await openContractCall(txOptions);
+    openContractCall(txOptions);
   } catch (error) {
     store.dispatch(
       loanEventReceived({
