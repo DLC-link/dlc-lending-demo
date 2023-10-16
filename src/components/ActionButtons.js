@@ -24,17 +24,23 @@ const ConfirmationProgress = (loan) => {
   const transactionConfirmations = useConfirmationChecker(loan);
 
   const [shouldBeIndeterminate, setShouldBeIndeterminate] = useState(true);
-  const [confirmationText, setConfirmationText] = useState(`checking confirmations...`);
+  const [confirmationText, setConfirmationText] = useState(`awaiting confirmations...`);
 
   useEffect(() => {
-    if (transactionConfirmations === 0 || isNaN(transactionConfirmations)) {
-      setConfirmationText(`checking confirmations...`);
+    setTimeout(() => {
+      console.log('confirmation progress useEffect');
+    }, 1000);
+  });
+
+  useEffect(() => {
+    if (isNaN(transactionConfirmations)) {
+      setConfirmationText(`awaiting confirmations...`);
       setShouldBeIndeterminate(true);
     } else if (transactionConfirmations > 6) {
       setConfirmationText(`processing...`);
       setShouldBeIndeterminate(true);
     } else {
-      setConfirmationText(`${transactionConfirmations || ''}/6 confirmations`);
+      setConfirmationText(`${transactionConfirmations || '0'}/6 confirmations`);
       setShouldBeIndeterminate(false);
     }
   }, [transactionConfirmations]);
@@ -43,7 +49,6 @@ const ConfirmationProgress = (loan) => {
     transactionConfirmations >= 6 &&
     [solidityLoanStatuses.CLOSED, clarityLoanStatuses.CLOSED].includes(loan.loan.status)
   ) {
-    console.log('loan', loan);
     return <></>;
   }
 
@@ -117,6 +122,24 @@ export function ActionButtons({ loan }) {
       break;
     case solidityLoanStatuses.NONE:
     case clarityLoanStatuses.NONE:
+      break;
+    case solidityLoanStatuses.PRECLOSED:
+    case clarityLoanStatuses.PRECLOSED:
+    case solidityLoanStatuses.CLOSEREQUESTED:
+    case clarityLoanStatuses.CLOSEREQUESTED:
+      actionButton = (
+        <ButtonContainer>
+          <Button
+            variant='outline'
+            isLoading
+            loadingText='PENDING'
+            color='gray'
+            _hover={{
+              shadow: 'none',
+            }}
+          />
+        </ButtonContainer>
+      );
       break;
     case solidityLoanStatuses.CLOSED:
     case clarityLoanStatuses.CLOSED:

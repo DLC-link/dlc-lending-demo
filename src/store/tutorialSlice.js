@@ -5,7 +5,7 @@ export const tutorialSlice = createSlice({
   name: 'tutorial',
   initialState: {
     isFirstTimeUser: true,
-    tutorialOn: true,
+    tutorialOn: false,
     tutorialStep: TutorialStep.CONNECTWALLET,
     tutorialLoanUUID: '-',
     blurBackground: false,
@@ -27,10 +27,12 @@ export const tutorialSlice = createSlice({
       state.tutorialOn = action.payload;
     },
     restartTutorial: (state) => {
-      state.tutorialLoanUUID = '-';    }
+      state.tutorialLoanUUID = '-';
+    },
   },
 });
 
-export const { toggleFirstTimeUser, setTutorialStep, setTutorialLoanUUID, setTutorialOn, restartTutorial } = tutorialSlice.actions;
+export const { toggleFirstTimeUser, setTutorialStep, setTutorialLoanUUID, setTutorialOn, restartTutorial } =
+  tutorialSlice.actions;
 
 export default tutorialSlice.reducer;

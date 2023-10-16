@@ -82,12 +82,14 @@ export default function Card({ loan }) {
     { label: 'Collateral', value: loan.formattedVaultCollateral },
     {
       label: 'Funding TX',
-      value: (
+      value: loan.fundingTXHash ? (
         <ExternalLinkButton
           label={'View funding transaction'}
           bitcoinExplorerURL={bitcoinFundingTXExplorerURL}
           gutter={150}
         />
+      ) : (
+        <Text variant={'value'}>Not Available</Text>
       ),
     },
     {
@@ -181,7 +183,7 @@ export default function Card({ loan }) {
   const CardContainer = ({ children }) => {
     return (
       <VStack
-        height={300}
+        height={350}
         width={250}
         borderRadius='lg'
         shadow='dark-lg'

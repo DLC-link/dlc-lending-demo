@@ -4,11 +4,7 @@ import { getAllEthereumLoansForAddress, getEthereumLoanByUUID } from '../blockch
 import { getAllStacksLoansForAddress, getStacksLoanByUUID } from '../blockchainFunctions/stacksFunctions';
 import { ToastEvent } from '../components/CustomToast';
 import { clarityLoanStatuses, solidityLoanStatuses } from '../enums/loanStatuses';
-import {
-  formatClarityLoanContract,
-  formatSolidityLoanContract,
-  updateLoanToFundingInProgress,
-} from '../utilities/loanFormatter';
+import { formatClarityLoanContract, formatSolidityLoanContract, setStateIfFunded } from '../utilities/loanFormatter';
 import { customShiftValue } from '../utilities/utils';
 import store from './store';
 
@@ -31,7 +27,7 @@ export const loansSlice = createSlice({
         uuid: '-',
         status: 'None',
         formattedVaultLoan: 0,
-        formattedVaultCollateral: customShiftValue(action.payload.BTCDeposit, 8, true) + ' BTC',
+        formattedVaultCollateral: customShiftValue(parseInt(action.payload.BTCDeposit), 8, true) + ' BTC',
       };
       state.loans.unshift(initialLoan);
     },
@@ -39,6 +35,13 @@ export const loansSlice = createSlice({
       if (action.payload.status === ToastEvent.ACCEPTSUCCEEDED) {
         state.loansWithBTCTransactions.push([action.payload.uuid, action.payload.txHash]);
         fetchLoans();
+      } else if (action.payload.status === ToastEvent.CLOSEREQUESTED) {
+        console.log('action.payload', action.payload);
+        const loanIndex = state.loans.findIndex((loan) => loan.uuid === action.payload.uuid);
+        state.loans[loanIndex].status =
+          action.payload.walletType === 'metamask'
+            ? solidityLoanStatuses.CLOSEREQUESTED
+            : clarityLoanStatuses.CLOSEREQUESTED;
       }
       state.toastEvent = {
         txHash: action.payload.txHash,
@@ -182,45 +185,52 @@ export const fetchLoans = createAsyncThunk('vaults/fetchLoans', async () => {
   }
 
   forEach((loan) => {
-    const matchingLoanWithBTCTransaction = loansWithBTCTransactions.find(
-      (loanWithBTCTransaction) => loan.uuid === loanWithBTCTransaction[0]
-    );
-    if (matchingLoanWithBTCTransaction) {
-      updateLoanToFundingInProgress(loan, matchingLoanWithBTCTransaction[1], walletType);
-    }
+    setStateIfFunded(loansWithBTCTransactions, loan, walletType);
   }, loans);
 
   return loans;
 });
 
 export const fetchLoan = createAsyncThunk('vaults/fetchLoan', async (payload) => {
-  const { address } = store.getState().account;
-  const { loanUUID, loanTXHash, loanEvent } = payload;
+  const { loanUUID, loanStatus, loanTXHash, loanEvent } = payload;
   const { walletType } = store.getState().account;
+  const { loans, loansWithBTCTransactions } = store.getState().loans;
+  const storedLoanUUIDs = loans.map((loan) => loan.uuid);
+  let fetchedLoanUUIDs = [];
 
+  let getAllLoansForAddress;
   let getLoanByUUID;
   let formatLoanContract;
 
   switch (walletType) {
     case 'metamask':
+      getAllLoansForAddress = getAllEthereumLoansForAddress;
       getLoanByUUID = getEthereumLoanByUUID;
       formatLoanContract = formatSolidityLoanContract;
       break;
     case 'xverse':
     case 'leather':
-    case 'walletConnect':
+      getAllLoansForAddress = getAllStacksLoansForAddress;
       getLoanByUUID = getStacksLoanByUUID;
       formatLoanContract = formatClarityLoanContract;
+      break;
+    case 'walletConnect':
       break;
     default:
       throw new Error('Unsupported wallet type!');
   }
 
+  if (loanStatus === solidityLoanStatuses.READY || loanStatus === clarityLoanStatuses.READY) {
+    const fetchedLoans = await getAllLoansForAddress();
+    fetchedLoanUUIDs = fetchedLoans.map((loan) => loan.uuid);
+  }
+
+  if (!(storedLoanUUIDs.includes(loanUUID) || fetchedLoanUUIDs.includes(loanUUID))) return;
+
   const loan = await getLoanByUUID(loanUUID);
+  let formattedLoan = formatLoanContract(loan);
 
-  if (loan.owner.toLowerCase() !== address.toLowerCase()) return;
-
-  const formattedLoan = formatLoanContract(loan);
+  formattedLoan = setStateIfFunded(loansWithBTCTransactions, formattedLoan, walletType);
 
   return { formattedLoan, loanTXHash, loanEvent };
 });

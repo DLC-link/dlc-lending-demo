@@ -2,6 +2,7 @@ import { Link, Flex, HStack, Text } from '@chakra-ui/react';
 
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { useSelector } from 'react-redux';
+import { getNetworkConfig, getEthereumNetworkConfig } from '../networks/networks';
 
 const VaultBlockchainEvent = {
   READY: 'Vault is ready!',
@@ -30,7 +31,6 @@ const WalletInteractionEvent = {
   FETCHFAILED: 'Failed to fetch offer!',
   ACCEPTFAILED: 'Failed to lock Bitcoin!',
   ACCEPTSUCCEEDED: 'Locked Bitcoin!',
-  METAMASKERROR: 'An error occured. Check MetaMask for details!',
 };
 
 const BlockchainInteractionEvent = {
@@ -44,36 +44,40 @@ export const ToastEvent = {
   ...BlockchainInteractionEvent,
 };
 
-export default function CustomToast({ txHash, status, successful }) {
-  console.log('CustomToast', txHash, status, successful);
-  const isSuccessful = successful ?? true;
-  const { walletType } = useSelector((state) => state.account);
-
-  const ethereumExplorerURL = `${process.env.REACT_APP_ETHEREUM_EXPLORER_API_URL}${txHash}`;
-
-  const stacksExplorerURL = `${process.env.REACT_APP_STACKS_EXPLORER_API_URL}${txHash}`;
+export default function CustomToast({ txHash, status }) {
+  const { walletType, blockchain } = useSelector((state) => state.account);
 
   const bitcoinExplorerURL = `${process.env.REACT_APP_BITCOIN_EXPLORER_API_URL}/tx/${txHash}`;
 
   let explorerURL;
   switch (walletType) {
     case 'metamask':
-      explorerURL = ethereumExplorerURL;
+      explorerURL = `${getEthereumNetworkConfig().explorerAPIURL}${txHash}`;
       break;
     case 'leather':
     case 'xverse':
-      explorerURL = stacksExplorerURL;
+      // const stacksNetworkConfig = getNetworkConfig();
+      // const stacksExplorerURL = `${stacksNetworkConfig.explorerAPIURL}${txHash}${
+      //   stacksNetworkConfig.network.version === 1 ? '' : '?chain=testnet'
+      // }${blockchain === 'stacks:42' ? '&api=https://devnet.dlc.link' : ''}`;
+      // explorerURL = stacksExplorerURL;
       break;
     default:
-      throw new Error('Unknown wallet type!');
+      console.error('Unknown wallet type!');
+      return;
   }
 
-  const eventExplorerAddress =
-    !isSuccessful || status === ToastEvent.SETUPREQUESTED
-      ? undefined
-      : status === ToastEvent.ACCEPTSUCCEEDED
-      ? bitcoinExplorerURL
-      : explorerURL;
+  const isSuccessfulEvent = ![
+    ToastEvent.ACCEPTFAILED,
+    ToastEvent.FETCHFAILED,
+    ToastEvent.TRANSACTIONFAILED,
+    ToastEvent.TRANSACTIONCANCELLED,
+    ToastEvent.RETRIEVALFAILED,
+  ].includes(status);
+
+  let eventExplorerAddress;
+  if (isSuccessfulEvent && status !== ToastEvent.SETUPREQUESTED)
+    eventExplorerAddress = status === ToastEvent.ACCEPTSUCCEEDED ? bitcoinExplorerURL : explorerURL;
 
   const CustomToastContainer = ({ children }) => {
     return (
@@ -110,7 +114,7 @@ export default function CustomToast({ txHash, status, successful }) {
           fontWeight='extrabold'>
           {status}
         </Text>
-        {isSuccessful && status !== ToastEvent.SETUPREQUESTED && (
+        {isSuccessfulEvent && status !== ToastEvent.SETUPREQUESTED && (
           <Text
             fontSize='3xs'
             fontWeight='bold'>
@@ -122,7 +126,7 @@ export default function CustomToast({ txHash, status, successful }) {
   };
 
   const CustomToastIcon = () => {
-    return isSuccessful ? <CheckCircleIcon color='green' /> : <WarningIcon color='red' />;
+    return isSuccessfulEvent ? <CheckCircleIcon color='green' /> : <WarningIcon color='red' />;
   };
 
   return (

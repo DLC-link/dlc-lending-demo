@@ -59,7 +59,7 @@ async function changeEthereumNetwork() {
   }
 }
 
-export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
+export async function requestAndDispatchMetaMaskAccountInformation(blockchainInfo) {
   try {
     const { ethereum } = window;
     if (!ethereum) {
@@ -72,10 +72,11 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchain) {
     const accountInformation = {
       walletType: 'metamask',
       address: accounts[0],
-      blockchain,
+      blockchain: blockchainInfo.id,
+      blockchainName: blockchainInfo.name,
     };
 
-    currentEthereumNetwork = blockchain;
+    currentEthereumNetwork = blockchainInfo.id;
 
     await setEthereumProvider();
 
@@ -242,6 +243,7 @@ export async function closeEthereumLoan(UUID) {
         loanEventReceived({
           txHash: tx.hash,
           status: ToastEvent.CLOSEREQUESTED,
+          uuid: UUID,
         })
       );
     } catch (error) {

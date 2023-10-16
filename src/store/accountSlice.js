@@ -7,12 +7,14 @@ export const accountSlice = createSlice({
     walletType: null,
     address: null,
     blockchain: null,
+    blockchainName: null,
   },
   reducers: {
     login: (state, action) => {
       state.walletType = action.payload.walletType;
       state.address = action.payload.address;
       state.blockchain = action.payload.blockchain;
+      state.blockchainName = action.payload.blockchainName;
     },
     logout: (state) => {
       if (state.walletType === 'leather' || state.walletType === 'xverse') {
@@ -21,6 +23,7 @@ export const accountSlice = createSlice({
       state.walletType = null;
       state.address = null;
       state.blockchain = null;
+      state.blockchainName = null;
     },
   },
 });

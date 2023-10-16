@@ -1,6 +1,6 @@
 import { io as ioClient } from 'socket.io-client';
 import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
-import { StacksNetwork } from '../networks/networks';
+import { getNetworkConfig } from '../networks/networks';
 import store from '../store/store';
 import { loanEventReceived, fetchLoan } from '../store/loansSlice';
 import { cvToValue, deserializeCV } from '@stacks/transactions';
@@ -8,7 +8,8 @@ import { getStacksLoanByID } from '../blockchainFunctions/stacksFunctions';
 import { ToastEvent } from '../components/CustomToast';
 
 export function startStacksObserver(blockchain) {
-  const { loanContractAddress, loanContractName, managerContractAddress, managerContractName, apiBase } = StacksNetwork;
+  const { loanContractAddress, loanContractName, managerContractAddress, managerContractName, apiBase } =
+    getNetworkConfig();
   const loanContractFullName = `${loanContractAddress}.${loanContractName}`;
   const managerContractFullName = `${managerContractAddress}.${managerContractName}`;
 
@@ -23,11 +24,11 @@ export function startStacksObserver(blockchain) {
 
   const stacksSocket = new StacksApiSocketClient(socket);
 
-  stacksSocket.socket.on('connect', () => {
+  stacksSocket.socket.on('connect', async () => {
     console.log(`Listening to [${blockchain}]`);
   });
 
-  stacksSocket.socket.on('disconnect', (reason) => {
+  stacksSocket.socket.on('disconnect', async (reason) => {
     console.log(`Disconnecting from [${blockchain}], reason: ${reason}`);
     stacksSocket.socket.connect();
   });
@@ -40,8 +41,13 @@ export function startStacksObserver(blockchain) {
   }, 2000);
 
   stacksSocket.subscribeAddressTransactions(managerContractFullName);
+  stacksSocket.subscribeAddressTransactions(loanContractFullName);
+
+  let lastTxHash = '';
 
   stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
+    if (txWithTransfers.tx.tx_id === lastTxHash) return;
+    lastTxHash = txWithTransfers.tx.tx_id;
     console.log(`TX happened on ${address}`);
 
     const _tx = txWithTransfers.tx;

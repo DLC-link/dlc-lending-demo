@@ -29,16 +29,26 @@ export default function SelectWalletModal() {
 
   const [showTutorial, setShowTutorial] = useState(false);
 
-  const stacksBlockchain = {
-    id: process.env.REACT_APP_STACKS_NETWORK_ID,
-    name: process.env.REACT_APP_STACKS_NETWORK_NAME,
+  // Stacks
+  const enabledStacksChains = process.env.REACT_APP_ENABLED_STACKS_CHAINS;
+  const enabledStacksChainsList = enabledStacksChains.split(',');
+
+  const stacksChainConfigs = {
+    testnet: {
+      id: 'stacks:2147483648',
+      name: 'Testnet',
+    },
+    mocknet: {
+      id: 'stacks:42',
+      name: 'Mocknet',
+    },
   };
 
-  const stacksBlockchains = [{ stacksBlockchain }];
+  const stacksBlockchains = [...enabledStacksChainsList.map((chain) => stacksChainConfigs[chain])];
 
-  const enabledEthChains = process.env.REACT_APP_ENABLED_ETHEREUM_CHAINS.split(',');
-
-  if (enabledEthChains.length === 0) throw new Error('No Ethereum chains enabled');
+  // Ethereum
+  const enabledEthChains = process.env.REACT_APP_ENABLED_ETHEREUM_CHAINS;
+  const enabledEthChainsList = enabledEthChains.split(',');
 
   const ethereumChainConfigs = {
     sepolia: {
@@ -52,7 +62,7 @@ export default function SelectWalletModal() {
   };
 
   const ethereumBlockchains = [
-    ...enabledEthChains.map((chain) => ethereumChainConfigs[chain]),
+    ...enabledEthChainsList.map((chain) => ethereumChainConfigs[chain]),
     { id: 'ethereum:31337', name: 'Hardhat' },
   ];
 
@@ -62,18 +72,21 @@ export default function SelectWalletModal() {
       name: 'Metamask',
       logo: '/metamask_logo.svg',
       blockchains: ethereumBlockchains,
+      disabled: enabledEthChains.length === 0,
     },
     {
       id: 'leather',
       name: 'Leather',
       logo: '/leather_logo.svg',
       blockchains: stacksBlockchains,
+      disabled: enabledStacksChains.length === 0,
     },
     {
       id: 'xverse',
       name: 'Xverse',
       logo: '/xverse_logo.svg',
       blockchains: stacksBlockchains,
+      disabled: enabledStacksChains.length === 0 || true, // NOTE: Xverse is disabled for now
     },
   ];
 
@@ -85,8 +98,8 @@ export default function SelectWalletModal() {
             <MenuButton
               width={225}
               variant={'outline'}
-              disabled={walletItem.id === 'xverse' || walletItem.id === 'leather'}
-              filter={walletItem.id === 'xverse' || walletItem.id === 'leather' ? 'blur(1px)' : ''}
+              disabled={walletItem.disabled}
+              filter={walletItem.disabled ? 'blur(1px)' : ''}
               animation={
                 showTutorial
                   ? `
@@ -106,30 +119,31 @@ export default function SelectWalletModal() {
               </HStack>
             </MenuButton>
             <MenuList width={225}>
-              {walletItem.blockchains.map((blockchain, idx) => {
-                return (
-                  <MenuItem
-                    justifyContent={'right'}
-                    key={`chain-${idx}`}
-                    onClick={() => {
-                      switch (walletItem.id) {
-                        case 'metamask':
-                          requestAndDispatchMetaMaskAccountInformation(blockchain.id);
-                          break;
-                        case 'leather':
-                          requestAndDispatchStacksAccountInformation(blockchain.id);
-                          break;
-                        case 'xverse':
-                          break;
-                        default:
-                          break;
-                      }
-                      dispatch(toggleSelectWalletModalVisibility(false));
-                    }}>
-                    <Text variant='network'>{blockchain.name}</Text>
-                  </MenuItem>
-                );
-              })}
+              {!walletItem.disabled &&
+                walletItem.blockchains.map((blockchain, idx) => {
+                  return (
+                    <MenuItem
+                      justifyContent={'right'}
+                      key={`chain-${idx}`}
+                      onClick={() => {
+                        switch (walletItem.id) {
+                          case 'metamask':
+                            requestAndDispatchMetaMaskAccountInformation(blockchain);
+                            break;
+                          case 'leather':
+                            requestAndDispatchStacksAccountInformation(blockchain.id);
+                            break;
+                          case 'xverse':
+                            break;
+                          default:
+                            break;
+                        }
+                        dispatch(toggleSelectWalletModalVisibility(false));
+                      }}>
+                      <Text variant='network'>{blockchain?.name}</Text>
+                    </MenuItem>
+                  );
+                })}
             </MenuList>
           </>
         )}
