@@ -17,7 +17,7 @@ BigInt.prototype.toJSON = function () {
 export default function App() {
   const address = useSelector((state) => state.account.address);
 
-  // useTutorialStep();
+  useTutorialStep();
 
   return (
     <>
