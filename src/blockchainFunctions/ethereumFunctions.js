@@ -17,11 +17,12 @@ import { ToastEvent } from '../components/CustomToast';
 let protocolContractETH;
 let usdcETH;
 let currentEthereumNetwork;
+let provider;
 
 export async function setEthereumProvider() {
   try {
     const { ethereum } = window;
-    const provider = new ethers.providers.Web3Provider(ethereum);
+    provider = new ethers.providers.Web3Provider(ethereum);
     const signer = provider.getSigner();
     const { chainId, name } = await provider.getNetwork();
 
@@ -83,6 +84,17 @@ export async function requestAndDispatchMetaMaskAccountInformation(blockchainInf
   }
 }
 
+// export async function getAllTxsForAddress() {
+//   const address = store.getState().account.address;
+//   console.log('provider', provider)
+
+//   provider.getHistory(address).then((history) => {
+//     history.forEach((tx) => {
+//       console.log(tx);
+//     });
+//   });
+// }
+
 export async function isAllowanceSet(amount, assetContract, protocolContractAddress) {
   const address = store.getState().account.address;
 
@@ -110,9 +122,12 @@ export async function isAllowanceSet(amount, assetContract, protocolContractAddr
 
 export async function sendLoanContractToEthereum(loanContract) {
   try {
-    protocolContractETH
-      .setupLoan(loanContract.BTCDeposit, loanContract.attestorCount, { gasLimit: 900000 })
-      .then((response) => store.dispatch(loanSetupRequested({ BTCDeposit: loanContract.BTCDeposit })));
+    const response = await protocolContractETH.setupLoan(loanContract.BTCDeposit, loanContract.attestorCount, {
+      gasLimit: 900000,
+    });
+    store.dispatch(
+      loanSetupRequested({ txHash: response.hash, BTCDeposit: loanContract.BTCDeposit, walletType: 'metamask' })
+    );
   } catch (error) {
     console.error(error);
   }
@@ -122,7 +137,6 @@ export async function getAllEthereumLoansForAddress() {
   const address = store.getState().account.address;
   let formattedLoans = [];
   try {
-    console.log('protocolContractETH', protocolContractETH);
     const loanContracts = await protocolContractETH.getAllLoansForAddress(address);
     formattedLoans = formatAllLoanContracts(loanContracts, 'solidity');
   } catch (error) {

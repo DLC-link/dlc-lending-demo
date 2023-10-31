@@ -16,6 +16,7 @@ const initialState = {
   loansWithBTCTransactions: [],
   toastEvent: null,
   showHiddenLoans: false,
+  setupLoans: [],
   hiddenLoans: [],
 };
 
@@ -26,11 +27,14 @@ export const loansSlice = createSlice({
     loanSetupRequested: (state, action) => {
       const initialLoan = {
         uuid: '-',
+        blockchain: action.payload.walletType,
         status: 'None',
+        txHash: action.payload.txHash,
         formattedVaultLoan: 0,
         formattedVaultCollateral: customShiftValue(parseInt(action.payload.BTCDeposit), 8, true) + ' BTC',
+        walletType: action.payload.walletType,
       };
-      state.loans.unshift(initialLoan);
+      state.setupLoans.unshift(initialLoan);
     },
     loanEventReceived: (state, action) => {
       if (action.payload.status === ToastEvent.ACCEPTSUCCEEDED) {
@@ -55,6 +59,9 @@ export const loansSlice = createSlice({
       } else {
         state.hiddenLoans.push(action.payload);
       }
+    },
+    removeSetupLoan: (state, action) => {
+      state.setupLoans = state.setupLoans.filter((loan) => loan.txHash !== action.payload);
     },
     toggleShowHiddenLoans: (state) => {
       state.showHiddenLoans = !state.showHiddenLoans;
@@ -86,6 +93,12 @@ export const loansSlice = createSlice({
             : state.loans.findIndex((loan) => loan.uuid === formattedLoan.uuid);
 
         state.loans[loanIndex] = formattedLoan;
+
+        // Remove loanTXHash from setupLoans if it matches one of the txHash values
+        const setupLoanIndex = state.setupLoans.findIndex((loan) => loan.txHash === loanTXHash);
+        if (setupLoanIndex !== -1) {
+          state.setupLoans.splice(setupLoanIndex, 1);
+        }
 
         let toastStatus;
 
@@ -147,8 +160,14 @@ export const loansSlice = createSlice({
   },
 });
 
-export const { loanSetupRequested, loanEventReceived, hideLoan, toggleShowHiddenLoans, deleteToastEvent } =
-  loansSlice.actions;
+export const {
+  loanSetupRequested,
+  loanEventReceived,
+  hideLoan,
+  removeSetupLoan,
+  toggleShowHiddenLoans,
+  deleteToastEvent,
+} = loansSlice.actions;
 
 export default loansSlice.reducer;
 

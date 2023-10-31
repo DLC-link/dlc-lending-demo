@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { clarityLoanOrder, solidityLoanOrder } from '../enums/loanStatuses';
-import { selectNotHiddenLoans } from '../store/loansSlice';
+import { removeSetupLoan } from '../store/loansSlice';
+import { useDispatch } from 'react-redux';
+import { checkIfTransactionSuccessful } from '../utilities/utils';
 
 export function useLoans() {
-  const { loans, showHiddenLoans, hiddenLoans } = useSelector((state) => state.loans);
+  const dispatch = useDispatch();
+  const { loans, showHiddenLoans, hiddenLoans, setupLoans } = useSelector((state) => state.loans);
 
   const walletType = useSelector((state) => state.account.walletType);
 
@@ -21,6 +24,19 @@ export function useLoans() {
     }
   };
 
+  const filteredSetupLoans = setupLoans.filter(loan => loan.blockchain === walletType);
+
+  const checkIfSetupLoanSuccessful = async (loan) => {
+    const isConfirmedTransaction = await checkIfTransactionSuccessful(loan.txHash, loan.walletType);
+    if (isConfirmedTransaction) {
+      dispatch(removeSetupLoan(loan.txHash));
+    }
+  };
+
+  Promise.all(filteredSetupLoans.map(checkIfSetupLoanSuccessful));
+
+  const allLoans = [...filteredSetupLoans, ...loans];
+
   const sortLoansByStatus = (loans, stateOrder) => {
     return loans.slice().sort((a, b) => {
       const stateAIndex = stateOrder.indexOf(a.status);
@@ -31,10 +47,10 @@ export function useLoans() {
 
   const sortedLoans = useMemo(() => {
     const stateOrder = determineStateOrder(walletType);
-    const loansToSort = showHiddenLoans ? loans : loans.filter((loan) => !hiddenLoans.includes(loan.uuid));
+    const loansToSort = showHiddenLoans ? allLoans : allLoans.filter((loan) => !hiddenLoans.includes(loan.uuid));
 
     return sortLoansByStatus(loansToSort, stateOrder);
-  }, [loans, walletType, showHiddenLoans, hiddenLoans]);
+  }, [loans, walletType, showHiddenLoans, hiddenLoans, setupLoans]);
 
   return sortedLoans;
 }

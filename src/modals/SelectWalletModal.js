@@ -20,6 +20,7 @@ import { requestAndDispatchStacksAccountInformation } from '../blockchainFunctio
 import TutorialBox from '../components/TutorialBox';
 import { TutorialStep } from '../enums/TutorialSteps';
 import { toggleSelectWalletModalVisibility } from '../store/componentSlice';
+import { ArrowDownIcon } from '@chakra-ui/icons';
 
 export default function SelectWalletModal() {
   const dispatch = useDispatch();
@@ -69,24 +70,19 @@ export default function SelectWalletModal() {
   const walletItems = [
     {
       id: 'metamask',
-      name: 'Metamask',
+      network: 'Ethereum',
       logo: '/metamask_logo.svg',
+      name: 'Metamask',
       blockchains: ethereumBlockchains,
       disabled: enabledEthChains.length === 0,
     },
     {
       id: 'leather',
-      name: 'Leather',
+      network: 'Stacks',
       logo: '/leather_logo.svg',
+      name: 'Leather',
       blockchains: stacksBlockchains,
       disabled: enabledStacksChains.length === 0,
-    },
-    {
-      id: 'xverse',
-      name: 'Xverse',
-      logo: '/xverse_logo.svg',
-      blockchains: stacksBlockchains,
-      disabled: enabledStacksChains.length === 0 || true, // NOTE: Xverse is disabled for now
     },
   ];
 
@@ -115,7 +111,10 @@ export default function SelectWalletModal() {
                   height={25}
                 />
                 <Spacer />
-                <Text variant='wallet'>{isOpen ? 'Choose Network' : walletItem.name}</Text>
+                <VStack>
+                <Text variant='wallet'>{isOpen ? 'Choose Network' : walletItem.network}</Text>
+                <Text variant='wallet'>{isOpen ? <ArrowDownIcon /> : walletItem.name}</Text>
+                </VStack>
               </HStack>
             </MenuButton>
             <MenuList width={225}>
@@ -132,8 +131,6 @@ export default function SelectWalletModal() {
                             break;
                           case 'leather':
                             requestAndDispatchStacksAccountInformation(blockchain.id);
-                            break;
-                          case 'xverse':
                             break;
                           default:
                             break;

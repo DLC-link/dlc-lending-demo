@@ -1,4 +1,6 @@
 import { hexToBytes as hexToBytesMS } from 'micro-stacks/common';
+import { getNetworkConfig, getEthereumNetworkConfig } from '../networks/networks';
+import { getAllTxsForAddress } from '../blockchainFunctions/ethereumFunctions';
 
 import Decimal from 'decimal.js';
 
@@ -134,3 +136,22 @@ export function formatCollateralInUSD(collateralAmount, bitcoinValue) {
 
   return new Intl.NumberFormat().format(decimalCollateralAmount.mul(decimalBitcoinValue).toNumber().toFixed(2));
 }
+
+export const checkIfTransactionSuccessful = async (txHash) => {
+  const explorerURL = `https://api.testnet.hiro.so/extended/v1/tx/${txHash}`;
+
+  try {
+    const txResponse = await fetch(explorerURL, {
+      headers: { Accept: 'application/json' },
+    });
+
+    const tx = await txResponse.json();
+    console.log(tx);
+
+    const isSuccessful = tx.tx_status === 'success';
+
+    return isSuccessful;
+  } catch (error) {
+    console.error(error);
+  }
+};
