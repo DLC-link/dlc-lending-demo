@@ -56,7 +56,7 @@ export default function useConfirmationChecker({ loan }) {
       console.error(error);
     }
 
-    const difference = bitcoinCurrentBlockHeight - bitcoinTransactionBlockHeight;
+    const difference = bitcoinCurrentBlockHeight - bitcoinTransactionBlockHeight + 1;
 
     setTransactionProgress(difference);
 

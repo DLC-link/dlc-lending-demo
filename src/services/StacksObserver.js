@@ -48,7 +48,7 @@ export function startStacksObserver(blockchain) {
   stacksSocket.socket.on('address-transaction', async (address, txWithTransfers) => {
     if (txWithTransfers.tx.tx_id === lastTxHash) return;
     lastTxHash = txWithTransfers.tx.tx_id;
-    console.log(`TX happened on ${address}`);
+    console.log(`TX happened on ${address} with tx_id ${txWithTransfers.tx.tx_id}`);
 
     const _tx = txWithTransfers.tx;
 

@@ -61,7 +61,7 @@ const populateTxOptions = (functionName, functionArgs, postConditions, senderAdd
     postConditionMode: PostConditionMode.Allow,
     onFinish: (data) => {
       if (typeof onFinishStatus !== 'string') {
-        store.dispatch(loanSetupRequested(onFinishStatus));
+        store.dispatch(loanSetupRequested({ txHash: `0x${data.txId}`, BTCDeposit: onFinishStatus, walletType: 'leather' }));
       } else {
         store.dispatch(
           loanEventReceived({ txHash: data.txId, status: onFinishStatus, walletType: 'leather', uuid: UUID })
@@ -122,7 +122,7 @@ export async function sendLoanContractToStacks(loanContract) {
   const functionName = 'setup-loan';
   const functionArgs = [uintCV(loanContract.BTCDeposit), bufferCV(selectedAttestors)];
   const senderAddress = undefined;
-  const onFinishStatus = { BTCDeposit: loanContract.BTCDeposit };
+  const onFinishStatus = loanContract.BTCDeposit;
 
   const txOptions = populateTxOptions(functionName, functionArgs, [], senderAddress, onFinishStatus);
 
