@@ -6,7 +6,7 @@ import { ToastEvent } from '../components/CustomToast';
 import { customShiftValue } from '../utilities/utils';
 import { getNetworkConfig, getEthereumNetworkConfig } from '../networks/networks';
 
-const createURLParams = (bitcoinContractOffer, attestorURLs) => {
+const createURLParams = (bitcoinContractOffer) => {
   const { walletType } = store.getState().account;
 
   const routerWalletURL =
@@ -23,10 +23,9 @@ const createURLParams = (bitcoinContractOffer, attestorURLs) => {
   };
   const urlParams = {
     bitcoinContractOffer: JSON.stringify(bitcoinContractOffer),
-    attestorURLs: JSON.stringify(attestorURLs),
+    bitcoinNetwork: JSON.stringify(process.env.REACT_APP_BITCOIN_NETWORK),
     counterpartyWalletDetails: JSON.stringify(counterPartyWalletDetails),
   };
-
   return urlParams;
 };
 
@@ -112,7 +111,7 @@ export const fetchBitcoinPrice = async () => {
 export const fetchBitcoinContractOfferAndSendToUserWallet = async (loanContract) => {
   const bitcoinContractOffer = await fetchBitcoinContractOfferFromCounterpartyWallet(loanContract);
   if (!bitcoinContractOffer) return;
-  const urlParams = createURLParams(bitcoinContractOffer, loanContract.attestorList);
+  const urlParams = createURLParams(bitcoinContractOffer);
   console.log(urlParams);
   await sendOfferForSigning(urlParams, loanContract.uuid);
 };
