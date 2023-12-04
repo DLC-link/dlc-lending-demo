@@ -79,7 +79,7 @@ const fetchDeploymentPlan = async (contract, chain) => {
 const contractDeploymentInfoNames = {
   protocolContract: 'LendingContract',
   usdc: 'USDC',
-  dlcManager: 'DlcManager',
+  dlcManager: 'DLCManager',
 };
 
 // Cache to store fetched contracts

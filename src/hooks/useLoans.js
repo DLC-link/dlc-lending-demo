@@ -24,7 +24,7 @@ export function useLoans() {
     }
   };
 
-  const filteredSetupLoans = setupLoans.filter(loan => loan.blockchain === walletType);
+  const filteredSetupLoans = setupLoans.filter((loan) => loan.blockchain === walletType);
 
   const checkIfSetupLoanSuccessful = async (loan) => {
     const isConfirmedTransaction = await checkIfTransactionSuccessful(loan.txHash, loan.walletType);
@@ -38,11 +38,12 @@ export function useLoans() {
   const allLoans = [...filteredSetupLoans, ...loans];
 
   const sortLoansByStatus = (loans, stateOrder) => {
-    return loans.slice().sort((a, b) => {
+    let sortedLoans = loans.slice().sort((a, b) => {
       const stateAIndex = stateOrder.indexOf(a.status);
       const stateBIndex = stateOrder.indexOf(b.status);
       return stateAIndex - stateBIndex;
     });
+    return sortedLoans.reverse();
   };
 
   const sortedLoans = useMemo(() => {
