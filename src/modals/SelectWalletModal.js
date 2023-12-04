@@ -112,8 +112,8 @@ export default function SelectWalletModal() {
                 />
                 <Spacer />
                 <VStack>
-                <Text variant='wallet'>{isOpen ? 'Choose Network' : walletItem.network}</Text>
-                <Text variant='wallet'>{isOpen ? <ArrowDownIcon /> : walletItem.name}</Text>
+                  <Text variant='wallet'>{isOpen ? 'Choose Network' : walletItem.network}</Text>
+                  <Text variant='wallet'>{isOpen ? <ArrowDownIcon /> : walletItem.name}</Text>
                 </VStack>
               </HStack>
             </MenuButton>

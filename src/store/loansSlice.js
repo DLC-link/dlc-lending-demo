@@ -86,13 +86,7 @@ export const loansSlice = createSlice({
       })
       .addCase(fetchLoan.fulfilled, (state, action) => {
         const { formattedLoan, loanTXHash, loanEvent } = action.payload;
-
-        const loanIndex =
-          formattedLoan.status === solidityLoanStatuses.READY || formattedLoan.status === clarityLoanStatuses.READY
-            ? state.loans.findIndex((loan) => loan.status === 'None')
-            : state.loans.findIndex((loan) => loan.uuid === formattedLoan.uuid);
-
-        state.loans[loanIndex] = formattedLoan;
+        state.loans[state.loans.length] = formattedLoan;
 
         // Remove loanTXHash from setupLoans if it matches one of the txHash values
         const setupLoanIndex = state.setupLoans.findIndex((loan) => loan.txHash === loanTXHash);
